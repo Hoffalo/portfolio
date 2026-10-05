@@ -85,6 +85,8 @@ export class World {
   constructor(canvas, onNear) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.scale(0.5, 0.5);
     this.player = { x: 482, y: 355, facing: "down" };
     this.keys = new Set();
     this.onNear = onNear;
@@ -119,453 +121,536 @@ export class World {
       phase: rand() * 7,
     }));
     this.scene = document.createElement("canvas");
-    this.scene.width = WIDTH;
-    this.scene.height = HEIGHT;
+    this.scene.width = WIDTH / 2;
+    this.scene.height = HEIGHT / 2;
     const main = this.ctx;
     this.ctx = this.scene.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.scale(0.5, 0.5);
     this.drawTerrain();
     this.ctx = main;
     this.frame = this.frame.bind(this);
     requestAnimationFrame(this.frame);
   }
+  // All art is drawn on a 480×270 framebuffer, with a two-unit pixel grid.
   rect(x, y, w, h, color) {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(
-      Math.round(x),
-      Math.round(y),
-      Math.round(w),
-      Math.round(h),
+      Math.round(x / 2) * 2,
+      Math.round(y / 2) * 2,
+      Math.max(2, Math.round(w / 2) * 2),
+      Math.max(2, Math.round(h / 2) * 2),
     );
   }
   path(points, color) {
-    const c = this.ctx;
-    c.fillStyle = color;
-    c.beginPath();
-    points.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
-    c.closePath();
-    c.fill();
+    // Scanline rasterization keeps diagonals stepped instead of antialiased.
+    const low = Math.floor(Math.min(...points.map((p) => p[1])) / 2) * 2;
+    const high = Math.max(...points.map((p) => p[1]));
+    for (let y = low; y < high; y += 2) {
+      const intersections = [];
+      for (let i = 0; i < points.length; i++) {
+        const a = points[i],
+          b = points[(i + 1) % points.length];
+        if ((a[1] <= y && b[1] > y) || (b[1] <= y && a[1] > y))
+          intersections.push(
+            a[0] + ((y - a[1]) * (b[0] - a[0])) / (b[1] - a[1]),
+          );
+      }
+      intersections.sort((a, b) => a - b);
+      for (let i = 0; i + 1 < intersections.length; i += 2)
+        this.rect(
+          intersections[i],
+          y,
+          intersections[i + 1] - intersections[i],
+          2,
+          color,
+        );
+    }
   }
   drawTerrain() {
-    const c = this.ctx;
-    this.rect(0, 0, 960, 540, "#14282b");
-    this.rect(0, 0, 960, 116, "#15222d");
+    this.rect(0, 0, 960, 540, "#22332e");
+    this.rect(0, 0, 960, 118, "#17242b");
     this.path(
       [
-        [0, 130],
-        [65, 80],
-        [130, 110],
-        [205, 56],
-        [269, 105],
-        [344, 64],
-        [430, 119],
-        [523, 58],
-        [604, 118],
-        [719, 66],
-        [824, 110],
-        [904, 55],
-        [960, 80],
-        [960, 160],
-        [0, 160],
+        [0, 124],
+        [64, 86],
+        [118, 104],
+        [196, 57],
+        [292, 112],
+        [380, 73],
+        [457, 115],
+        [545, 62],
+        [661, 115],
+        [745, 69],
+        [863, 113],
+        [937, 79],
+        [960, 110],
+        [960, 165],
+        [0, 165],
       ],
-      "#1b3037",
+      "#253b3b",
     );
     this.path(
       [
-        [0, 149],
-        [88, 102],
-        [177, 139],
-        [305, 92],
-        [405, 144],
-        [566, 103],
-        [680, 137],
-        [825, 91],
-        [960, 148],
-        [960, 189],
-        [0, 189],
+        [0, 151],
+        [78, 112],
+        [180, 150],
+        [271, 99],
+        [386, 145],
+        [508, 108],
+        [630, 152],
+        [735, 109],
+        [851, 154],
+        [960, 115],
+        [960, 191],
+        [0, 191],
       ],
-      "#1a3739",
+      "#2b4240",
     );
-    this.rect(798, 40, 3, 3, "#b3b995");
-    this.rect(72, 45, 2, 2, "#687f80");
-    this.rect(290, 31, 2, 2, "#718587");
-    this.rect(584, 48, 2, 2, "#718587");
-    // Pixel crescent.
-    this.rect(835, 29, 18, 4, "#acb99c");
-    this.rect(829, 33, 27, 5, "#acb99c");
-    this.rect(826, 38, 28, 15, "#acb99c");
-    this.rect(830, 53, 24, 5, "#acb99c");
-    this.rect(835, 58, 15, 3, "#acb99c");
-    this.rect(840, 27, 19, 25, "#15222d");
-    this.rect(847, 51, 10, 5, "#15222d");
-    // Stream and rocky banks.
-    this.path(
-      [
-        [439, 131],
-        [483, 122],
-        [505, 170],
-        [467, 210],
-        [496, 257],
-        [521, 298],
-        [491, 328],
-        [465, 312],
-        [478, 264],
-        [446, 224],
-        [455, 181],
-      ],
-      "#263c40",
-    );
-    this.path(
-      [
-        [452, 130],
-        [478, 130],
-        [490, 172],
-        [455, 208],
-        [485, 256],
-        [506, 296],
-        [487, 313],
-        [477, 305],
-        [489, 267],
-        [439, 221],
-        [467, 172],
-      ],
-      "#27474b",
-    );
+    // A small, pale moon over the valley.
+    this.rect(814, 30, 26, 4, "#adb39b");
+    this.rect(808, 34, 38, 26, "#adb39b");
+    this.rect(814, 60, 26, 4, "#adb39b");
+    this.rect(826, 28, 24, 25, "#17242b");
+    this.rect(838, 51, 12, 8, "#17242b");
+    [
+      [79, 35],
+      [191, 22],
+      [335, 45],
+      [555, 23],
+      [718, 40],
+      [887, 25],
+    ].forEach(([x, y]) => this.rect(x, y, 2, 2, "#7e9591"));
+    const r = seeded(832);
     this.grass.forEach((g) => {
-      if (g.y > 149)
-        this.rect(
-          g.x,
-          g.y,
-          g.v > 0.8 ? 3 : 2,
-          2,
-          g.v > 0.6 ? "#294139" : "#1b3331",
-        );
-      if (g.v > 0.92) {
-        this.rect(g.x, g.y - 3, 1, 4, "#345045");
-        this.rect(g.x + 2, g.y - 2, 1, 3, "#345045");
+      if (g.y < 137) return;
+      this.rect(g.x, g.y, 2 + g.v * 3, 2, g.v > 0.55 ? "#304438" : "#1c2c29");
+      if (g.v > 0.78) {
+        this.rect(g.x, g.y - 4, 2, 4, "#40503a");
+        this.rect(g.x + 4, g.y - 2, 2, 4, "#354b37");
       }
     });
-    // Connected worn pathways.
+    // Mossy creek banks, with a clear walkable bridge further downstream.
+    const creek = [
+      [439, 121],
+      [480, 121],
+      [504, 170],
+      [466, 210],
+      [496, 259],
+      [521, 298],
+      [492, 329],
+      [465, 315],
+      [478, 263],
+      [444, 225],
+      [453, 182],
+    ];
+    this.path(creek, "#3e5147");
     this.path(
       [
-        [289, 279],
-        [329, 279],
-        [369, 316],
-        [471, 310],
-        [643, 286],
-        [705, 277],
-        [722, 303],
-        [645, 314],
-        [519, 344],
-        [561, 382],
-        [694, 425],
-        [733, 428],
-        [729, 463],
-        [682, 454],
-        [528, 402],
-        [463, 368],
-        [387, 397],
-        [272, 457],
-        [238, 445],
-        [248, 418],
-        [375, 369],
-        [431, 343],
-        [350, 344],
+        [450, 120],
+        [475, 121],
+        [490, 170],
+        [452, 209],
+        [484, 260],
+        [507, 298],
+        [487, 315],
+        [477, 305],
+        [490, 266],
+        [436, 222],
+        [467, 170],
       ],
-      "#495046",
+      "#314e54",
+    );
+    for (let y = 142; y < 279; y += 18) {
+      this.rect(450 + Math.sin(y) * 9, y, 18, 2, "#456864");
+      this.rect(479 + Math.cos(y) * 5, y + 8, 9, 2, "#233e47");
+    }
+    // Winding dirt paths, edged with scattered warm stones.
+    const trail = [
+      [289, 277],
+      [327, 277],
+      [365, 316],
+      [471, 309],
+      [643, 283],
+      [706, 278],
+      [721, 306],
+      [647, 314],
+      [514, 346],
+      [558, 382],
+      [698, 426],
+      [735, 427],
+      [730, 458],
+      [683, 452],
+      [528, 401],
+      [468, 367],
+      [388, 396],
+      [272, 455],
+      [238, 445],
+      [249, 416],
+      [376, 368],
+      [429, 343],
+      [350, 345],
+    ];
+    this.path(trail, "#3b4436");
+    this.path(
+      trail.map(([x, y]) => [x, y - 4]),
+      "#78664c",
     );
     this.path(
       [
-        [463, 337],
-        [492, 339],
-        [501, 466],
-        [540, 540],
-        [447, 540],
-        [467, 468],
+        [465, 339],
+        [493, 339],
+        [502, 468],
+        [544, 540],
+        [444, 540],
+        [465, 468],
       ],
-      "#495046",
+      "#6f6048",
     );
-    const r = seeded(511);
-    for (let i = 0; i < 260; i++) {
-      const x = 215 + r() * 530,
-        y = 281 + r() * 259;
+    for (let i = 0; i < 340; i++) {
+      const x = 220 + r() * 535,
+        y = 286 + r() * 254;
       if (
-        Math.abs(y - (340 + Math.abs(x - 480) * 0.3)) < 22 ||
-        (Math.abs(x - 481) < 17 && y > 340)
+        Math.abs(y - (340 + Math.abs(x - 480) * 0.3)) < 17 ||
+        (Math.abs(x - 481) < 15 && y > 340)
       )
-        this.rect(x, y, 4 + r() * 5, 2, r() > 0.5 ? "#656351" : "#38423c");
+        this.rect(x, y, 4 + r() * 4, 2, r() > 0.55 ? "#93805a" : "#594f3e");
     }
-    // Cross-stream bridge.
-    this.rect(444, 279, 80, 32, "#27312d");
-    for (let i = 0; i < 9; i++) this.rect(447 + i * 8, 279, 6, 32, "#726951");
-    this.rect(440, 274, 88, 5, "#8b7956");
-    this.rect(441, 311, 87, 4, "#8b7956");
-    [443, 521].forEach((x) => {
-      this.rect(x, 267, 5, 55, "#5e573f");
-      this.rect(x, 266, 5, 3, "#ad9562");
+    this.rect(442, 278, 84, 36, "#252f29");
+    for (let x = 448; x < 520; x += 8) {
+      this.rect(x, 278, 6, 36, "#967949");
+      this.rect(x, 280, 2, 32, "#b0925d");
+    }
+    this.rect(438, 273, 90, 5, "#b39260");
+    this.rect(438, 314, 90, 5, "#594936");
+    [440, 524].forEach((x) => {
+      this.rect(x, 269, 4, 53, "#72603f");
+      this.rect(x, 267, 6, 4, "#b89a62");
     });
-    this.trees
-      .filter((t) => t.y < 260)
-      .sort((a, b) => a.y - b.y)
-      .forEach((t) => this.tree(t));
-    // Ground objects: stones, stumps, mushrooms.
-    for (let i = 0; i < 45; i++) {
-      const x = r() * 940,
-        y = 220 + r() * 300;
-      if (nearbyArea(x, y) || !canWalk(x, y) || Math.abs(x - 480) < 45)
+    // Tiny garden by the cabin: squash, flowers, and a crooked fence.
+    this.rect(790, 384, 48, 62, "#182b28");
+    for (let y = 392; y < 443; y += 16)
+      for (let x = 797; x < 833; x += 14) {
+        this.rect(x - 3, y, 12, 10, "#554b36");
+        this.rect(x + 2, y - 3, 3, 6, "#68804a");
+        this.rect(x - 1, y + 1, 8, 6, "#a47643");
+        this.rect(x + 2, y + 1, 2, 5, "#c3944b");
+      }
+    for (let x = 785; x < 841; x += 14) {
+      this.rect(x, 446, 3, 13, "#7a704b");
+      this.rect(x, 448, 14, 3, "#98815b");
+    }
+    // Flowers, pebbles and clusters of mushrooms.
+    for (let i = 0; i < 95; i++) {
+      const x = 160 + r() * 670,
+        y = 165 + r() * 337;
+      if (!canWalk(x, y) || nearbyArea(x, y) || Math.abs(x - 482) < 33)
         continue;
-      this.rect(x, y, 8, 4, "#4a5550");
-      this.rect(x + 2, y - 3, 4, 3, "#59635a");
-      if (i % 3 === 0) {
-        this.rect(x + 10, y, 2, 5, "#aaa084");
-        this.rect(x + 8, y - 1, 6, 3, "#88574b");
+      if (i % 4 === 0) {
+        this.rect(x, y, 3, 6, "#778056");
+        this.rect(x - 3, y - 2, 9, 4, "#a36452");
+        this.rect(x, y - 2, 3, 2, "#ce9b77");
+      } else if (i % 3 === 0) {
+        this.rect(x, y, 2, 6, "#67794d");
+        this.rect(x - 2, y - 2, 6, 4, "#b0aa79");
+      } else {
+        this.rect(x, y, 8, 4, "#53604e");
+        this.rect(x + 2, y - 2, 5, 2, "#72806a");
       }
     }
-    // Fence.
-    for (let x = 325; x < 418; x += 20) {
-      this.rect(x, 461, 3, 18, "#63644b");
-      this.rect(x, 463, 20, 3, "#60614a");
-      this.rect(x, 472, 20, 3, "#494e3c");
+    for (let x = 327; x < 420; x += 20) {
+      this.rect(x, 461, 4, 20, "#82714e");
+      this.rect(x, 464, 20, 3, "#a28a5f");
+      this.rect(x, 474, 20, 3, "#5d583b");
     }
-    this.rect(568, 455, 40, 4, "#807151");
-    this.rect(573, 459, 3, 12, "#665a42");
-    this.rect(600, 459, 3, 12, "#665a42");
-    this.rect(568, 446, 40, 7, "#655e45");
+    this.rect(564, 453, 45, 6, "#a28a5e");
+    this.rect(566, 444, 41, 7, "#786a4c");
+    this.rect(568, 459, 4, 10, "#5c573e");
+    this.rect(602, 459, 4, 10, "#5c573e");
+    // A stone-ringed campfire in the clearing.
+    this.rect(562, 342, 26, 6, "#1b2b27");
+    this.rect(558, 336, 7, 7, "#71806b");
+    this.rect(585, 337, 7, 7, "#71806b");
+    this.rect(565, 347, 21, 4, "#586553");
+    this.rect(563, 339, 22, 4, "#6c4d35");
+    this.rect(568, 336, 5, 11, "#94704a");
+  }
+  ellipse(x, y, w, h, color) {
+    for (let yy = -h / 2; yy <= h / 2; yy += 2) {
+      const span = (w / 2) * Math.sqrt(Math.max(0, 1 - (yy / (h / 2)) ** 2));
+      this.rect(x - span, y + yy, span * 2, 2, color);
+    }
   }
   tree(t) {
-    const x = Math.round(t.x),
-      y = Math.round(t.y),
-      s = t.s;
+    const x = Math.round(t.x / 2) * 2,
+      y = Math.round(t.y / 2) * 2;
+    const s = t.s,
+      width = Math.round((34 * s) / 2) * 2,
+      height = Math.round((68 * s) / 2) * 2;
+    this.ellipse(x, y + 2, width * 1.7, 12, "#192a24");
+    this.rect(x - 6, y - 29, 12, 33, "#403c2c");
+    this.rect(x - 3, y - 27, 4, 30, "#786445");
+    this.rect(x - 9, y - 3, 5, 7, "#514c33");
+    this.rect(x + 5, y - 5, 5, 9, "#514c33");
+    const dark = t.tone > 0.5 ? "#1e322b" : "#1c332f",
+      mid = t.tone > 0.5 ? "#334b36" : "#2c4b3b",
+      light = t.tone > 0.5 ? "#526644" : "#47644a";
+    if (t.tone < 0.28) {
+      // Pines mix with softer broadleaf trees around the clearing.
+      this.path(
+        [
+          [x, y - height - 18],
+          [x - 12 * s, y - height + 4],
+          [x - 7 * s, y - height + 4],
+          [x - 26 * s, y - 38 * s],
+          [x - 18 * s, y - 38 * s],
+          [x - 37 * s, y - 9],
+          [x + 37 * s, y - 9],
+          [x + 18 * s, y - 38 * s],
+          [x + 26 * s, y - 38 * s],
+          [x + 7 * s, y - height + 4],
+          [x + 12 * s, y - height + 4],
+        ],
+        dark,
+      );
+      this.path(
+        [
+          [x, y - height - 13],
+          [x - 9 * s, y - height + 5],
+          [x - 5 * s, y - height + 5],
+          [x - 21 * s, y - 37 * s],
+          [x - 14 * s, y - 37 * s],
+          [x - 31 * s, y - 13],
+          [x - 1, y - 13],
+        ],
+        mid,
+      );
+      this.rect(x - 13 * s, y - 41 * s, 10 * s, 3, light);
+      this.rect(x - 22 * s, y - 20, 16 * s, 3, light);
+    } else {
+      // Overlapping rasterized leaf clusters produce irregular, rounded crowns.
+      this.ellipse(x, y - height * 0.7, width * 2.15, height * 0.9, dark);
+      this.ellipse(
+        x - width * 0.42,
+        y - height * 0.66,
+        width * 1.5,
+        height * 0.66,
+        dark,
+      );
+      this.ellipse(
+        x + width * 0.43,
+        y - height * 0.61,
+        width * 1.5,
+        height * 0.65,
+        dark,
+      );
+      this.ellipse(x - 3, y - height * 0.84, width * 1.6, height * 0.56, mid);
+      this.ellipse(
+        x - width * 0.42,
+        y - height * 0.61,
+        width * 1.22,
+        height * 0.58,
+        mid,
+      );
+      this.ellipse(
+        x + width * 0.32,
+        y - height * 0.6,
+        width * 1.25,
+        height * 0.53,
+        mid,
+      );
+      const r = seeded(Math.round(t.x * 47 + t.y));
+      for (let i = 0; i < 32; i++) {
+        const lx = (r() - 0.5) * width * 1.8,
+          ly = (r() - 0.5) * height * 0.7;
+        if ((lx / (width * 0.95)) ** 2 + (ly / (height * 0.4)) ** 2 < 1)
+          this.rect(
+            x + lx,
+            y - height * 0.72 + ly,
+            4 + r() * 4,
+            2 + r() * 2,
+            i % 3 === 0 ? light : dark,
+          );
+      }
+      this.rect(x - width * 0.4, y - height * 0.94, width * 0.4, 3, light);
+      this.rect(x - width * 0.75, y - height * 0.7, width * 0.3, 3, light);
+    }
+  }
+  glow(x, y, size, color = "#e0ac53") {
+    // Three stepped pools of light instead of a smooth modern gradient.
     const c = this.ctx;
     c.save();
-    c.translate(x, y);
-    c.scale(s, s);
-    this.rect(-4, -13, 8, 27, "#4a4635");
-    this.rect(-2, -13, 2, 24, "#62533b");
-    const tone = t.tone > 0.5;
-    this.path(
-      [
-        [0, -83],
-        [-12, -61],
-        [-7, -61],
-        [-23, -38],
-        [-16, -39],
-        [-31, -11],
-        [-23, -12],
-        [-38, 10],
-        [36, 10],
-        [24, -12],
-        [30, -11],
-        [16, -39],
-        [22, -38],
-        [8, -61],
-        [12, -61],
-      ],
-      tone ? "#1c3c34" : "#18372f",
-    );
-    this.path(
-      [
-        [0, -77],
-        [-10, -60],
-        [-5, -60],
-        [-19, -37],
-        [-12, -38],
-        [-26, -11],
-        [-19, -12],
-        [-31, 5],
-        [-3, 5],
-        [-3, -64],
-      ],
-      tone ? "#2b4c3d" : "#234737",
-    );
-    this.rect(-14, -30, 9, 2, "#36583e");
-    this.rect(-20, -6, 14, 2, "#33533c");
+    [
+      [size, 0.025],
+      [size * 0.65, 0.04],
+      [size * 0.35, 0.08],
+    ].forEach(([s, alpha]) => {
+      c.globalAlpha = alpha;
+      this.rect(x - s, y - s * 0.45, s * 2, s * 0.9, color);
+      this.rect(x - s * 0.7, y - s * 0.65, s * 1.4, s * 1.3, color);
+    });
     c.restore();
-  }
-  glow(x, y, size, color = "#e8b65b") {
-    const c = this.ctx;
-    const g = c.createRadialGradient(x, y, 1, x, y, size);
-    g.addColorStop(0, color + "3a");
-    g.addColorStop(1, color + "00");
-    c.fillStyle = g;
-    c.fillRect(x - size, y - size, size * 2, size * 2);
   }
   building(d) {
     const { x, y, w, h, id } = d;
-    this.rect(x - 6, y + h - 1, w + 15, 14, "#0b1d23");
-    this.rect(x, y + 25, w, h - 24, "#5c5946");
-    this.rect(
-      x + 5,
-      y + 30,
-      w - 10,
-      h - 30,
-      id === "gamedev" ? "#4c4e49" : "#66604a",
-    );
-    for (let yy = y + 40; yy < y + h; yy += 12) {
-      this.rect(x + 4, yy, w - 8, 2, "#3f4438");
-      for (let xx = x + 10; xx < x + w - 6; xx += 25)
-        this.rect(xx + (yy % 24 ? 7 : 0), yy - 10, 2, 10, "#50513f");
+    this.rect(x - 6, y + h - 2, w + 12, 14, "#182622");
+    this.rect(x - 2, y + 28, w + 4, h - 24, "#302d28");
+    this.rect(x + 3, y + 31, w - 6, h - 30, "#79664b");
+    for (let yy = y + 37; yy < y + h; yy += 9) {
+      this.rect(x + 3, yy, w - 6, 2, "#4e4935");
+      this.rect(x + 5, yy + 2, w - 10, 2, "#8e7652");
     }
+    [x + 4, x + w - 10].forEach((xx) =>
+      this.rect(xx, y + 31, 6, h - 31, "#4a4030"),
+    );
     if (id === "career") {
-      this.rect(x + 24, y - 29, w - 47, 67, "#69705c");
-      for (let i = 0; i < 5; i++)
-        this.rect(x + 24, y - 20 + i * 11, w - 47, 2, "#46544b");
-      this.rect(x + 34, y - 41, w - 68, 13, "#4b5b54");
-      this.rect(x + 41, y - 48, w - 82, 9, "#77806a");
+      this.rect(x + 22, y - 34, w - 43, 66, "#69644e");
+      for (let yy = y - 29; yy < y + 32; yy += 10)
+        this.rect(x + 24, yy, w - 48, 2, "#454a3c");
       this.path(
         [
-          [x + 16, y - 27],
-          [x + w - 10, y - 27],
-          [x + w - 2, y + 3],
-          [x + 8, y + 3],
+          [x + 13, y - 25],
+          [x + 30, y - 49],
+          [x + w - 29, y - 49],
+          [x + w - 10, y - 25],
         ],
-        "#414b50",
+        "#59646a",
       );
-      this.rect(x + 28, y - 21, w - 52, 20, "#70817a");
-      this.rect(x + 48, y - 24, 8, 25, "#a2a589");
-      this.rect(x + 34, y + 13, w - 70, 20, "#e5c083");
-      this.rect(x + 37, y + 17, w - 77, 12, "#efcc85");
-      this.rect(x + 54, y + 13, 3, 20, "#6b6550");
-      this.rect(x + w - 15, y - 35, 5, 28, "#a4aa8a");
-      this.rect(x + w - 12, y - 41, 22, 8, "#737f73");
+      this.rect(x + 28, y - 35, w - 55, 10, "#74837d");
+      this.rect(x + 46, y - 45, 6, 25, "#949582");
+      this.rect(x + w - 4, y - 35, 4, 32, "#818d7c");
+      this.rect(x + w - 2, y - 40, 20, 8, "#a1a895");
     } else {
-      this.rect(x + w - 33, y - 17, 14, 39, "#5a5b4b");
-      this.rect(x + w - 36, y - 20, 20, 5, "#77725b");
+      this.rect(x + w - 34, y - 18, 17, 37, "#565447");
+      this.rect(x + w - 36, y - 20, 21, 5, "#7d7560");
     }
+    const roof =
+      id === "gamedev" ? "#765668" : id === "about" ? "#785b4e" : "#5a6460";
+    const shade =
+      id === "gamedev" ? "#4c3c4b" : id === "about" ? "#4d413a" : "#3c4a46";
     this.path(
       [
-        [x - 14, y + 36],
-        [x + w / 2, y - 10],
-        [x + w + 14, y + 36],
-        [x + w + 14, y + 45],
-        [x - 14, y + 45],
+        [x - 14, y + 34],
+        [x + w / 2, y - 14],
+        [x + w + 14, y + 34],
+        [x + w + 14, y + 43],
+        [x - 14, y + 43],
       ],
-      id === "gamedev" ? "#514656" : "#434e4c",
+      shade,
     );
     this.path(
       [
-        [x - 10, y + 34],
-        [x + w / 2, y - 6],
-        [x + w + 9, y + 34],
+        [x - 10, y + 31],
+        [x + w / 2, y - 9],
+        [x + w + 10, y + 31],
       ],
-      id === "gamedev" ? "#675166" : "#5a6660",
+      roof,
     );
-    for (let i = 0; i < 5; i++) {
-      const yy = y + 5 + i * 7;
-      const half = (yy - y + 10) * 1.5;
-      this.rect(
-        x + w / 2 - half,
-        yy,
-        half * 2,
-        2,
-        id === "gamedev" ? "#4c424e" : "#424f4b",
-      );
+    // Individual roof shingles and a bright timber eave.
+    for (let row = 0; row < 6; row++) {
+      const yy = y - 3 + row * 7,
+        half = (yy - y + 13) * 1.65;
+      this.rect(x + w / 2 - half, yy, half * 2, 2, shade);
+      for (let xx = x + w / 2 - half + 5; xx < x + w / 2 + half - 4; xx += 16)
+        this.rect(xx + (row % 2 ? 4 : 0), yy + 2, 2, 4, shade);
     }
-    this.rect(x - 12, y + 40, w + 24, 5, "#8a7a56");
-    // Door and warmly lit windows.
-    this.rect(d.doorX - 13, y + h - 42, 26, 42, "#383b32");
-    this.rect(d.doorX - 9, y + h - 37, 18, 37, "#ac8350");
-    this.rect(d.doorX - 6, y + h - 32, 12, 22, "#d1a666");
-    this.rect(d.doorX + 5, y + h - 14, 2, 2, "#e6c987");
-    this.rect(d.doorX - 15, y + h, 30, 5, "#a0916b");
-    this.rect(d.doorX - 19, y + h + 5, 38, 4, "#6d7258");
+    this.rect(x - 13, y + 37, w + 26, 5, "#a18a5c");
+    this.rect(x - 9, y + 42, w + 18, 3, "#493f2f");
+    const doorY = y + h - 42;
+    this.rect(d.doorX - 13, doorY, 26, 42, "#30362c");
+    this.rect(d.doorX - 10, doorY + 4, 20, 38, "#a17c47");
+    for (let xx = d.doorX - 8; xx < d.doorX + 9; xx += 6)
+      this.rect(xx, doorY + 6, 2, 34, "#765b39");
+    this.rect(d.doorX - 7, doorY + 7, 14, 15, "#e2b765");
+    this.rect(d.doorX - 1, doorY + 7, 2, 15, "#877047");
+    this.rect(d.doorX + 5, doorY + 29, 3, 3, "#ecc981");
+    this.rect(d.doorX - 17, y + h, 34, 5, "#ad9a6b");
+    this.rect(d.doorX - 22, y + h + 5, 44, 4, "#6c7354");
     [x + 16, x + w - 39].forEach((wx) => {
-      this.rect(wx - 3, y + h - 47, 27, 28, "#353d35");
-      this.rect(
-        wx,
-        y + h - 44,
-        21,
-        22,
-        id === "gamedev" ? "#d99f8a" : "#ddbb79",
-      );
-      this.rect(wx + 2, y + h - 42, 17, 18, "#f0ce85");
-      this.rect(wx + 9, y + h - 44, 3, 22, "#695a40");
-      this.rect(wx, y + h - 34, 21, 2, "#695a40");
-      this.rect(wx - 3, y + h - 20, 27, 4, "#7e7454");
-      this.glow(
-        wx + 10,
-        y + h - 33,
-        42,
-        id === "gamedev" ? "#d39383" : "#e8b65b",
-      );
+      this.rect(wx - 3, y + h - 50, 28, 31, "#39392c");
+      this.rect(wx, y + h - 47, 22, 25, "#d3a24e");
+      this.rect(wx + 3, y + h - 44, 16, 19, "#f0cc78");
+      this.rect(wx + 9, y + h - 47, 3, 25, "#806242");
+      this.rect(wx, y + h - 35, 22, 3, "#806242");
+      this.rect(wx - 5, y + h - 21, 32, 5, "#a48a5b");
+      this.rect(wx - 6, y + h - 49, 3, 25, "#5b6042");
+      this.rect(wx + 26, y + h - 49, 3, 25, "#5b6042");
+      this.glow(wx + 11, y + h - 34, 58);
     });
-    if (id === "gamedev") {
-      this.rect(x + 30, y + 48, 65, 16, "#302c37");
-      this.rect(x + 35, y + 52, 54, 3, "#c49c94");
-      this.rect(x + 39, y + 58, 46, 2, "#997b85");
-    }
     if (id === "projects") {
-      this.rect(x - 22, y + h - 20, 16, 20, "#65513b");
-      this.rect(x - 21, y + h - 18, 14, 3, "#96794e");
-      this.rect(x + w + 6, y + h - 15, 12, 16, "#594d3c");
+      this.rect(x - 23, y + h - 20, 18, 21, "#80663e");
+      this.rect(x - 21, y + h - 17, 14, 3, "#c19958");
+      this.rect(x - 21, y + h - 6, 14, 3, "#493c2a");
+      this.rect(x + w + 7, y + h - 19, 18, 22, "#5f5339");
+      this.rect(x + w + 10, y + h - 15, 12, 3, "#a88850");
+    }
+    if (id === "gamedev") {
+      this.rect(x + 35, y + 46, 52, 15, "#382f3b");
+      this.rect(x + 41, y + 51, 7, 6, "#e4ae79");
+      this.rect(x + 54, y + 51, 7, 6, "#b794a3");
+      this.rect(x + 68, y + 51, 7, 6, "#97a88a");
+    }
+    if (id === "about") {
+      this.rect(x + w + 4, y + h - 6, 17, 6, "#85674e");
+      this.rect(x + w + 8, y + h - 13, 4, 8, "#626f48");
+      this.rect(x + w + 14, y + h - 17, 4, 11, "#708352");
+      this.rect(x - 21, y + h - 14, 12, 16, "#735f45");
+      this.rect(x - 24, y + h - 19, 18, 8, "#485e3e");
     }
   }
   lantern(x, y) {
-    this.rect(x, y - 31, 3, 33, "#5b6450");
-    this.rect(x - 7, y - 33, 10, 3, "#647055");
-    this.rect(x - 7, y - 30, 6, 10, "#d9b770");
-    this.rect(x - 9, y - 32, 10, 3, "#504e3a");
-    this.rect(x - 9, y - 20, 10, 2, "#504e3a");
-    this.glow(x - 4, y - 25, 57);
+    this.rect(x, y - 33, 4, 35, "#575843");
+    this.rect(x - 8, y - 35, 14, 4, "#a58e57");
+    this.rect(x - 8, y - 30, 8, 11, "#d4a553");
+    this.rect(x - 6, y - 28, 4, 7, "#f3d285");
+    this.rect(x - 10, y - 33, 12, 3, "#534b33");
+    this.rect(x - 10, y - 20, 12, 3, "#534b33");
+    this.glow(x - 4, y - 25, 68);
   }
   label(d) {
-    const c = this.ctx;
-    const y = d.y + d.h + 26;
-    c.font = "bold 10px monospace";
-    const w = c.measureText(d.label).width + 24;
-    this.rect(d.doorX - w / 2, y - 11, w, 29, "#102127e8");
-    this.rect(d.doorX - w / 2, y - 11, w, 1, "#566855");
+    const c = this.ctx,
+      y = d.y + d.h + 26;
+    c.font = "14px VT323, monospace";
     c.textAlign = "center";
-    c.fillStyle = d.color;
-    c.fillText(d.label, d.doorX, y);
-    c.font = "7px monospace";
-    c.fillStyle = "#8fa295";
-    c.fillText(d.sub, d.doorX, y + 11);
+    const text = d.sub === "ABOUT ME" ? "ABOUT" : d.sub;
+    const w = c.measureText(text).width + 20;
+    this.rect(d.doorX - w / 2 - 2, y - 14, w + 4, 20, "#302f26");
+    this.rect(d.doorX - w / 2, y - 12, w, 16, "#776847");
+    c.fillStyle = "#ead6a5";
+    c.fillText(text, d.doorX, y + 1);
   }
   character() {
-    const { x, y, facing } = this.player;
-    const px = Math.round(x),
-      py = Math.round(y),
-      step = this.walking && !this.reduced ? Math.sin(this.time * 13) : 0;
-    this.rect(px - 7, py + 1, 15, 3, "#112227");
-    this.rect(px - 5, py - 5, 4, 7 + (step > 0 ? 1 : 0), "#443e38");
-    this.rect(px + 2, py - 5, 4, 7 + (step < 0 ? 1 : 0), "#443e38");
-    this.rect(px - 7, py - 18, 14, 14, "#879382");
-    this.rect(px - 9, py - 16, 3, 9, "#a0ab91");
-    this.rect(px + 7, py - 16, 3, 9, "#a0ab91");
-    this.rect(px - 6, py - 29, 12, 12, "#d1b88b");
-    this.rect(px - 7, py - 30, 14, 6, "#413d39");
-    this.rect(px - 8, py - 24, 3, 7, "#413d39");
-    this.rect(px - 7, py - 18, 14, 4, "#b46a58");
-    this.rect(px + 5, py - 15, 4, 9, "#9d5348");
+    const { x, y, facing } = this.player,
+      px = Math.round(x / 2) * 2,
+      py = Math.round(y / 2) * 2;
+    this.rect(px - 11, py + 1, 22, 4, "#172720");
+    this.rect(px - 8, py - 8, 6, 10, "#343632");
+    this.rect(px + 2, py - 8, 6, 10, "#343632");
+    this.rect(px - 11, py - 24, 22, 18, "#7c9980");
+    this.rect(px - 13, py - 22, 4, 12, "#b6ac7d");
+    this.rect(px + 9, py - 22, 4, 12, "#b6ac7d");
+    this.rect(px - 8, py - 40, 16, 17, "#dcbb85");
+    this.rect(px - 10, py - 42, 20, 9, "#4d4033");
+    this.rect(px - 12, py - 37, 4, 12, "#4d4033");
+    this.rect(px - 12, py - 26, 24, 5, "#b46a53");
+    this.rect(px + 7, py - 22, 5, 12, "#964a43");
     if (facing !== "up") {
-      this.rect(px + (facing === "left" ? -4 : 2), py - 23, 2, 2, "#383b36");
+      this.rect(px + (facing === "left" ? -5 : 3), py - 32, 2, 3, "#39372e");
+      this.rect(px - 3, py - 27, 6, 2, "#ad845a");
     }
-    this.rect(px - 1, py - 14, 7, 8, "#626e60");
+    this.rect(px - 5, py - 18, 10, 10, "#5d7865");
+    this.rect(px - 3, py - 16, 6, 2, "#9fa17c");
   }
   draw() {
     const c = this.ctx;
     c.clearRect(0, 0, 960, 540);
-    c.drawImage(this.scene, 0, 0);
-    // Stream glints.
-    for (let i = 0; i < 8; i++) {
-      const y = 145 + i * 19,
-        x = 466 + Math.sin(i * 2) * 10;
-      this.rect(
-        x + (this.reduced ? 0 : Math.sin(this.time + i) * 3),
-        y,
-        9,
-        1,
-        "#56817c",
-      );
-    }
+    c.drawImage(this.scene, 0, 0, 960, 540);
     const sorted = [
       ...destinations.map((d) => ({
         y: d.y + d.h,
         draw: () => this.building(d),
       })),
-      ...this.trees
-        .filter((t) => t.y >= 260)
-        .map((t) => ({ y: t.y, draw: () => this.tree(t) })),
+      ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
       { y: this.player.y, draw: () => this.character() },
     ].sort((a, b) => a.y - b.y);
     sorted.forEach((o) => o.draw());
@@ -576,42 +661,35 @@ export class World {
       [633, 452],
       [458, 460],
     ].forEach(([x, y]) => this.lantern(x, y));
-    // Central wayfinder.
-    this.rect(531, 316, 4, 32, "#746749");
-    this.rect(516, 317, 36, 10, "#9a8458");
-    this.rect(519, 319, 29, 2, "#544f38");
-    this.rect(518, 330, 29, 9, "#81704d");
-    this.rect(522, 333, 20, 2, "#4a4b36");
+    this.rect(531, 318, 4, 30, "#796343");
+    this.rect(516, 318, 37, 10, "#b69b66");
+    this.rect(519, 320, 29, 2, "#78613e");
     destinations.forEach((d) => this.label(d));
+    this.rect(569, 328, 15, 13, "#c88342");
+    this.rect(572, 323, 9, 15, "#f0b853");
+    this.rect(575, 326, 4, 11, "#f8d986");
+    this.glow(576, 335, 55);
     this.flies.forEach((f) => {
       const t = this.reduced ? f.phase : this.time;
       const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
         y = f.y + Math.cos(t * 0.7 + f.phase) * 6;
-      const a = 0.25 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
-      c.globalAlpha = a;
-      this.rect(x, y, 2, 2, "#d2ce85");
-      this.glow(x, y, 9, "#cad58a");
+      c.globalAlpha = 0.4 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
+      this.rect(x, y, 2, 2, "#cfcb85");
       c.globalAlpha = 1;
     });
     if (!this.reduced) {
-      c.globalAlpha = 0.2;
+      c.globalAlpha = 0.14;
       this.rain.forEach((r) => {
         const y = ((r.y + this.time * r.s) % 570) - 15,
           x = (r.x - this.time * 13 + 9600) % 980;
-        this.rect(x, y, 1, 7, "#9bb5b6");
+        this.rect(x, y, 2, 6, "#9fb5a4");
       });
       c.globalAlpha = 1;
     }
-    const mist = c.createLinearGradient(0, 400, 0, 540);
-    mist.addColorStop(0, "#7d9b9300");
-    mist.addColorStop(1, "#7d9b9314");
-    c.fillStyle = mist;
-    c.fillRect(0, 400, 960, 140);
     if (this.near) {
       const d = destinations.find((d) => d.id === this.near);
-      c.strokeStyle = "#d7bb7d";
-      c.lineWidth = 1;
-      c.strokeRect(d.doorX - 19, d.doorY - 44, 38, 45);
+      this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
+      this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
     }
   }
   frame(now) {
