@@ -19,14 +19,32 @@ try {
       true,
     );
   }
+  assert.equal(await page.locator("h1").textContent(), "Issam Arida");
   assert.equal(
-    await page.locator(".header").innerText(),
-    "issamaarida@gmail.com",
+    await page.locator(".email-link").getAttribute("href"),
+    "mailto:issamaarida@gmail.com",
   );
   assert.equal(
-    await page.locator(".intro, .destinations, .progress").count(),
-    0,
+    await page
+      .locator(".identity img")
+      .evaluate((el) => el.complete && el.naturalWidth > 0),
+    true,
   );
+  assert.deepEqual(
+    await page
+      .locator(".reading-section> .section-heading h2")
+      .allTextContents(),
+    ["About", "Projects", "Career", "Game Dev"],
+  );
+  assert.equal(await page.locator(".destinations, .progress").count(), 0);
+  for (const id of ["about", "projects", "career", "gamedev"]) {
+    await page.locator(`[data-area="${id}"]`).click();
+    assert.equal(
+      await page.locator("#panel-content .section-body").innerText(),
+      await page.locator(`#${id} .section-body`).innerText(),
+    );
+    await page.keyboard.press("Escape");
+  }
   await page.locator("#motion").click();
   assert.equal(
     await page.locator("#motion").getAttribute("aria-pressed"),
@@ -81,9 +99,16 @@ try {
     "true",
   );
   await reduced.close();
+  const plain = await browser.newPage({ javaScriptEnabled: false });
+  await plain.goto(process.env.TEST_URL || "http://localhost:5173");
+  assert.equal(await plain.locator(".reading-section").count(), 4);
+  await plain.locator(".reading-invitation a").click();
+  assert.equal(new URL(plain.url()).hash, "#about");
+  assert.equal(await plain.locator("#projects .project-card").count(), 4);
+  await plain.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, minimal game layout, sound, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();
