@@ -218,3 +218,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Portfolio static source (intentionally tracked)
+!dist/
+!dist/**
+node_modules/
+.sites-runtime/
+playwright-report/
+test-results/
+
+# Local documentation and AI tooling — never publish to Git
+*.md
+*.MD
+agents/
+.openai/
+.agents/
+.codex/
+.claude/
