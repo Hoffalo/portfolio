@@ -7,6 +7,8 @@ const types = {
   ".css": "text/css",
   ".js": "text/javascript",
   ".svg": "image/svg+xml",
+  ".ttf": "font/ttf",
+  ".woff2": "font/woff2",
 };
 const port = Number(process.env.PORT || 5173);
 http
