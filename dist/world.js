@@ -70,10 +70,15 @@ export function movePlayer(player, dx, dy, dt) {
   const amount = 100 * Math.min(dt, 0.04),
     x = player.x + (dx / length) * amount,
     y = player.y + (dy / length) * amount;
+  const previousX = player.x,
+    previousY = player.y;
   if (canWalk(x, player.y)) player.x = x;
   if (canWalk(player.x, y)) player.y = y;
   player.facing = dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down";
-  return true;
+  return player.x !== previousX || player.y !== previousY;
+}
+export function walkFrame(time, moving, reduced) {
+  return moving && !reduced ? Math.floor(time * 8) % 4 : 0;
 }
 function seeded(seed) {
   return () => {
@@ -96,6 +101,7 @@ export class World {
     this.time = 0;
     this.last = 0;
     this.walking = false;
+    this.walkTime = 0;
     const rand = seeded(827);
     this.grass = Array.from({ length: 1400 }, () => ({
       x: rand() * 960,
@@ -110,12 +116,12 @@ export class World {
         if (y < 150 || x < 150 || x > 818 || (x > 384 && x < 577 && y < 235))
           this.trees.push({ x, y, s: 0.65 + rand() * 0.5, tone: rand() });
       }
-    this.rain = Array.from({ length: 110 }, () => ({
+    this.rain = Array.from({ length: 55 }, () => ({
       x: rand() * 960,
       y: rand() * 540,
       s: 25 + rand() * 55,
     }));
-    this.flies = Array.from({ length: 22 }, () => ({
+    this.flies = Array.from({ length: 15 }, () => ({
       x: 145 + rand() * 680,
       y: 240 + rand() * 255,
       phase: rand() * 7,
@@ -392,6 +398,11 @@ export class World {
     this.rect(x - 3, y - 27, 4, 30, "#786445");
     this.rect(x - 9, y - 3, 5, 7, "#514c33");
     this.rect(x + 5, y - 5, 5, 9, "#514c33");
+    this.ctx.save();
+    const sway = this.reduced
+      ? 0
+      : Math.round(Math.sin(this.time * 0.8 + t.x * 0.017) * 1.2) * 2;
+    this.ctx.translate(sway, 0);
     const dark = t.tone > 0.5 ? "#1e322b" : "#1c332f",
       mid = t.tone > 0.5 ? "#334b36" : "#2c4b3b",
       light = t.tone > 0.5 ? "#526644" : "#47644a";
@@ -475,6 +486,7 @@ export class World {
       this.rect(x - width * 0.4, y - height * 0.94, width * 0.4, 3, light);
       this.rect(x - width * 0.75, y - height * 0.7, width * 0.3, 3, light);
     }
+    this.ctx.restore();
   }
   glow(x, y, size, color = "#e0ac53") {
     // Three stepped pools of light instead of a smooth modern gradient.
@@ -485,7 +497,8 @@ export class World {
       [size * 0.65, 0.04],
       [size * 0.35, 0.08],
     ].forEach(([s, alpha]) => {
-      c.globalAlpha = alpha;
+      c.globalAlpha =
+        alpha * (this.reduced ? 1 : 0.93 + Math.sin(this.time * 4 + x) * 0.07);
       this.rect(x - s, y - s * 0.45, s * 2, s * 0.9, color);
       this.rect(x - s * 0.7, y - s * 0.65, s * 1.4, s * 1.3, color);
     });
@@ -620,31 +633,107 @@ export class World {
     c.fillText(text, d.doorX, y + 1);
   }
   character() {
-    const { x, y, facing } = this.player,
-      px = Math.round(x / 2) * 2,
+    const { x, y, facing } = this.player;
+    const px = Math.round(x / 2) * 2,
       py = Math.round(y / 2) * 2;
-    this.rect(px - 11, py + 1, 22, 4, "#172720");
-    this.rect(px - 8, py - 8, 6, 10, "#343632");
-    this.rect(px + 2, py - 8, 6, 10, "#343632");
-    this.rect(px - 11, py - 24, 22, 18, "#7c9980");
-    this.rect(px - 13, py - 22, 4, 12, "#b6ac7d");
-    this.rect(px + 9, py - 22, 4, 12, "#b6ac7d");
-    this.rect(px - 8, py - 40, 16, 17, "#dcbb85");
-    this.rect(px - 10, py - 42, 20, 9, "#4d4033");
-    this.rect(px - 12, py - 37, 4, 12, "#4d4033");
-    this.rect(px - 12, py - 26, 24, 5, "#b46a53");
-    this.rect(px + 7, py - 22, 5, 12, "#964a43");
-    if (facing !== "up") {
-      this.rect(px + (facing === "left" ? -5 : 3), py - 32, 2, 3, "#39372e");
-      this.rect(px - 3, py - 27, 6, 2, "#ad845a");
+    const frame = walkFrame(this.walkTime, this.walking, this.reduced);
+    const stride = [0, 3, 0, -3][frame],
+      bob = frame % 2 ? 2 : 0;
+    const side = facing === "left" || facing === "right",
+      direction = facing === "left" ? -1 : 1;
+    this.ellipse(px, py + 3, 24, 7, "#15271f");
+    // Boots alternate independently; the arms counter-swing against the legs.
+    this.rect(px - 8, py - 8 - stride, 6, 10, "#343732");
+    this.rect(px - 9, py - stride, 8, 3, "#554835");
+    this.rect(px + 2, py - 8 + stride, 6, 10, "#343732");
+    this.rect(px + 2, py + stride, 8, 3, "#554835");
+    const body = py - bob;
+    this.rect(px - 11, body - 24, 22, 18, "#789880");
+    this.rect(px - 9, body - 23, 5, 16, "#98aa86");
+    this.rect(px - 13, body - 22 + stride, 4, 12, "#9dad89");
+    this.rect(px - 13, body - 12 + stride, 4, 4, "#dcbb85");
+    this.rect(px + 9, body - 22 - stride, 4, 12, "#6c876f");
+    this.rect(px + 9, body - 12 - stride, 4, 4, "#c7a878");
+    this.rect(px - 8, body - 40, 16, 17, "#dcbb85");
+    this.rect(px - 10, body - 42, 20, 9, "#4b4034");
+    this.rect(px - 8, body - 44, 14, 4, "#68533a");
+    this.rect(px - 12, body - 37, 4, 12, "#4b4034");
+    this.rect(px - 12, body - 26, 24, 5, "#b86650");
+    const scarfWave = this.reduced
+      ? 0
+      : Math.round(Math.sin(this.time * 4)) * 2;
+    this.rect(px + (facing === "left" ? 9 : -13), body - 23, 5, 12, "#91463e");
+    this.rect(
+      px + (facing === "left" ? 10 : -16),
+      body - 14 + scarfWave,
+      7,
+      4,
+      "#b86650",
+    );
+    if (facing === "up") {
+      this.rect(px - 8, body - 34, 16, 8, "#4b4034");
+      this.rect(px - 7, body - 19, 14, 12, "#526d58");
+      this.rect(px - 5, body - 17, 10, 4, "#839174");
+      this.rect(px - 6, body - 8, 12, 3, "#ab976c");
+    } else {
+      if (side) {
+        this.rect(px + (direction < 0 ? -11 : 8), body - 33, 3, 6, "#dcbb85");
+        this.rect(px + (direction < 0 ? -6 : 5), body - 32, 2, 3, "#32392c");
+      } else {
+        this.rect(px - 5, body - 32, 2, 3, "#32392c");
+        this.rect(px + 3, body - 32, 2, 3, "#32392c");
+      }
+      this.rect(px - 3, body - 27, 6, 2, "#ad845a");
+      this.rect(px - 5, body - 18, 10, 10, "#5d7865");
+      this.rect(px - 3, body - 16, 6, 2, "#b2b18b");
     }
-    this.rect(px - 5, py - 18, 10, 10, "#5d7865");
-    this.rect(px - 3, py - 16, 6, 2, "#9fa17c");
+  }
+  smoke(d) {
+    if (d.id === "career") return;
+    const x = d.x + d.w - 26,
+      y = d.y - 23;
+    for (let i = 0; i < 3; i++) {
+      const phase = this.reduced ? i * 0.31 : (this.time * 0.11 + i * 0.31) % 1;
+      const drift = this.reduced ? i * 3 : Math.sin(phase * 5 + d.x) * 7;
+      this.ctx.globalAlpha = (1 - phase) * 0.21;
+      this.rect(
+        x + drift - 4,
+        y - phase * 47,
+        8 + phase * 12,
+        6 + phase * 5,
+        "#a2aaa0",
+      );
+    }
+    this.ctx.globalAlpha = 1;
+  }
+  fire() {
+    const frame = this.reduced ? 1 : Math.floor(this.time * 7) % 4;
+    this.rect(569, 329, 16, 12, "#b9683a");
+    this.rect(572, 325 - (frame % 2) * 3, 10, 15, "#df9845");
+    this.rect(576, 322 + (frame % 3) * 2, 5, 18, "#f0c561");
+    this.rect(576, 331, 4, 8, "#ffe19a");
+    this.glow(576, 335, 64);
+    if (!this.reduced) {
+      const rise = (this.time * 13) % 27;
+      this.ctx.globalAlpha = 1 - rise / 27;
+      this.rect(571 + Math.sin(this.time * 3) * 4, 324 - rise, 2, 2, "#e4c078");
+      this.ctx.globalAlpha = 1;
+    }
   }
   draw() {
     const c = this.ctx;
     c.clearRect(0, 0, 960, 540);
     c.drawImage(this.scene, 0, 0, 960, 540);
+    for (let i = 0; i < 7; i++) {
+      const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
+      this.rect(
+        458 + Math.sin(i * 2) * 10 + phase * 2,
+        148 + i * 19,
+        12,
+        2,
+        "#51736b",
+      );
+    }
     const sorted = [
       ...destinations.map((d) => ({
         y: d.y + d.h,
@@ -654,6 +743,7 @@ export class World {
       { y: this.player.y, draw: () => this.character() },
     ].sort((a, b) => a.y - b.y);
     sorted.forEach((o) => o.draw());
+    destinations.forEach((d) => this.smoke(d));
     [
       [363, 289],
       [596, 314],
@@ -665,10 +755,20 @@ export class World {
     this.rect(516, 318, 37, 10, "#b69b66");
     this.rect(519, 320, 29, 2, "#78613e");
     destinations.forEach((d) => this.label(d));
-    this.rect(569, 328, 15, 13, "#c88342");
-    this.rect(572, 323, 9, 15, "#f0b853");
-    this.rect(575, 326, 4, 11, "#f8d986");
-    this.glow(576, 335, 55);
+    this.fire();
+    // A sleeping cat beside the cabin: only its tail stirs.
+    this.rect(626, 426, 17, 8, "#9f9472");
+    this.rect(623, 424, 7, 8, "#9f9472");
+    this.rect(623, 421, 3, 4, "#b4a17b");
+    this.rect(627, 429, 2, 2, "#4c4e37");
+    this.rect(636, 431, 9, 2, "#756f50");
+    this.rect(
+      643,
+      424 + (this.reduced ? 0 : Math.round(Math.sin(this.time * 0.7)) * 2),
+      7,
+      3,
+      "#aaa07b",
+    );
     this.flies.forEach((f) => {
       const t = this.reduced ? f.phase : this.time;
       const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
@@ -701,6 +801,8 @@ export class World {
             Number(this.keys.has("right")) - Number(this.keys.has("left")),
           dy = Number(this.keys.has("down")) - Number(this.keys.has("up"));
         this.walking = movePlayer(this.player, dx, dy, dt);
+        if (this.walking) this.walkTime += dt;
+        else this.walkTime = 0;
         const near = nearbyArea(this.player.x, this.player.y);
         if (near !== this.near) {
           this.near = near;
