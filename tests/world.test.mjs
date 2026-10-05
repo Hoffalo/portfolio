@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  foxState,
   WALK_SPEED,
   walkFrame,
   canWalk,
@@ -75,4 +76,16 @@ test("blocked movement does not trigger a walking animation", () => {
   const player = { x: 48, y: 300 };
   assert.equal(movePlayer(player, -1, 0, 0.03), false);
   assert.equal(player.x, 48);
+});
+
+test("both fox routes stay in reachable clearings and freeze under reduced motion", () => {
+  for (let index = 0; index < 2; index++) {
+    for (let time = 0; time < 40; time += 0.1) {
+      const fox = foxState(time, index);
+      assert.ok(canWalk(fox.x, fox.y));
+      assert.ok(fox.frame >= 0 && fox.frame < 4);
+    }
+    assert.deepEqual(foxState(0, index, true), foxState(20, index, true));
+    assert.notDeepEqual(foxState(0, index), foxState(1, index));
+  }
 });
