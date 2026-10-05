@@ -12,14 +12,6 @@ const world = new World(canvas, (id) => {
       areas[id].name + " · Press E to enter";
   } else document.querySelector("#world-status").textContent = "";
 });
-const escapeHTML = (s) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ],
-  );
 function openArea(id) {
   const area = areas[id];
   if (!area) return;
@@ -28,11 +20,16 @@ function openArea(id) {
   world.keys.clear();
   document.querySelector("#panel-kicker").textContent =
     `${area.number} / ${area.subtitle}`;
-  let body = `<h2 id="panel-title">${area.name}</h2><p class="panel-lead">${area.intro}</p>`;
-  if (area.projects)
-    body += `<div class="project-grid">${area.projects.map((p) => `<article class="project-card"><div class="tags">${p.tags.map((t) => `<span>${escapeHTML(t)}</span>`).join("")}</div><h3 style="margin-top:15px">${escapeHTML(p.name)}</h3><p>${escapeHTML(p.description)}</p><a href="${p.url}" target="_blank" rel="noopener noreferrer">VIEW SOURCE ↗</a></article>`).join("")}</div>`;
-  else body += area.html;
-  document.querySelector("#panel-content").innerHTML = body;
+  const source = document.querySelector(`#${area.sectionId} .section-body`);
+  const body = source.cloneNode(true);
+  // Cloned dialog content must not duplicate document IDs.
+  body
+    .querySelectorAll("[id]")
+    .forEach((element) => element.removeAttribute("id"));
+  const title = document.createElement("h2");
+  title.id = "panel-title";
+  title.textContent = area.name;
+  document.querySelector("#panel-content").replaceChildren(title, body);
   panel.showModal();
   panel.scrollTop = 0;
   document.querySelector("#close-panel").focus();
