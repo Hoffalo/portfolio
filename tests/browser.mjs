@@ -20,8 +20,12 @@ try {
     );
   }
   assert.equal(
-    await page.locator("#progress-label").textContent(),
-    "4 / 4 PLACES DISCOVERED",
+    await page.locator(".header").innerText(),
+    "issamaarida@gmail.com",
+  );
+  assert.equal(
+    await page.locator(".intro, .destinations, .progress").count(),
+    0,
   );
   await page.locator("#motion").click();
   assert.equal(
@@ -79,7 +83,7 @@ try {
   await reduced.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, discovery, sound, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, minimal game layout, sound, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();

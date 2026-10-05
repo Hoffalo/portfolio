@@ -3,7 +3,6 @@ import { areas } from "./content.js";
 const canvas = document.querySelector("#world"),
   panel = document.querySelector("#panel"),
   interact = document.querySelector("#interact");
-const discovered = new Set();
 let returnFocus = null;
 const world = new World(canvas, (id) => {
   interact.hidden = !id;
@@ -11,9 +10,7 @@ const world = new World(canvas, (id) => {
     interact.querySelector("span").textContent = `Enter ${areas[id].name}`;
     document.querySelector("#world-status").textContent =
       areas[id].name + " · Press E to enter";
-  } else
-    document.querySelector("#world-status").textContent =
-      "Follow the light. Find a story.";
+  } else document.querySelector("#world-status").textContent = "";
 });
 const escapeHTML = (s) =>
   s.replace(
@@ -36,17 +33,6 @@ function openArea(id) {
     body += `<div class="project-grid">${area.projects.map((p) => `<article class="project-card"><div class="tags">${p.tags.map((t) => `<span>${escapeHTML(t)}</span>`).join("")}</div><h3 style="margin-top:15px">${escapeHTML(p.name)}</h3><p>${escapeHTML(p.description)}</p><a href="${p.url}" target="_blank" rel="noopener noreferrer">VIEW SOURCE ↗</a></article>`).join("")}</div>`;
   else body += area.html;
   document.querySelector("#panel-content").innerHTML = body;
-  discovered.add(id);
-  document.querySelector(`[data-area="${id}"]`).classList.add("visited");
-  document.querySelector("#progress-label").textContent =
-    `${discovered.size} / 4 PLACES DISCOVERED`;
-  [...document.querySelectorAll("#progress-dots i")].forEach((dot, i) =>
-    dot.classList.toggle("found", i < discovered.size),
-  );
-  document.querySelector("#panel-footer-note").textContent =
-    discovered.size === 4
-      ? "Every lantern holds a story. You found them all."
-      : "A page from the archive.";
   panel.showModal();
   panel.scrollTop = 0;
   document.querySelector("#close-panel").focus();
@@ -133,8 +119,8 @@ const motion = document.querySelector("#motion");
 function updateMotion() {
   motion.setAttribute("aria-pressed", String(world.reduced));
   motion.querySelector("span").textContent = world.reduced
-    ? "ATMOSPHERE STILL"
-    : "ATMOSPHERE ON";
+    ? "wind still"
+    : "wind on";
   motion.setAttribute(
     "aria-label",
     world.reduced ? "Enable ambient motion" : "Reduce ambient motion",
@@ -214,12 +200,11 @@ document.querySelector("#sound").addEventListener("click", async () => {
       soundEnabled ? "Disable ambient sound" : "Enable ambient sound",
     );
     button.querySelector("span").textContent = soundEnabled
-      ? "SOUND ON"
-      : "SOUND OFF";
+      ? "sound on"
+      : "sound off";
   } catch {
     soundEnabled = false;
     button.setAttribute("aria-pressed", "false");
-    button.querySelector("span").textContent = "SOUND OFF";
+    button.querySelector("span").textContent = "sound off";
   }
 });
-document.querySelector("#year").textContent = new Date().getFullYear();
