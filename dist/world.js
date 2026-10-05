@@ -125,11 +125,17 @@ export class World {
         )
           this.trees.push({ x, y, s: size, tone });
       }
-    this.rain = Array.from({ length: 55 }, () => ({
+    this.rain = Array.from({ length: 28 }, () => ({
       x: rand() * 960,
       y: rand() * 540,
-      s: 25 + rand() * 55,
+      s: 36 + rand() * 26,
     }));
+    this.clouds = [
+      { x: 100, y: 12, w: 140, h: 17, speed: 2.0 },
+      { x: 410, y: 30, w: 170, h: 20, speed: 1.2 },
+      { x: 715, y: 16, w: 110, h: 16, speed: 1.7 },
+      { x: 872, y: 69, w: 150, h: 15, speed: 1.0 },
+    ];
     this.flies = Array.from({ length: 15 }, () => ({
       x: 145 + rand() * 680,
       y: 240 + rand() * 255,
@@ -222,12 +228,14 @@ export class World {
       ],
       "#2b4240",
     );
-    // A small, pale moon over the valley.
-    this.rect(814, 30, 26, 4, "#adb39b");
-    this.rect(808, 34, 38, 26, "#adb39b");
-    this.rect(814, 60, 26, 4, "#adb39b");
-    this.rect(826, 28, 24, 25, "#17242b");
-    this.rect(838, 51, 12, 8, "#17242b");
+    // A luminous full moon, with soft pixel craters and a restrained halo.
+    this.ellipse(828, 46, 62, 62, "#233637");
+    this.ellipse(828, 46, 52, 52, "#3d5048");
+    this.ellipse(828, 46, 44, 44, "#bbc4ab");
+    this.ellipse(827, 45, 40, 40, "#e2dfbd");
+    this.ellipse(817, 38, 8, 6, "#c9d0b4");
+    this.ellipse(837, 49, 10, 8, "#c9d0b4");
+    this.ellipse(827, 57, 5, 5, "#c9d0b4");
     [
       [79, 35],
       [191, 22],
@@ -717,6 +725,40 @@ export class World {
       this.ctx.globalAlpha = 1;
     }
   }
+  skyClouds() {
+    const c = this.ctx;
+    c.save();
+    for (const cloud of this.clouds) {
+      const drift = this.reduced ? 0 : this.time * cloud.speed;
+      const x = ((cloud.x + drift + 180) % (WIDTH + 360)) - 180;
+      const y = cloud.y;
+      c.globalAlpha = 0.57;
+      this.ellipse(x, y, cloud.w, cloud.h, "#3a4b50");
+      this.ellipse(
+        x - cloud.w * 0.18,
+        y - 5,
+        cloud.w * 0.44,
+        cloud.h * 0.92,
+        "#3a4b50",
+      );
+      this.ellipse(
+        x + cloud.w * 0.15,
+        y - 3,
+        cloud.w * 0.5,
+        cloud.h * 0.8,
+        "#3a4b50",
+      );
+      c.globalAlpha = 0.28;
+      this.rect(
+        x - cloud.w * 0.32,
+        y + cloud.h * 0.22,
+        cloud.w * 0.64,
+        3,
+        "#69746e",
+      );
+    }
+    c.restore();
+  }
   moonlight() {
     const c = this.ctx;
     c.save();
@@ -761,6 +803,7 @@ export class World {
     const c = this.ctx;
     c.clearRect(0, 0, 960, 540);
     c.drawImage(this.scene, 0, 0, 960, 540);
+    this.skyClouds();
     this.moonlight();
     for (let i = 0; i < 7; i++) {
       const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
@@ -815,11 +858,11 @@ export class World {
       c.globalAlpha = 1;
     });
     if (!this.reduced) {
-      c.globalAlpha = 0.14;
+      c.globalAlpha = 0.18;
       this.rain.forEach((r) => {
         const y = ((r.y + this.time * r.s) % 570) - 15,
-          x = (r.x - this.time * 13 + 9600) % 980;
-        this.rect(x, y, 2, 6, "#9fb5a4");
+          x = r.x;
+        this.rect(x, y, 2, 4, "#a6b6b5");
       });
       c.globalAlpha = 1;
     }

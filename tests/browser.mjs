@@ -20,6 +20,23 @@ try {
     );
   }
   assert.equal(await page.locator("h1").textContent(), "Issam Arida");
+  assert.match(await page.locator(".email-link").innerText(), /My contact:/);
+  assert.deepEqual(await page.locator(".house-label").allTextContents(), [
+    "Projects",
+    "Career",
+    "Game Dev",
+    "About",
+  ]);
+  assert.ok(
+    await page
+      .locator(".identity img")
+      .evaluate((el) => el.getBoundingClientRect().width >= 90),
+  );
+  assert.ok(
+    await page
+      .locator(".reading-invitation a")
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 20),
+  );
   assert.equal(
     await page.locator(".email-link").getAttribute("href"),
     "mailto:issamaarida@gmail.com",
@@ -68,6 +85,19 @@ try {
     before,
     "Keyboard movement changes the rendered player position",
   );
+  await page.keyboard.down("d");
+  await page.waitForTimeout(1000);
+  await page.keyboard.up("d");
+  await page.keyboard.down("w");
+  await page.waitForTimeout(400);
+  await page.keyboard.up("w");
+  assert.equal(
+    await page.locator("#interact span").textContent(),
+    "Enter the career section",
+  );
+  await page.keyboard.press("e");
+  assert.equal(await page.locator("#panel-title").textContent(), "Career");
+  await page.keyboard.press("Escape");
   await page.locator("#sound").click();
   assert.equal(
     await page.locator("#sound").getAttribute("aria-pressed"),
@@ -112,6 +142,16 @@ try {
     true,
   );
   assert.equal(await page.locator(".touch-pad").isVisible(), true);
+  assert.ok(
+    await page
+      .locator(".identity img")
+      .evaluate((el) => el.getBoundingClientRect().width >= 76),
+  );
+  assert.ok(
+    await page
+      .locator(".reading-invitation a")
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 18),
+  );
   const box = await page.locator("#world").boundingBox();
   assert.ok(Math.abs(box.width / box.height - 16 / 9) < 0.01);
   await page.locator('[data-area="projects"]').click();
