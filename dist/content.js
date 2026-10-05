@@ -2,25 +2,25 @@
 export const areas = {
   projects: {
     number: "01",
-    name: "The Workshop",
+    name: "Projects",
     subtitle: "PROJECTS",
     sectionId: "projects",
   },
   career: {
     number: "02",
-    name: "The Observatory",
+    name: "Career",
     subtitle: "CAREER",
     sectionId: "career",
   },
   gamedev: {
     number: "03",
-    name: "The Arcade",
+    name: "Game Dev",
     subtitle: "GAME DEV",
     sectionId: "gamedev",
   },
   about: {
     number: "04",
-    name: "The Cabin",
+    name: "About",
     subtitle: "ABOUT ME",
     sectionId: "about",
   },

@@ -56,7 +56,7 @@ a:hover {
   padding: 0 40px;
 }
 .header {
-  min-height: 120px;
+  min-height: 144px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -68,8 +68,8 @@ a:hover {
   gap: 18px;
 }
 .identity img {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid #637568;
@@ -230,7 +230,9 @@ kbd {
 }
 .reading-invitation a {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.6;
   text-align: center;
 }
 .reading-invitation a:hover {
@@ -536,17 +538,17 @@ dialog::backdrop {
     gap: 13px;
   }
   .identity img {
-    width: 52px;
-    height: 52px;
+    width: 76px;
+    height: 76px;
   }
   h1 {
     font-size: 27px;
   }
   .email-link {
-    margin-left: 65px;
+    margin-left: 89px;
     padding: 0;
     font-size: 13px;
-    margin-top: -8px;
+    margin-top: -10px;
   }
   .game-bottom {
     flex-wrap: wrap;
@@ -597,7 +599,7 @@ dialog::backdrop {
     padding: 12px 12px 38px;
   }
   .reading-invitation a {
-    font-size: 13px;
+    font-size: 18px;
   }
   .reading-section {
     padding: 36px 4px 42px;
@@ -640,5 +642,43 @@ dialog::backdrop {
   * {
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.contact-label {
+  color: var(--text);
+  margin-right: 4px;
+}
+.house-label {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border: 1px solid #8f805b;
+  border-radius: 2px;
+  background: #2a3028f2;
+  color: #f1deb1;
+  font: 500 14px/1.25 var(--sans);
+  white-space: nowrap;
+  box-shadow: 0 2px 4px #0004;
+  pointer-events: none;
+}
+.building-access button:hover .house-label,
+.building-access button:focus-visible .house-label {
+  border-color: #dfc791;
+  color: #fff1cd;
+}
+@media (max-width: 700px) {
+  .house-label {
+    font-size: 12px;
+    padding: 2px 6px;
+    top: calc(100% + 2px);
+  }
+  .header {
+    min-height: 146px;
+  }
+  .email-link {
+    font-size: 12px;
   }
 }

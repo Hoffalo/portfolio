@@ -629,18 +629,6 @@ export class World {
     this.rect(x - 10, y - 20, 12, 3, "#534b33");
     this.glow(x - 4, y - 25, 68);
   }
-  label(d) {
-    const c = this.ctx,
-      y = d.y + d.h + 26;
-    c.font = "14px VT323, monospace";
-    c.textAlign = "center";
-    const text = d.sub === "ABOUT ME" ? "ABOUT" : d.sub;
-    const w = c.measureText(text).width + 20;
-    this.rect(d.doorX - w / 2 - 2, y - 14, w + 4, 20, "#302f26");
-    this.rect(d.doorX - w / 2, y - 12, w, 16, "#776847");
-    c.fillStyle = "#ead6a5";
-    c.fillText(text, d.doorX, y + 1);
-  }
   character() {
     const { x, y, facing } = this.player;
     const px = Math.round(x / 2) * 2,
@@ -804,7 +792,6 @@ export class World {
     this.rect(531, 318, 4, 30, "#796343");
     this.rect(516, 318, 37, 10, "#b69b66");
     this.rect(519, 320, 29, 2, "#78613e");
-    destinations.forEach((d) => this.label(d));
     this.fire();
     // A sleeping cat beside the cabin: only its tail stirs.
     this.rect(626, 426, 17, 8, "#9f9472");
