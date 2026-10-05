@@ -32,13 +32,14 @@
           <img
             src="./photo.jpg"
             alt="Portrait of Issam Arida"
-            width="64"
-            height="64"
+            width="96"
+            height="96"
           />
           <h1>Issam Arida</h1>
         </div>
         <a class="email-link" href="mailto:issamaarida@gmail.com"
-          >issamaarida@gmail.com</a
+          ><span class="contact-label">My contact:</span>
+          issamaarida@gmail.com</a
         >
       </header>
       <main>
@@ -54,24 +55,32 @@
             <div class="building-access" aria-label="Village buildings">
               <button
                 data-area="projects"
-                aria-label="Enter projects workshop"
+                aria-label="Enter the projects section"
                 style="--x: 25.5%; --y: 33.1%; --w: 14.3%; --h: 20.4%"
-              ></button>
+              >
+                <span class="house-label" aria-hidden="true">Projects</span>
+              </button>
               <button
                 data-area="career"
-                aria-label="Enter career observatory"
+                aria-label="Enter the career section"
                 style="--x: 65.3%; --y: 27%; --w: 12.1%; --h: 26.9%"
-              ></button>
+              >
+                <span class="house-label" aria-hidden="true">Career</span>
+              </button>
               <button
                 data-area="gamedev"
-                aria-label="Enter game development arcade"
+                aria-label="Enter the game development section"
                 style="--x: 19.6%; --y: 62.8%; --w: 12.7%; --h: 18%"
-              ></button>
+              >
+                <span class="house-label" aria-hidden="true">Game Dev</span>
+              </button>
               <button
                 data-area="about"
-                aria-label="Enter about cabin"
+                aria-label="Enter the about section"
                 style="--x: 67.5%; --y: 64.8%; --w: 13.9%; --h: 16.9%"
-              ></button>
+              >
+                <span class="house-label" aria-hidden="true">About</span>
+              </button>
             </div>
             <button id="interact" class="interact" hidden>
               <kbd>E</kbd> <span>Enter</span>

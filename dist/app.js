@@ -7,9 +7,11 @@ let returnFocus = null;
 const world = new World(canvas, (id) => {
   interact.hidden = !id;
   if (id) {
-    interact.querySelector("span").textContent = `Enter ${areas[id].name}`;
+    const section =
+      id === "gamedev" ? "game development" : areas[id].name.toLowerCase();
+    interact.querySelector("span").textContent = `Enter the ${section} section`;
     document.querySelector("#world-status").textContent =
-      areas[id].name + " · Press E to enter";
+      `Press E to enter the ${section} section`;
   } else document.querySelector("#world-status").textContent = "";
 });
 if ("IntersectionObserver" in window) {
