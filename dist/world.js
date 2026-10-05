@@ -64,10 +64,11 @@ export function nearbyArea(x, y) {
     null
   );
 }
+export const WALK_SPEED = 160;
 export function movePlayer(player, dx, dy, dt) {
   const length = Math.hypot(dx, dy);
   if (!length) return false;
-  const amount = 100 * Math.min(dt, 0.04),
+  const amount = WALK_SPEED * Math.min(dt, 0.04),
     x = player.x + (dx / length) * amount,
     y = player.y + (dy / length) * amount;
   const previousX = player.x,
@@ -78,7 +79,7 @@ export function movePlayer(player, dx, dy, dt) {
   return player.x !== previousX || player.y !== previousY;
 }
 export function walkFrame(time, moving, reduced) {
-  return moving && !reduced ? Math.floor(time * 8) % 4 : 0;
+  return moving && !reduced ? Math.floor(time * 10) % 4 : 0;
 }
 function seeded(seed) {
   return () => {
@@ -97,6 +98,7 @@ export class World {
     this.onNear = onNear;
     this.near = null;
     this.active = true;
+    this.visible = true;
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.time = 0;
     this.last = 0;
@@ -113,8 +115,15 @@ export class World {
       for (let col = 0; col < 24; col++) {
         const x = col * 45 + (rand() - 0.5) * 22,
           y = 85 + row * 71 + (rand() - 0.5) * 27;
-        if (y < 150 || x < 150 || x > 818 || (x > 384 && x < 577 && y < 235))
-          this.trees.push({ x, y, s: 0.65 + rand() * 0.5, tone: rand() });
+        const size = 0.65 + rand() * 0.5,
+          tone = rand();
+        // Leave a break in the treeline so the moon can light the clearing.
+        const moonOpening = x > 754 && x < 904 && y < 157;
+        if (
+          !moonOpening &&
+          (y < 150 || x < 150 || x > 818 || (x > 384 && x < 577 && y < 235))
+        )
+          this.trees.push({ x, y, s: size, tone });
       }
     this.rain = Array.from({ length: 55 }, () => ({
       x: rand() * 960,
@@ -720,10 +729,51 @@ export class World {
       this.ctx.globalAlpha = 1;
     }
   }
+  moonlight() {
+    const c = this.ctx;
+    c.save();
+    // Pixel-stepped shafts are rendered before scenery, which occludes the light.
+    const breathe = this.reduced ? 1 : 0.94 + Math.sin(this.time * 0.24) * 0.06;
+    const shafts = [
+      {
+        points: [
+          [814, 52],
+          [823, 52],
+          [390, 540],
+          [270, 540],
+        ],
+        alpha: 0.038,
+      },
+      {
+        points: [
+          [824, 51],
+          [832, 51],
+          [655, 540],
+          [485, 540],
+        ],
+        alpha: 0.052,
+      },
+      {
+        points: [
+          [835, 50],
+          [841, 50],
+          [892, 530],
+          [744, 530],
+        ],
+        alpha: 0.029,
+      },
+    ];
+    for (const shaft of shafts) {
+      c.globalAlpha = shaft.alpha * breathe;
+      this.path(shaft.points, "#b5d5c8");
+    }
+    c.restore();
+  }
   draw() {
     const c = this.ctx;
     c.clearRect(0, 0, 960, 540);
     c.drawImage(this.scene, 0, 0, 960, 540);
+    this.moonlight();
     for (let i = 0; i < 7; i++) {
       const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
       this.rect(
@@ -795,7 +845,7 @@ export class World {
   frame(now) {
     const dt = this.last ? Math.min((now - this.last) / 1000, 0.04) : 0;
     this.last = now;
-    if (!document.hidden) {
+    if (!document.hidden && this.visible) {
       if (this.active) {
         const dx =
             Number(this.keys.has("right")) - Number(this.keys.has("left")),

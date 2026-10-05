@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  WALK_SPEED,
   walkFrame,
   canWalk,
   movePlayer,
@@ -31,7 +32,8 @@ test("diagonal movement uses equal speed and frame spikes are capped", () => {
   assert.ok(Math.abs(Math.hypot(b.x - 482, b.y - 355) - (a.x - 482)) < 1e-6);
   const c = { x: 482, y: 355 };
   movePlayer(c, 1, 0, 20);
-  assert.equal(c.x, 486);
+  assert.equal(c.x, 482 + WALK_SPEED * 0.04);
+  assert.equal(a.x, 482 + 160 * 0.02);
 });
 test("all entrances are reachable from spawn through collision map", () => {
   const grid = 4,
@@ -63,7 +65,7 @@ test("all entrances are reachable from spawn through collision map", () => {
 
 test("walking has four discrete frames and respects reduced motion", () => {
   assert.deepEqual(
-    [0, 0.125, 0.25, 0.375].map((t) => walkFrame(t, true, false)),
+    [0, 0.1, 0.2, 0.3].map((t) => walkFrame(t, true, false)),
     [0, 1, 2, 3],
   );
   assert.equal(walkFrame(0.375, false, false), 0);

@@ -78,6 +78,31 @@ try {
     await page.locator("#sound").getAttribute("aria-pressed"),
     "false",
   );
+  // Readers should not keep an invisible animated canvas running.
+  await page.locator("#motion").click();
+  await page.locator(".reading-invitation a").click();
+  assert.equal(new URL(page.url()).hash, "#about");
+  await page.locator("#career").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(150);
+  const offscreen = await page
+    .locator("#world")
+    .evaluate((el) => el.toDataURL());
+  await page.keyboard.down("d");
+  await page.waitForTimeout(250);
+  await page.keyboard.up("d");
+  assert.equal(
+    await page.locator("#world").evaluate((el) => el.toDataURL()),
+    offscreen,
+  );
+  await page.locator("#world").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(100);
+  const resumed = await page.locator("#world").evaluate((el) => el.toDataURL());
+  await page.waitForTimeout(250);
+  assert.notEqual(
+    await page.locator("#world").evaluate((el) => el.toDataURL()),
+    resumed,
+  );
+  await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: "/tmp/midnight-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(
@@ -104,10 +129,21 @@ try {
     await reduced.locator("#motion").getAttribute("aria-pressed"),
     "true",
   );
+  await reduced.evaluate(() => document.fonts.ready);
+  await reduced.waitForTimeout(100);
+  const still = await reduced
+    .locator("#world")
+    .evaluate((el) => el.toDataURL());
+  await reduced.waitForTimeout(250);
+  assert.equal(
+    await reduced.locator("#world").evaluate((el) => el.toDataURL()),
+    still,
+  );
   await reduced.close();
   const plain = await browser.newPage({ javaScriptEnabled: false });
   await plain.goto(process.env.TEST_URL || "http://localhost:5173");
   assert.equal(await plain.locator(".reading-section").count(), 4);
+  assert.equal(await plain.locator(".game-frame").isVisible(), false);
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");
   assert.equal(await plain.locator("#projects .project-card").count(), 4);
@@ -118,7 +154,7 @@ try {
   await plain.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, offscreen pause/resume, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();
