@@ -12,6 +12,13 @@ const world = new World(canvas, (id) => {
       areas[id].name + " · Press E to enter";
   } else document.querySelector("#world-status").textContent = "";
 });
+if ("IntersectionObserver" in window) {
+  const visibility = new IntersectionObserver(([entry]) => {
+    world.visible = entry.isIntersecting;
+    if (!world.visible) world.keys.clear();
+  });
+  visibility.observe(canvas);
+}
 function openArea(id) {
   const area = areas[id];
   if (!area) return;
@@ -71,7 +78,8 @@ const movement = {
   ArrowRight: "right",
 };
 window.addEventListener("keydown", (e) => {
-  if (panel.open || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (panel.open || !world.visible || e.ctrlKey || e.metaKey || e.altKey)
+    return;
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   const focused = document.activeElement;
   if (focused !== canvas && focused !== document.body) return;
