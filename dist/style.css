@@ -513,3 +513,8 @@ dialog::backdrop {
     transition: none !important;
   }
 }
+
+/* Keep the keyboard focus ring inside the clipped game viewport. */
+canvas:focus-visible {
+  outline-offset: -3px;
+}
