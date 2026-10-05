@@ -20,7 +20,34 @@ try {
     );
   }
   assert.equal(await page.locator("h1").textContent(), "Issam Arida");
-  assert.match(await page.locator(".email-link").innerText(), /My contact:/);
+  assert.equal(await page.title(), "Issam Arida's Portfolio");
+  assert.equal(await page.locator(".reading-section .inline-links").count(), 0);
+  assert.equal(await page.locator("#projects .project-card").count(), 5);
+  assert.equal(
+    await page.locator('#projects a[href$="structural_atlas"]').count(),
+    1,
+  );
+  assert.doesNotMatch(
+    await page.locator("#gamedev").innerText(),
+    /Beyond the woodland|Structural Atlas/,
+  );
+  assert.ok(
+    await page
+      .locator(".house-label")
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily.includes("VT323")),
+  );
+  assert.ok(
+    await page
+      .locator("#interact")
+      .evaluate((el) => getComputedStyle(el).fontFamily.includes("VT323")),
+  );
+  assert.ok(
+    await page
+      .locator(".social-links")
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 20),
+  );
+  assert.match(await page.locator(".email-link").innerText(), /Contact:/);
   assert.deepEqual(await page.locator(".house-label").allTextContents(), [
     "Projects",
     "Career",
@@ -186,7 +213,7 @@ try {
   assert.equal(await plain.locator(".game-frame").isVisible(), false);
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");
-  assert.equal(await plain.locator("#projects .project-card").count(), 4);
+  assert.equal(await plain.locator("#projects .project-card").count(), 5);
   assert.equal(
     await plain.locator("#about .volunteer-list article").count(),
     2,
