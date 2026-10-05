@@ -81,6 +81,45 @@ export function movePlayer(player, dx, dy, dt) {
 export function walkFrame(time, moving, reduced) {
   return moving && !reduced ? Math.floor(time * 10) % 4 : 0;
 }
+const FOX_ROUTES = [
+  [
+    [334, 375],
+    [393, 355],
+    [427, 398],
+    [355, 433],
+    [332, 409],
+  ],
+  [
+    [566, 380],
+    [621, 334],
+    [629, 393],
+    [604, 424],
+    [553, 410],
+  ],
+];
+export function foxState(time, index, reduced = false) {
+  const route = FOX_ROUTES[index];
+  const lengths = route.map((point, i) =>
+    Math.hypot(
+      point[0] - route[(i + 1) % route.length][0],
+      point[1] - route[(i + 1) % route.length][1],
+    ),
+  );
+  const total = lengths.reduce((sum, length) => sum + length, 0);
+  let distance =
+    ((reduced ? 0 : time) * (index ? 32 : 38) + index * 79) % total;
+  let segment = 0;
+  while (distance > lengths[segment]) distance -= lengths[segment++];
+  const start = route[segment],
+    end = route[(segment + 1) % route.length],
+    t = distance / lengths[segment];
+  return {
+    x: start[0] + (end[0] - start[0]) * t,
+    y: start[1] + (end[1] - start[1]) * t,
+    facing: end[0] >= start[0] ? 1 : -1,
+    frame: reduced ? 0 : Math.floor(time * 10 + index) % 4,
+  };
+}
 function seeded(seed) {
   return () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -125,16 +164,31 @@ export class World {
         )
           this.trees.push({ x, y, s: size, tone });
       }
-    this.rain = Array.from({ length: 28 }, () => ({
+    // Frame the southern edge without closing the central entrance path.
+    this.trees.push(
+      ...[
+        { x: 82, y: 534, s: 1.02, tone: 0.65 },
+        { x: 158, y: 552, s: 1.15, tone: 0.22 },
+        { x: 231, y: 552, s: 0.96, tone: 0.71 },
+        { x: 304, y: 542, s: 0.93, tone: 0.34 },
+        { x: 372, y: 556, s: 1.05, tone: 0.18 },
+        { x: 604, y: 556, s: 1.0, tone: 0.62 },
+        { x: 676, y: 554, s: 1.08, tone: 0.3 },
+        { x: 749, y: 556, s: 0.98, tone: 0.76 },
+        { x: 832, y: 550, s: 1.15, tone: 0.21 },
+        { x: 918, y: 538, s: 1.02, tone: 0.58 },
+      ],
+    );
+    this.rain = Array.from({ length: 54 }, () => ({
       x: rand() * 960,
       y: rand() * 540,
-      s: 36 + rand() * 26,
+      s: 65 + rand() * 35,
     }));
     this.clouds = [
-      { x: 100, y: 12, w: 140, h: 17, speed: 2.0 },
-      { x: 410, y: 30, w: 170, h: 20, speed: 1.2 },
-      { x: 715, y: 16, w: 110, h: 16, speed: 1.7 },
-      { x: 872, y: 69, w: 150, h: 15, speed: 1.0 },
+      { x: 100, y: 16, w: 170, h: 24, speed: 2.0 },
+      { x: 410, y: 30, w: 200, h: 26, speed: 1.2 },
+      { x: 715, y: 18, w: 140, h: 22, speed: 1.7 },
+      { x: 872, y: 72, w: 170, h: 24, speed: 1.0 },
     ];
     this.flies = Array.from({ length: 15 }, () => ({
       x: 145 + rand() * 680,
@@ -725,6 +779,33 @@ export class World {
       this.ctx.globalAlpha = 1;
     }
   }
+  fox(state) {
+    const c = this.ctx;
+    c.save();
+    c.translate(Math.round(state.x / 2) * 2, Math.round(state.y / 2) * 2);
+    c.scale(state.facing, 1);
+    const stride = [0, 2, 0, -2][state.frame],
+      bob = state.frame % 2 ? -2 : 0;
+    this.ellipse(0, 2, 33, 7, "#172920");
+    // A bushy tail with a cream tip, pointed ears, and a four-frame trot.
+    this.rect(-23, -12 + bob, 12, 7, "#a76236");
+    this.rect(-29, -14 + bob, 9, 7, "#e0d0a3");
+    this.rect(-20, -9 + bob, 9, 7, "#c47b43");
+    this.rect(-12, -12 + bob, 24, 11, "#b86d38");
+    this.rect(-11, -14 + bob, 19, 5, "#d58d4b");
+    this.rect(-8, -5 + bob, 18, 4, "#e3cc93");
+    this.rect(-11, -2 + stride, 4, 5, "#4d3e2d");
+    this.rect(-4, -2 - stride, 4, 5, "#5c4630");
+    this.rect(7, -2 + stride, 4, 5, "#4d3e2d");
+    this.rect(7, -18 + bob, 12, 12, "#ca8246");
+    this.rect(8, -23 + bob, 4, 6, "#b66c38");
+    this.rect(14, -23 + bob, 4, 6, "#b66c38");
+    this.rect(10, -21 + bob, 2, 3, "#46372b");
+    this.rect(16, -11 + bob, 8, 5, "#ebd8a6");
+    this.rect(22, -11 + bob, 3, 3, "#342e27");
+    this.rect(16, -16 + bob, 2, 2, "#302f27");
+    c.restore();
+  }
   skyClouds() {
     const c = this.ctx;
     c.save();
@@ -732,23 +813,23 @@ export class World {
       const drift = this.reduced ? 0 : this.time * cloud.speed;
       const x = ((cloud.x + drift + 180) % (WIDTH + 360)) - 180;
       const y = cloud.y;
-      c.globalAlpha = 0.57;
-      this.ellipse(x, y, cloud.w, cloud.h, "#3a4b50");
+      c.globalAlpha = 0.76;
+      this.ellipse(x, y, cloud.w, cloud.h, "#4b5e62");
       this.ellipse(
         x - cloud.w * 0.18,
         y - 5,
         cloud.w * 0.44,
         cloud.h * 0.92,
-        "#3a4b50",
+        "#4b5e62",
       );
       this.ellipse(
         x + cloud.w * 0.15,
         y - 3,
         cloud.w * 0.5,
         cloud.h * 0.8,
-        "#3a4b50",
+        "#4b5e62",
       );
-      c.globalAlpha = 0.28;
+      c.globalAlpha = 0.39;
       this.rect(
         x - cloud.w * 0.32,
         y + cloud.h * 0.22,
@@ -815,12 +896,17 @@ export class World {
         "#51736b",
       );
     }
+    const foxes = [
+      foxState(this.time, 0, this.reduced),
+      foxState(this.time, 1, this.reduced),
+    ];
     const sorted = [
       ...destinations.map((d) => ({
         y: d.y + d.h,
         draw: () => this.building(d),
       })),
       ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
+      ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
       { y: this.player.y, draw: () => this.character() },
     ].sort((a, b) => a.y - b.y);
     sorted.forEach((o) => o.draw());
@@ -858,11 +944,11 @@ export class World {
       c.globalAlpha = 1;
     });
     if (!this.reduced) {
-      c.globalAlpha = 0.18;
+      c.globalAlpha = 0.35;
       this.rain.forEach((r) => {
         const y = ((r.y + this.time * r.s) % 570) - 15,
           x = r.x;
-        this.rect(x, y, 2, 4, "#a6b6b5");
+        this.rect(x, y, 2, 8, "#bdc9c4");
       });
       c.globalAlpha = 1;
     }
