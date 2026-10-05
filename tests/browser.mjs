@@ -45,6 +45,12 @@ try {
     );
     await page.keyboard.press("Escape");
   }
+  assert.equal(await page.locator("#about .volunteer-list article").count(), 2);
+  assert.match(await page.locator("#about").innerText(), /Tzu Chi Foundation/);
+  assert.match(
+    await page.locator("#career").innerText(),
+    /AI Engineer · Optimiza/,
+  );
   await page.locator("#motion").click();
   assert.equal(
     await page.locator("#motion").getAttribute("aria-pressed"),
@@ -105,6 +111,10 @@ try {
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");
   assert.equal(await plain.locator("#projects .project-card").count(), 4);
+  assert.equal(
+    await plain.locator("#about .volunteer-list article").count(),
+    2,
+  );
   await plain.close();
   assert.deepEqual(errors, []);
   console.log(
