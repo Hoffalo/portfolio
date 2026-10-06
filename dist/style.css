@@ -314,11 +314,7 @@ kbd {
   font: 16px/1.5 var(--sans);
   margin-top: 8px;
 }
-.reading-invitation a > span:last-child {
-  display: block;
-  margin-top: 10px;
-  font-size: 24px;
-}
+
 .portfolio-reading {
   width: 100%;
   max-width: none;
@@ -1951,10 +1947,6 @@ dialog p {
   .reading-invitation .billboard-detail {
     font-size: 18px;
   }
-  .reading-invitation a > span:last-child {
-    margin-top: 5px;
-    font-size: 20px;
-  }
 }
 .portfolio-reading .reading-section {
   min-width: 0;
@@ -2349,9 +2341,7 @@ dialog p {
 .reading-invitation .billboard-detail {
   margin-top: 12px;
 }
-.reading-invitation a > span:last-child {
-  margin-top: 14px;
-}
+
 @media (max-width: 740px) {
   #journey-world > .sky-header {
     height: 270px;
@@ -2380,5 +2370,60 @@ dialog p {
 @media (max-width: 740px) {
   .sky-header .moon-clearing {
     top: 160px;
+  }
+}
+
+/* Roof plaques keep the entrance and player sprite clear. */
+.house-label {
+  top: 18%;
+  transform: translate(-50%, -50%);
+}
+.interact {
+  top: 92%;
+  bottom: auto;
+}
+.reading-invitation a {
+  padding: 36px 30px;
+  text-align: center;
+}
+.reading-invitation .billboard-detail {
+  margin: 12px 0 0;
+}
+@media (max-width: 700px) {
+  .house-label {
+    top: 18%;
+    font-size: 16px;
+    padding: 2px 5px;
+  }
+  .interact {
+    font-size: 18px;
+    padding: 5px 8px;
+    max-width: calc(100% - 12px);
+    white-space: normal;
+    text-align: center;
+  }
+}
+@media (max-width: 740px) {
+  .reading-invitation a {
+    padding: 32px 16px;
+  }
+}
+@media (max-width: 740px) {
+  .game-frame .social-links {
+    top: 0;
+  }
+}
+@media (max-width: 900px) {
+  .game-frame .social-links {
+    top: 0;
+  }
+}
+@media (max-width: 360px) {
+  .game-frame .social-links a {
+    min-width: 110px;
+    padding: 16px 8px 10px;
+    font-size: 18px;
+    line-height: 1;
+    white-space: nowrap;
   }
 }

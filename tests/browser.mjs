@@ -20,6 +20,10 @@ try {
     );
   }
   assert.equal(await page.locator("h1").textContent(), "Issam Arida");
+  assert.doesNotMatch(
+    await page.locator(".reading-invitation").innerText(),
+    /↓/,
+  );
   assert.equal(await page.title(), "Issam Arida's Portfolio");
   assert.equal(await page.locator(".reading-section .inline-links").count(), 0);
   assert.equal(await page.locator("#projects .project-card").count(), 4);

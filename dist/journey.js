@@ -1434,6 +1434,7 @@ export function paintJourney(painter, layout, includeActors = true) {
   }
   trees.push(...readingTrees);
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
+  const framingTrees = [];
   if (layout.invitation) {
     const middle = layout.invitation.y + layout.invitation.height / 2;
     for (const [x, y, tone] of [
@@ -1442,7 +1443,7 @@ export function paintJourney(painter, layout, includeActors = true) {
       [666, -64, 0.17],
       [950, 72, 0.25],
     ])
-      p.tree({ x, y: middle + y, s: 0.86, tone });
+      framingTrees.push({ x, y: middle + y, s: 0.86, tone });
   }
   if (layout.invitation) {
     const invitation = layout.invitation,
@@ -1462,9 +1463,15 @@ export function paintJourney(painter, layout, includeActors = true) {
       [926, -150],
       [105, 207],
       [854, 207],
+      [944, 50, 0.57, 0.76],
+      [944, 130, 0.62, 0.13],
+      [90, 185, 0.55, 0.82],
+      [205, 187, 0.61, 0.11],
+      [760, 185, 0.55, 0.74],
+      [880, 190, 0.6, 0.2],
     ];
-    for (const [x, offset] of candidates) {
-      const tree = { x, y: middle + offset, s: 0.79, tone: 0.19 };
+    for (const [x, offset, size = 0.79, tone = 0.19] of candidates) {
+      const tree = { x, y: middle + offset, s: size, tone };
       const footprint = treeFootprint(tree);
       if (
         intersects(footprint, notice) ||
@@ -1478,9 +1485,10 @@ export function paintJourney(painter, layout, includeActors = true) {
         )
       )
         continue;
-      p.tree(tree);
+      framingTrees.push(tree);
     }
   }
+  for (const tree of framingTrees.sort((a, b) => a.y - b.y)) p.tree(tree);
   for (const scene of scenery) {
     if (scene.paint === farm) farm(p, layout.stable, includeActors);
     else if (scene.paint === river) river(p, layout.divider);
