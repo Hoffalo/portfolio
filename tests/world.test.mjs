@@ -139,3 +139,35 @@ test("rabbits lead foxes on reachable routes and freeze for reduced motion", () 
     assert.deepEqual(rabbitState(0, i, true), rabbitState(10, i, true));
   }
 });
+
+test("a transient render error cannot stop the next animation frame", () => {
+  const previousRAF = globalThis.requestAnimationFrame;
+  const previousDocument = globalThis.document;
+  const queued = [];
+  globalThis.requestAnimationFrame = (callback) => queued.push(callback);
+  globalThis.document = { hidden: false };
+  try {
+    let rendered = 0;
+    const world = {
+      last: 0,
+      time: 0,
+      visible: true,
+      active: false,
+      draw() {
+        throw new Error("transient render failure");
+      },
+    };
+    world.frame = World.prototype.frame.bind(world);
+    assert.throws(() => world.frame(100), /transient render failure/);
+    assert.equal(queued.length, 1);
+    world.draw = () => rendered++;
+    queued[0](116);
+    assert.equal(rendered, 1);
+    assert.equal(queued.length, 2);
+  } finally {
+    if (previousRAF === undefined) delete globalThis.requestAnimationFrame;
+    else globalThis.requestAnimationFrame = previousRAF;
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
+});

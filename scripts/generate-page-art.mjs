@@ -39,6 +39,7 @@ try {
       .getBoundingClientRect();
     painter.setLayout(
       {
+        scale,
         divider: {
           x: (dividerBox.left - box.left) / scale,
           y: (dividerBox.top - box.top) / scale,

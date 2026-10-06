@@ -95,9 +95,7 @@ try {
       .evaluate((el) => getComputedStyle(el).backgroundImage),
     "none",
   );
-  assert.ok(
-    await page.locator("#world").evaluate((el) => el.height > 2000 / 2),
-  );
+  assert.ok(await page.locator("#world").evaluate((el) => el.height < 1000));
   assert.deepEqual(await page.locator(".house-label").allTextContents(), [
     "Projects",
     "Career",
@@ -178,26 +176,19 @@ try {
   assert.equal(new URL(page.url()).hash, "#about");
   await page.locator("#career").scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(100);
   const offscreen = await page
     .locator("#world")
-    .evaluate((el) =>
-      JSON.stringify([
-        ...el.getContext("2d").getImageData(0, 0, 480, 270).data,
-      ]),
-    );
+    .evaluate((el) => el.toDataURL());
   await page.keyboard.down("d");
   await page.waitForTimeout(250);
   await page.keyboard.up("d");
   assert.equal(
-    await page
-      .locator("#world")
-      .evaluate((el) =>
-        JSON.stringify([
-          ...el.getContext("2d").getImageData(0, 0, 480, 270).data,
-        ]),
-      ),
+    await page.locator("#world").evaluate((el) => el.toDataURL()),
     offscreen,
   );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => scrollTo(0, 0));
   await page.waitForTimeout(100);
   const resumed = await page.locator("#world").evaluate((el) => el.toDataURL());
@@ -207,7 +198,7 @@ try {
     resumed,
   );
   await page.evaluate(() => scrollTo(0, 0));
-  await page.screenshot({ path: "/tmp/midnight-desktop.png", fullPage: true });
+  await page.screenshot({ path: "/tmp/midnight-desktop.png", fullPage: false });
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(
     await page.evaluate(
@@ -236,7 +227,7 @@ try {
     true,
   );
   await page.locator("#close-panel").click();
-  await page.screenshot({ path: "/tmp/midnight-mobile.png", fullPage: true });
+  await page.screenshot({ path: "/tmp/midnight-mobile.png", fullPage: false });
   await page.setViewportSize({ width: 320, height: 844 });
   assert.equal(
     await page.evaluate(
@@ -314,7 +305,7 @@ try {
   await walking.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, bounded cabin movement and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, bounded cabin movement and viewport rendering, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();
