@@ -71,8 +71,8 @@ try {
   );
   const scenery = await page.evaluate(async () => {
     const styles = [
-      getComputedStyle(document.body).backgroundImage,
-      getComputedStyle(document.body, "::before").backgroundImage,
+      getComputedStyle(document.querySelector("#journey-world"))
+        .backgroundImage,
     ];
     const sources = styles.join(",").matchAll(/url\("?([^"\)]+)"?\)/g);
     return Promise.all(
@@ -87,13 +87,16 @@ try {
       ),
     );
   });
-  assert.equal(scenery.length, 3);
+  assert.equal(scenery.length, 1);
   assert.ok(scenery.every(Boolean));
   assert.equal(
-    await page.evaluate(
-      () => getComputedStyle(document.body, "::before").pointerEvents,
-    ),
+    await page
+      .locator(".shell")
+      .evaluate((el) => getComputedStyle(el).backgroundImage),
     "none",
+  );
+  assert.ok(
+    await page.locator("#world").evaluate((el) => el.height > 2000 / 2),
   );
   assert.deepEqual(await page.locator(".house-label").allTextContents(), [
     "Projects",
@@ -182,7 +185,7 @@ try {
     await page.locator("#sound").getAttribute("aria-pressed"),
     "false",
   );
-  // Readers should not keep an invisible animated canvas running.
+  // Only the visible world band is animated; the offscreen village stays still.
   await page.locator("#motion").click();
   await page.locator(".reading-invitation a").click();
   assert.equal(new URL(page.url()).hash, "#about");
@@ -190,15 +193,25 @@ try {
   await page.waitForTimeout(150);
   const offscreen = await page
     .locator("#world")
-    .evaluate((el) => el.toDataURL());
+    .evaluate((el) =>
+      JSON.stringify([
+        ...el.getContext("2d").getImageData(0, 0, 480, 270).data,
+      ]),
+    );
   await page.keyboard.down("d");
   await page.waitForTimeout(250);
   await page.keyboard.up("d");
   assert.equal(
-    await page.locator("#world").evaluate((el) => el.toDataURL()),
+    await page
+      .locator("#world")
+      .evaluate((el) =>
+        JSON.stringify([
+          ...el.getContext("2d").getImageData(0, 0, 480, 270).data,
+        ]),
+      ),
     offscreen,
   );
-  await page.locator("#world").scrollIntoViewIfNeeded();
+  await page.evaluate(() => scrollTo(0, 0));
   await page.waitForTimeout(100);
   const resumed = await page.locator("#world").evaluate((el) => el.toDataURL());
   await page.waitForTimeout(250);
@@ -226,7 +239,7 @@ try {
       .locator(".reading-invitation a")
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 18),
   );
-  const box = await page.locator("#world").boundingBox();
+  const box = await page.locator(".world-wrap").boundingBox();
   assert.ok(Math.abs(box.width / box.height - 16 / 9) < 0.01);
   await page.locator('[data-area="projects"]').click();
   assert.equal(
@@ -272,6 +285,7 @@ try {
   await plain.goto(process.env.TEST_URL || "http://localhost:5173");
   assert.equal(await plain.locator(".reading-section").count(), 4);
   assert.equal(await plain.locator(".game-frame").isVisible(), false);
+  assert.ok(await plain.locator(".reading-invitation a strong").count());
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");
   assert.equal(await plain.locator("#projects .project-card").count(), 5);
@@ -280,9 +294,27 @@ try {
     2,
   );
   await plain.close();
+  const walking = await browser.newPage({
+    viewport: { width: 1440, height: 1000 },
+    reducedMotion: "reduce",
+  });
+  walking.on("pageerror", (error) => errors.push(error.message));
+  await walking.goto(process.env.TEST_URL || "http://localhost:5173");
+  await walking.locator("#world").focus();
+  await walking.keyboard.down("s");
+  await walking.waitForTimeout(1800);
+  await walking.keyboard.up("s");
+  assert.equal(
+    await walking
+      .locator("#journey-world")
+      .evaluate((el) => el.classList.contains("is-exploring")),
+    true,
+  );
+  assert.ok(await walking.evaluate(() => scrollY > 150));
+  await walking.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, offscreen pause/resume, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, full-height exploration and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();

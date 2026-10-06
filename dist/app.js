@@ -14,18 +14,78 @@ const world = new World(canvas, (id) => {
       `Press E to enter the ${section} section`;
   } else document.querySelector("#world-status").textContent = "";
 });
-if ("IntersectionObserver" in window) {
-  const visibility = new IntersectionObserver(([entry]) => {
-    world.visible = entry.isIntersecting;
-    if (!world.visible) world.keys.clear();
-  });
-  visibility.observe(canvas);
+const journey = document.querySelector("#journey-world");
+let worldTop = 0,
+  worldScale = 1,
+  layoutWidth = 0,
+  layoutHeight = 0;
+function updateViewport() {
+  const top = (scrollY - worldTop) / worldScale;
+  world.viewport = {
+    top: Math.max(0, top - 20),
+    bottom: Math.min(world.layout.height, top + innerHeight / worldScale + 20),
+  };
+  world.visible = world.viewport.bottom > world.viewport.top;
 }
+function resizeJourney() {
+  const box = journey.getBoundingClientRect();
+  worldTop = scrollY + box.top;
+  worldScale = box.width / 960;
+  if (
+    Math.abs(box.width - layoutWidth) > 1 ||
+    Math.abs(box.height - layoutHeight) > 1
+  ) {
+    layoutWidth = box.width;
+    layoutHeight = box.height;
+    const sections = [...document.querySelectorAll(".reading-section")].map(
+      (section) => {
+        const rect = section.getBoundingClientRect();
+        return {
+          id: section.id,
+          x: (rect.left - box.left) / worldScale,
+          y: (rect.top - box.top) / worldScale,
+          width: rect.width / worldScale,
+          height: rect.height / worldScale,
+        };
+      },
+    );
+    world.setLayout({
+      height: Math.ceil(box.height / worldScale / 2) * 2,
+      sections,
+      mobile: innerWidth <= 700,
+    });
+  }
+  updateViewport();
+}
+resizeJourney();
+new ResizeObserver(resizeJourney).observe(journey);
+document.fonts.ready.then(resizeJourney);
+addEventListener("scroll", updateViewport, { passive: true });
+addEventListener("resize", resizeJourney);
+function stopExploring() {
+  world.keys.clear();
+  journey.classList.remove("is-exploring");
+  if (document.activeElement === canvas) canvas.blur();
+}
+addEventListener("wheel", stopExploring, { passive: true });
+canvas.addEventListener("pointercancel", stopExploring);
+document
+  .querySelectorAll(".reading-section,.reading-invitation,.social-links")
+  .forEach((element) => element.addEventListener("pointerdown", stopExploring));
+world.onMove = (player) => {
+  journey.classList.toggle("is-exploring", player.y > 540);
+  const y = worldTop + player.y * worldScale;
+  if (y > scrollY + innerHeight * 0.78)
+    scrollTo({ top: y - innerHeight * 0.7, behavior: "instant" });
+  else if (y < scrollY + 120)
+    scrollTo({ top: Math.max(0, y - innerHeight * 0.3), behavior: "instant" });
+};
 function openArea(id) {
   const area = areas[id];
   if (!area) return;
   returnFocus = document.activeElement;
   world.active = false;
+  journey.classList.remove("is-exploring");
   world.keys.clear();
   document.querySelector("#panel-kicker").textContent =
     `${area.number} / ${area.subtitle}`;
@@ -85,6 +145,7 @@ window.addEventListener("keydown", (e) => {
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   const focused = document.activeElement;
   if (focused !== canvas && focused !== document.body) return;
+  if (focused === document.body && world.viewport.top > 540) return;
   if (movement[key]) {
     e.preventDefault();
     world.keys.add(movement[key]);
@@ -111,6 +172,7 @@ document.querySelectorAll("[data-move]").forEach((b) => {
   b.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     b.setPointerCapture(e.pointerId);
+    canvas.focus({ preventScroll: true });
     world.keys.add(b.dataset.move);
   });
   const stop = () => world.keys.delete(b.dataset.move);
