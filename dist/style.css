@@ -1662,3 +1662,107 @@ dialog p {
 .sky-header {
   display: flow-root;
 }
+/* Keep scenery at a stable game scale on wide screens. */
+.shell {
+  width: min(1440px, 100%);
+  max-width: 1440px;
+}
+.stable-clearing {
+  height: 600px;
+}
+.railway-clearing {
+  width: 100%;
+  height: 220px;
+  margin-top: 130px;
+  pointer-events: none;
+}
+.stable-clearing {
+  margin-top: 100px;
+}
+.building-access button:hover {
+  background: transparent;
+  box-shadow: none;
+}
+@media (max-width: 700px) {
+  .stable-clearing {
+    height: max(440px, 112.5vw);
+  }
+  .railway-clearing {
+    height: 170px;
+    margin-top: 100px;
+  }
+}
+/* Woven earth-pigment borders and woodland storytelling motifs. */
+.reading-section,
+dialog {
+  border-image: url("./art/woven-frame.svg") 32 / 32px / 0 round;
+  border-width: 32px;
+}
+.reading-section::before,
+.reading-section::after {
+  height: 48px;
+  left: -40px;
+  right: -40px;
+  background: url("./art/forest-story-band.svg") center / 256px 48px repeat-x;
+  clip-path: polygon(
+    0 4px,
+    12px 4px,
+    12px 0,
+    calc(100% - 12px) 0,
+    calc(100% - 12px) 4px,
+    100% 4px,
+    calc(100% - 8px) 24px,
+    100% 44px,
+    calc(100% - 12px) 44px,
+    calc(100% - 12px) 48px,
+    12px 48px,
+    12px 44px,
+    0 44px,
+    8px 24px
+  );
+}
+.reading-section::before {
+  top: -34px;
+}
+.reading-section::after {
+  bottom: -34px;
+}
+.section-heading::after {
+  background-image: url("./art/forest-story-band.svg");
+  background-size: 192px 36px;
+  width: 120px;
+  height: 36px;
+  opacity: 0.65;
+}
+@media (max-width: 700px) {
+  .reading-section,
+  dialog {
+    border-width: 16px;
+    border-image-width: 16px;
+  }
+  .reading-section::before,
+  .reading-section::after {
+    left: -24px;
+    right: -24px;
+    height: 36px;
+    background-size: 192px 36px;
+    clip-path: polygon(
+      0 4px,
+      8px 0,
+      calc(100% - 8px) 0,
+      100% 4px,
+      calc(100% - 6px) 18px,
+      100% 32px,
+      calc(100% - 8px) 36px,
+      8px 36px,
+      0 32px,
+      6px 18px
+    );
+  }
+  .reading-section::before {
+    top: -20px;
+  }
+  .reading-section::after {
+    bottom: -20px;
+  }
+}

@@ -206,11 +206,6 @@ export class World {
         { x: 918, y: 538, s: 1.02, tone: 0.58 },
       ],
     );
-    this.rain = Array.from({ length: 54 }, () => ({
-      x: rand() * 960,
-      y: rand() * 540,
-      s: 65 + rand() * 35,
-    }));
     this.clouds = [
       { x: 100, y: 16, w: 170, h: 24, speed: 2.0 },
       { x: 410, y: 30, w: 200, h: 26, speed: 1.2 },
@@ -1352,15 +1347,6 @@ export class World {
         this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
       }
       c.restore();
-    }
-    if (!this.reduced) {
-      c.globalAlpha = 0.35;
-      this.rain.forEach((r) => {
-        const y = top + ((r.y + this.time * r.s) % (height + 16)) - 8,
-          x = r.x;
-        this.rect(x, y, 2, 8, "#bdc9c4");
-      });
-      c.globalAlpha = 1;
     }
     c.restore();
   }
