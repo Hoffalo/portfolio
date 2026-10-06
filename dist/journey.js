@@ -485,50 +485,90 @@ export function farmGeometry(area) {
   return {
     barn: [235, area.y + 139, 1],
     cows: [
-      [580, 130],
-      [820, 195],
-      [580, 315],
-      [805, 325],
-      [445, 378],
-      [820, 392],
+      [540, 125],
+      [825, 235],
+      [520, 285],
+      [650, 210],
+      [465, 397],
+      [790, 105],
     ].map(([x, y]) => [x, area.y + y]),
     animalScale: 1,
   };
 }
 
+export function farmFenceGeometry(area) {
+  const points = [
+    [38, 28],
+    [248, 17],
+    [482, 25],
+    [724, 17],
+    [910, 31],
+    [940, 74],
+    [944, 256],
+    [954, 450],
+    [952, 499],
+    [704, 501],
+    [442, 490],
+    [231, 501],
+    [59, 488],
+    [22, 450],
+    [28, 250],
+    [20, 83],
+  ].map(([x, y]) => [x, area.y + y]);
+  return { points, gate: { left: 356, right: 440, y: area.y + 493 } };
+}
 function farmFence(p, area, front) {
-  const y = area.y + (front ? area.height - 20 : 28);
-  for (let x = 20; x <= 944; x += 84) {
-    p.rect(x, y - 25, 7, 31, "#8a7047");
-    p.rect(x + 2, y - 23, 3, 28, "#bda06c");
-    if (x < 940) {
-      p.rect(x + 7, y - 18, 78, 6, "#ac9060");
-      p.rect(x + 7, y - 5, 78, 5, "#967b50");
+  const { points, gate } = farmFenceGeometry(area);
+  for (let i = 0; i < points.length; i++) {
+    if ((i >= 7 && i <= 12) !== front) continue;
+    const [ax, ay] = points[i],
+      [bx, by] = points[(i + 1) % points.length];
+    const length = Math.hypot(bx - ax, by - ay),
+      count = Math.ceil(length / 52);
+    p.path(
+      [
+        [ax, ay - 18],
+        [bx, by - 18],
+        [bx, by - 12],
+        [ax, ay - 12],
+      ],
+      "#ac9060",
+    );
+    p.path(
+      [
+        [ax, ay - 5],
+        [bx, by - 5],
+        [bx, by],
+        [ax, ay],
+      ],
+      "#967b50",
+    );
+    for (let j = 0; j < count; j++) {
+      const x = ax + ((bx - ax) * j) / count,
+        y = ay + ((by - ay) * j) / count;
+      p.rect(x - 2, y - 25, 7, 31, "#8a7047");
+      p.rect(x, y - 23, 3, 28, "#bda06c");
     }
   }
   if (front) {
-    // A hinged gate gives the enclosed pasture a natural entrance.
-    p.rect(363, y - 18, 77, 6, "#c1a16b");
-    p.rect(363, y - 5, 77, 5, "#c1a16b");
+    p.rect(
+      gate.left + 7,
+      gate.y - 18,
+      gate.right - gate.left - 7,
+      6,
+      "#c1a16b",
+    );
+    p.rect(gate.left + 7, gate.y - 5, gate.right - gate.left - 7, 5, "#c1a16b");
     p.path(
       [
-        [365, y - 17],
-        [369, y - 18],
-        [439, y - 2],
-        [436, y + 1],
+        [gate.left + 9, gate.y - 17],
+        [gate.left + 13, gate.y - 18],
+        [gate.right - 1, gate.y - 2],
+        [gate.right - 4, gate.y + 1],
       ],
       "#ab8954",
     );
-    p.rect(428, y - 11, 8, 3, "#d7c490");
-  } else {
-    for (const x of [20, 944]) {
-      p.rect(x + 2, area.y + 35, 3, area.height - 57, "#9c8051");
-      p.rect(x - 3, area.y + 35, 3, area.height - 57, "#735d3d");
-      for (let yy = area.y + 80; yy < area.y + area.height - 30; yy += 64) {
-        p.rect(x - 2, yy - 18, 9, 32, "#96784c");
-        p.rect(x, yy - 16, 3, 29, "#c1a16b");
-      }
-    }
+    p.rect(gate.right - 12, gate.y - 11, 8, 3, "#d7c490");
   }
 }
 
@@ -543,11 +583,15 @@ function scaledAt(p, x, y, scale, paint) {
 export function chickenState(time, reduced = false, index = 0) {
   const paths = [
     [205, 302, 15, 6],
-    [272, 318, 15, 5],
-    [48, 304, 12, 7],
+    [320, 318, 15, 5],
+    [62, 302, 10, 7],
     [510, 210, 12, 6],
-    [463, 260, 18, 12],
-    [720, 285, 18, 7],
+    [463, 340, 10, 7],
+    [695, 305, 16, 7],
+    [82, 446, 12, 5],
+    [180, 458, 15, 5],
+    [280, 450, 15, 5],
+    [365, 455, 10, 5],
   ];
   const [x, y, rx, ry] = paths[index % paths.length];
   const phase = reduced
@@ -583,8 +627,8 @@ function chicken(p, area, time, reduced, index) {
 export function pigState(time, reduced = false, index = 0) {
   const phase = reduced ? index * 2.1 : time * 0.55 + index * 2.1;
   return {
-    x: (index ? 255 : 140) + Math.sin(phase) * 7,
-    y: (index ? 406 : 397) + Math.cos(phase) * 3,
+    x: (index ? 836 : 685) + Math.sin(phase) * 7,
+    y: (index ? 441 : 405) + Math.cos(phase) * 3,
     roll: reduced ? index : Math.floor(time * 0.8 + index * 2) % 4,
     face: index ? -1 : 1,
   };
@@ -633,33 +677,85 @@ function pig(p, area, time, reduced, index) {
     p.rect(x + 30, y + 12, 5, 3, "#a18a67");
   }
 }
+export function pigPenGeometry(area) {
+  return {
+    left: 590,
+    right: 940,
+    top: area.y + 354,
+    bottom: area.y + 474,
+    inner: { left: 600, right: 930, top: area.y + 374, bottom: area.y + 469 },
+  };
+}
+export function henGeometry(area) {
+  return {
+    left: 48,
+    right: 330,
+    top: area.y + 330,
+    bottom: area.y + 489,
+    shelter: { left: 78, right: 262, top: area.y + 335, bottom: area.y + 425 },
+  };
+}
 function pigPen(p, area, frontOnly = false) {
+  const pen = pigPenGeometry(area);
   if (!frontOnly) {
-    p.ellipse(193, area.y + 396, 252, 77, "#736047");
-    p.ellipse(191, area.y + 399, 220, 60, "#857052");
-    for (let i = 0; i < 16; i++)
-      p.rect(83 + i * 13, area.y + 376 + ((i * 11) % 44), 10, 2, "#9c8764");
-    for (let x = 70; x <= 330; x += 52) {
-      p.rect(x, area.y + 340, 6, 31, "#8f7650");
-      if (x < 330) {
-        p.rect(x + 6, area.y + 348, 46, 5, "#b29a6b");
-        p.rect(x + 6, area.y + 362, 46, 4, "#967d53");
+    p.ellipse(765, area.y + 414, 350, 120, "#736047");
+    p.ellipse(763, area.y + 418, 315, 95, "#857052");
+    for (let i = 0; i < 25; i++)
+      p.rect(610 + i * 12, area.y + 370 + ((i * 19) % 80), 12, 2, "#9c8764");
+    for (let x = pen.left; x <= pen.right; x += 50) {
+      p.rect(x, pen.top - 15, 6, 32, "#8f7650");
+      if (x < pen.right) {
+        p.rect(x + 6, pen.top - 7, 44, 5, "#b29a6b");
+        p.rect(x + 6, pen.top + 7, 44, 4, "#967d53");
       }
     }
-    for (const x of [70, 330]) {
-      p.rect(x + 1, area.y + 367, 3, 65, "#a78d5d");
-      p.rect(x - 2, area.y + 387, 8, 31, "#9d8155");
+    for (const x of [pen.left, pen.right]) {
+      p.rect(x + 1, pen.top + 13, 3, 105, "#a78d5d");
+      p.rect(x - 2, pen.top + 53, 8, 31, "#9d8155");
     }
-    p.ellipse(296, area.y + 380, 30, 13, "#777c67");
-    p.ellipse(296, area.y + 378, 25, 8, "#567370");
+    p.ellipse(913, area.y + 391, 32, 14, "#777c67");
+    p.ellipse(913, area.y + 389, 26, 9, "#567370");
   }
-  for (let x = 70; x <= 330; x += 52) {
-    p.rect(x, area.y + 412, 6, 29, "#967c52");
-    if (x < 330) {
-      p.rect(x + 6, area.y + 419, 46, 5, "#bea16f");
-      p.rect(x + 6, area.y + 432, 46, 4, "#9c8257");
+  for (let x = pen.left; x <= pen.right; x += 50) {
+    p.rect(x, pen.bottom - 23, 6, 29, "#967c52");
+    if (x < pen.right) {
+      p.rect(x + 6, pen.bottom - 16, 44, 5, "#bea16f");
+      p.rect(x + 6, pen.bottom - 3, 44, 4, "#9c8257");
     }
   }
+}
+function henShelter(p, area) {
+  const y = area.y;
+  p.ellipse(175, y + 426, 290, 124, "#8c774a");
+  for (let i = 0; i < 30; i++)
+    p.rect(
+      55 + ((i * 37) % 255),
+      y + 393 + ((i * 19) % 81),
+      6,
+      2,
+      i % 2 ? "#b79c62" : "#cab27b",
+    );
+  p.rect(90, y + 355, 158, 69, "#7c5c3b");
+  for (let x = 96; x < 248; x += 13) p.rect(x, y + 359, 9, 61, "#9f784c");
+  p.path(
+    [
+      [78, y + 356],
+      [98, y + 335],
+      [239, y + 335],
+      [262, y + 356],
+    ],
+    "#50694e",
+  );
+  p.rect(80, y + 354, 180, 5, "#b4985f");
+  p.rect(180, y + 377, 39, 45, "#3b4030");
+  p.rect(186, y + 382, 27, 40, "#576245");
+  p.rect(106, y + 370, 31, 29, "#5a4c34");
+  p.rect(111, y + 375, 21, 19, "#ceb979");
+  p.rect(120, y + 375, 3, 19, "#8c764a");
+  for (let i = 0; i < 4; i++) p.rect(177, y + 423 + i * 6, 45, 4, "#b89d67");
+  p.lantern(241, y + 408);
+  p.ellipse(74, y + 415, 27, 13, "#797963");
+  p.ellipse(74, y + 412, 21, 7, "#547574");
 }
 function farmActors(p, area, time = 0) {
   const g = farmGeometry(area);
@@ -685,7 +781,7 @@ function farmActors(p, area, time = 0) {
       () => poses[i](p, 0, 0, time, 1),
     ),
   );
-  for (let i = 0; i < 6; i++) chicken(p, area, time, p.reduced, i);
+  for (let i = 0; i < 10; i++) chicken(p, area, time, p.reduced, i);
   for (let i = 0; i < 2; i++) pig(p, area, time, p.reduced, i);
   pigPen(p, area, true);
   farmFence(p, area, true);
@@ -767,6 +863,7 @@ function farm(p, area, includeActors) {
     p.rect(x, area.y + 276 + (x % 3) * 3, 3, 17, "#e0bf71");
   p.ellipse(124, area.y + 317, 90, 25, "#7c7656");
   p.ellipse(124, area.y + 312, 78, 15, "#527776");
+  henShelter(p, area);
   pigPen(p, area);
   if (includeActors) farmActors(p, area);
   farmFence(p, area, true);
@@ -1000,6 +1097,24 @@ function animateDrift(p, area, time, reduced) {
 }
 
 function drift(p, area, includeActors) {
+  for (const [x, y, tone] of [
+    [110, 100, 0.16],
+    [850, 105, 0.22],
+    [855, 310, 0.15],
+    [125, 318, 0.2],
+  ])
+    p.tree({ x, y: area.y + y, s: 0.95, tone });
+  for (const [x, y] of [
+    [145, 208],
+    [811, 226],
+    [225, 82],
+    [730, 313],
+  ]) {
+    p.ellipse(x, area.y + y, 35, 19, "#5c6954");
+    p.rect(x - 10, area.y + y - 5, 18, 3, "#a1a48b");
+    paintFern(p, x + 14, area.y + y + 7, 0.8);
+  }
+
   p.ellipse(480, area.y + 205, 575, 266, "#3e4a32");
   p.ellipse(480, area.y + 205, 537, 237, "#786546");
   p.ellipse(480, area.y + 205, 498, 211, "#8a7553");

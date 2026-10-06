@@ -449,24 +449,40 @@ export class World {
     return canWalk(x, y);
   }
   moonPosition() {
-    return { x: 480, y: (this.layout.moonArea?.y || 0) + 70, diameter: 118 };
+    return { x: 480, y: (this.layout.moonArea?.y || 0) + 125, diameter: 118 };
   }
   drawSky() {
     this.rect(0, 0, WIDTH, (this.layout.skyHeight || 0) + 190, "#17242b");
-    // Fixed, distant ridges sit behind the moon and the nearer snowy range.
+    const { x, y, diameter: d } = this.moonPosition();
+    this.ellipse(x, y, d + 22, d + 22, "#253c40");
+    this.ellipse(x, y, d + 10, d + 10, "#486360");
+    this.ellipse(x, y, d, d, "#c6d3b5");
+    this.ellipse(x - 2, y - 2, d - 6, d - 6, "#e5e4c7");
+    this.ellipse(x - d * 0.23, y - d * 0.2, d * 0.19, d * 0.14, "#c6ceb4");
+    this.ellipse(x + d * 0.22, y + d * 0.09, d * 0.23, d * 0.18, "#c9d0b9");
+    this.ellipse(x - d * 0.03, y + d * 0.3, d * 0.13, d * 0.09, "#cbd2b8");
+    const rand = seeded(714);
+    for (let i = 0; i < 45; i++) {
+      const sx = rand() * WIDTH,
+        sy = rand() * this.layout.skyHeight;
+      if (Math.hypot(sx - x, sy - y) > d * 0.7)
+        this.rect(sx, sy, 2, 2, "#7d9693");
+    }
+    // All snowy silhouettes sit in front of the moon, below the clear identity sky.
     // Muted pigment gives depth while every silhouette stays on the pixel grid.
     const distantBase = this.layout.skyHeight + 122;
     this.ctx.save();
     try {
       this.ctx.globalAlpha = 0.68;
-      for (const [center, peakHeight, span] of [
+      for (const [center, height, span] of [
         [-70, 206, 360],
         [176, 226, 370],
         [430, 204, 350],
         [706, 236, 380],
         [966, 210, 370],
       ]) {
-        const top = distantBase - peakHeight;
+        const top = Math.max(distantBase - height, y + d * 0.3, 130);
+        const peakHeight = distantBase - top;
         this.path(
           [
             [center - span * 0.5, distantBase],
@@ -528,22 +544,7 @@ export class World {
     } finally {
       this.ctx.restore();
     }
-    const { x, y, diameter: d } = this.moonPosition();
-    this.ellipse(x, y, d + 22, d + 22, "#253c40");
-    this.ellipse(x, y, d + 10, d + 10, "#486360");
-    this.ellipse(x, y, d, d, "#c6d3b5");
-    this.ellipse(x - 2, y - 2, d - 6, d - 6, "#e5e4c7");
-    this.ellipse(x - d * 0.23, y - d * 0.2, d * 0.19, d * 0.14, "#c6ceb4");
-    this.ellipse(x + d * 0.22, y + d * 0.09, d * 0.23, d * 0.18, "#c9d0b9");
-    this.ellipse(x - d * 0.03, y + d * 0.3, d * 0.13, d * 0.09, "#cbd2b8");
-    const rand = seeded(714);
-    for (let i = 0; i < 45; i++) {
-      const sx = rand() * WIDTH,
-        sy = rand() * this.layout.skyHeight;
-      if (Math.hypot(sx - x, sy - y) > d * 0.7)
-        this.rect(sx, sy, 2, 2, "#7d9693");
-    }
-    // One continuous mountain range spans the sky and village, under the moon.
+    // A central crest covers the moon’s lower quarter; side ridges stay below it.
     const base = this.layout.skyHeight + 176;
     const moonFloor = y + d / 2 + 18;
     for (const [mx, height, w] of [

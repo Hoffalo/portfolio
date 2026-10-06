@@ -2204,3 +2204,111 @@ dialog p {
     font-size: 16px;
   }
 }
+
+/* Clear night sky for the identity signals, with a lower mountain horizon. */
+.shell {
+  width: min(1120px, 100%);
+}
+#journey-world > .sky-header {
+  position: relative;
+  height: auto;
+  aspect-ratio: 960 / 230;
+  min-height: 220px;
+}
+.sky-header .moon-clearing {
+  top: 40px;
+}
+.stable-clearing {
+  aspect-ratio: 960 / 520;
+}
+.game-frame .social-links a {
+  background: url("./art/hanging-sign.svg") center / 100% 100% no-repeat;
+  box-shadow: none;
+  border: 0;
+  padding: 30px 22px 20px;
+  min-width: 150px;
+  color: #fff0ce;
+  text-shadow: 2px 2px #332c22;
+}
+.game-frame .social-links a::after {
+  display: none;
+}
+.game-frame .social-links a:hover {
+  filter: brightness(1.12);
+}
+.reading-invitation {
+  aspect-ratio: 960 / 250;
+  min-height: 230px;
+}
+.reading-invitation a {
+  background: url("./art/trail-notice.svg") center / 100% 100% no-repeat;
+  box-shadow: none;
+  border: 0;
+  margin-left: 29%;
+  width: 42%;
+  padding: 28px 26px;
+  color: #fff0ce;
+  text-shadow: 2px 2px #332c22;
+}
+.reading-invitation strong {
+  font-size: 30px;
+  line-height: 1.1;
+}
+.reading-invitation a::before,
+.reading-invitation a::after {
+  top: calc(100% - 6px);
+  height: 38px;
+  width: 12px;
+  border: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #69543b 0 4px,
+    #8c704a 4px 6px,
+    #504630 6px 12px
+  );
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 70% 80%, 70% 100%, 0 100%);
+}
+.reading-invitation a::before {
+  left: 17%;
+}
+.reading-invitation a::after {
+  right: 17%;
+}
+@media (max-width: 740px) {
+  #journey-world > .sky-header {
+    height: 300px;
+    min-height: 300px;
+    aspect-ratio: auto;
+  }
+  .sky-header .moon-clearing {
+    top: 160px;
+  }
+  .game-frame .social-links a {
+    font-size: 20px;
+    padding: 19px 12px 14px;
+    min-width: 100px;
+  }
+  .reading-invitation {
+    min-height: 250px;
+  }
+  .reading-invitation a {
+    padding: 20px 16px;
+  }
+  .reading-invitation strong {
+    font-size: 22px;
+  }
+  .reading-invitation .billboard-detail {
+    font-size: 16px;
+  }
+}
+
+#journey-world > .sky-header {
+  width: 100%;
+  min-width: 0;
+}
+@media (max-width: 740px) {
+  .reading-invitation a {
+    padding-top: 30px;
+    padding-bottom: 28px;
+  }
+}
