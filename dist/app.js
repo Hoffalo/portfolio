@@ -55,7 +55,16 @@ function resizeJourney() {
   const dividerBox = document
     .querySelector(".river-divider")
     .getBoundingClientRect();
+  const railwayBox = document
+    .querySelector(".railway-clearing")
+    .getBoundingClientRect();
   const layout = {
+    railway: {
+      x: (railwayBox.left - box.left) / worldScale,
+      y: (railwayBox.top - box.top) / worldScale,
+      width: railwayBox.width / worldScale,
+      height: railwayBox.height / worldScale,
+    },
     scale: worldScale,
     divider: {
       x: (dividerBox.left - box.left) / worldScale,
@@ -90,6 +99,7 @@ function resizeJourney() {
     layoutSignature = signature;
   }
   updateViewport();
+  world.draw();
 }
 resizeJourney();
 function scheduleResize() {

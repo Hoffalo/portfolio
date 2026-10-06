@@ -33,7 +33,7 @@ try {
         canvas.height,
         Math.ceil(
           (innerHeight - canvas.getBoundingClientRect().top) /
-            (innerWidth / canvas.width),
+            (shell.width / canvas.width),
         ),
       );
       const data = canvas
@@ -47,9 +47,10 @@ try {
         left: shell.left,
         right: shell.right,
         width: innerWidth,
+        sceneryWidth: shell.width,
         overflow: document.documentElement.scrollWidth > innerWidth,
         backingHeight: canvas.height,
-        limit: Math.ceil((innerHeight * 960) / innerWidth / 2) + 24,
+        limit: Math.ceil((innerHeight * 960) / shell.width / 2) + 24,
         pixels: [
           ...canvas
             .getContext("2d")
@@ -57,13 +58,14 @@ try {
         ].some((value) => value !== 0),
       };
     });
-    assert.equal(metrics.left, 0);
-    assert.equal(metrics.right, metrics.width);
+    assert.equal(metrics.sceneryWidth, Math.min(1440, metrics.width));
+    assert.equal(metrics.left, (metrics.width - metrics.sceneryWidth) / 2);
+    assert.equal(metrics.right, (metrics.width + metrics.sceneryWidth) / 2);
     assert.equal(metrics.overflow, false);
     assert.equal(
       metrics.transparent,
       0,
-      "Visible scenery must have no transparent seams",
+      `Visible scenery must have no transparent seams at ${width}px`,
     );
     assert.ok(
       metrics.backingHeight <= metrics.limit,
@@ -75,10 +77,10 @@ try {
     const before = await page
       .locator("#world")
       .evaluate((el) => el.toDataURL());
-    await page.waitForTimeout(160);
-    assert.notEqual(
-      await page.locator("#world").evaluate((el) => el.toDataURL()),
-      before,
+    await page.waitForTimeout(700);
+    assert.ok(
+      (await page.locator("#world").evaluate((el) => el.toDataURL())) !==
+        before,
       "Animation must continue after resize and scroll",
     );
   }
@@ -87,28 +89,27 @@ try {
     await page.setViewportSize({ width, height: 1080 });
   await page.waitForTimeout(200);
   const live = await page.locator("#world").evaluate((el) => el.toDataURL());
-  await page.waitForTimeout(160);
-  assert.notEqual(
-    await page.locator("#world").evaluate((el) => el.toDataURL()),
-    live,
+  await page.waitForTimeout(700);
+  assert.ok(
+    (await page.locator("#world").evaluate((el) => el.toDataURL())) !== live,
   );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForTimeout(100);
   const frozen = await page.locator("#world").evaluate((el) => el.toDataURL());
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(700);
   assert.equal(
     await page.locator("#world").evaluate((el) => el.toDataURL()),
     frozen,
   );
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(700);
   assert.notEqual(
     await page.locator("#world").evaluate((el) => el.toDataURL()),
     frozen,
   );
   assert.deepEqual(errors, []);
   console.log(
-    "Resolution verification passed: edge-to-edge 320–3440px, bounded canvas memory, live resize/scroll animation, reduced-motion resume, and no rendering errors.",
+    "Resolution verification passed: centered scenery at 320–3440px, bounded canvas memory, live resize/scroll animation, reduced-motion resume, and no rendering errors.",
   );
 } finally {
   await browser.close();

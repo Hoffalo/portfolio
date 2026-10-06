@@ -549,33 +549,131 @@ function highlandCow(p, x, y, time = 0, phase = 0) {
   );
 }
 
+function grazingCow(p, x, y, time) {
+  const chew = time ? (Math.floor(time * 1.8) % 2) * 2 : 0;
+  const tail = time ? Math.round(Math.sin(time * 0.8)) * 3 : 0;
+  p.ellipse(x, y + 37, 108, 17, "#24342a");
+  for (const dx of [-26, -13, 17, 31]) {
+    p.rect(x + dx, y + 10, 9, 27, "#744c31");
+    p.rect(x + dx - 1, y + 34, 11, 5, "#343128");
+  }
+  p.path(
+    [
+      [x - 40, y - 6],
+      [x - 47, y - 2],
+      [x - 52 + tail, y + 27],
+      [x - 44, y + 25],
+    ],
+    "#93603a",
+  );
+  p.ellipse(x - 4, y, 86, 49, "#875532");
+  p.ellipse(x - 12, y - 9, 61, 29, "#aa7745");
+  for (let i = 0; i < 11; i++)
+    p.rect(
+      x - 41 + i * 7,
+      y + 7,
+      7,
+      12 + (i % 3) * 4,
+      i % 2 ? "#93603a" : "#b17e47",
+    );
+  p.path(
+    [
+      [x + 21, y - 14],
+      [x + 45, y + 10],
+      [x + 39, y + 28],
+      [x + 18, y + 8],
+    ],
+    "#9b693c",
+  );
+  p.ellipse(x + 43, y + 19 + chew, 35, 30, "#bb894d");
+  for (const side of [-1, 1])
+    p.path(
+      [
+        [x + 43 + side * 10, y + 13],
+        [x + 43 + side * 28, y + 6],
+        [x + 43 + side * 29, y - 4],
+        [x + 43 + side * 24, y - 3],
+        [x + 43 + side * 20, y + 3],
+      ],
+      "#ddd0aa",
+    );
+  for (let i = 0; i < 5; i++)
+    p.rect(x + 27 + i * 6, y + 7 + chew, 7, 15 + (i % 2) * 4, "#c49152");
+  p.rect(x + 36, y + 23 + chew, 5, 2, "#433528");
+  p.ellipse(x + 46, y + 32 + chew, 23, 11, "#cfa56f");
+  for (let i = 0; i < 4; i++)
+    p.rect(x + 34 + i * 6, y + 38, 3, 7 + (i % 2) * 4, "#839351");
+}
+
+function sleepingCow(p, x, y, time) {
+  const breath = time ? Math.round((Math.sin(time * 0.65) + 1) * 0.7) * 2 : 0;
+  p.ellipse(x, y + 18, 94, 18, "#24342a");
+  p.ellipse(x - 4, y - breath / 2, 89, 44 + breath, "#674b36");
+  p.ellipse(x - 15, y - 8 - breath / 2, 62, 27 + breath, "#8e6b49");
+  for (let i = 0; i < 10; i++)
+    p.rect(x - 42 + i * 8, y + 8, 8, 7 + (i % 3) * 3, "#99724c");
+  p.ellipse(x + 30, y + 5, 35, 29, "#a17b52");
+  for (const side of [-1, 1])
+    p.path(
+      [
+        [x + 30 + side * 10, y - 1],
+        [x + 30 + side * 25, y - 8],
+        [x + 30 + side * 28, y - 20],
+        [x + 30 + side * 24, y - 22],
+        [x + 30 + side * 19, y - 11],
+      ],
+      "#d1c29a",
+    );
+  for (let i = 0; i < 5; i++)
+    p.rect(x + 14 + i * 6, y - 6, 7, 15 + (i % 2) * 3, "#b68c5c");
+  p.rect(x + 21, y + 7, 6, 2, "#43382c");
+  p.rect(x + 36, y + 8, 6, 2, "#43382c");
+  p.ellipse(x + 30, y + 19, 24, 10, "#c3a47a");
+  p.ellipse(x - 16, y + 17, 35, 11, "#a78258");
+}
+
+function calf(p, x, y, time) {
+  const bob = time ? Math.round(Math.sin(time * 0.75)) * 2 : 0;
+  const step = time ? Math.round(Math.sin(time * 1.4)) * 2 : 0;
+  p.ellipse(x, y + 23, 67, 10, "#24342a");
+  for (const [i, dx] of [-17, -6, 12, 21].entries()) {
+    p.rect(x + dx, y + 7, 6, 16 + (i % 2 ? step : -step), "#cbab72");
+    p.rect(x + dx - 1, y + 20 + (i % 2 ? step : -step), 8, 4, "#675137");
+  }
+  p.ellipse(x - 3, y, 55, 32, "#c0a16a");
+  p.ellipse(x - 10, y - 7, 37, 17, "#dfc287");
+  for (let i = 0; i < 8; i++)
+    p.rect(x - 27 + i * 7, y + 7, 6, 7 + (i % 2) * 3, "#d7bb81");
+  p.ellipse(x + 23, y - 2 + bob, 28, 28, "#d9b97c");
+  for (const dx of [13, 29]) p.rect(x + dx, y - 22 + bob, 5, 9, "#e7d6ab");
+  p.ellipse(x + 8, y - 6 + bob, 11, 7, "#d9b97c");
+  p.ellipse(x + 38, y - 6 + bob, 11, 7, "#d9b97c");
+  for (let i = 0; i < 5; i++)
+    p.rect(x + 10 + i * 5, y - 12 + bob, 6, 12 + (i % 2) * 4, "#ead098");
+  for (const dx of [15, 29]) p.rect(x + dx, y + 1 + bob, 3, 3, "#55452f");
+  p.ellipse(x + 24, y + 11 + bob, 20, 9, "#eed9ad");
+  p.rect(x + 21, y + 10 + bob, 6, 2, "#8d724c");
+}
+
 function farmGeometry(area, mobile) {
   return mobile
     ? {
         barn: [480, area.y + 260, 2],
         cows: [
           [245, 560],
-          [670, 575],
-          [245, 755],
-          [670, 770],
-          [245, 955],
-          [670, 965],
+          [670, 595],
+          [245, 850],
+          [670, 900],
         ].map(([x, y]) => [x, area.y + y]),
         animalScale: 2,
       }
     : {
         barn: [235, area.y + 139, 1],
         cows: [
-          [526, 110],
-          [686, 117],
-          [846, 105],
-          [526, 220],
-          [686, 229],
-          [846, 215],
-          [487, 330],
-          [624, 334],
-          [760, 326],
-          [891, 333],
+          [580, 130],
+          [820, 195],
+          [580, 315],
+          [805, 325],
         ].map(([x, y]) => [x, area.y + y]),
         animalScale: 1,
       };
@@ -596,9 +694,14 @@ function farmActors(p, area, mobile, time = 0) {
     stallHorse(p, 56, 8, false, time);
     stallFront(p);
   });
+  const poses = [highlandCow, grazingCow, sleepingCow, calf];
   g.cows.forEach(([x, y], i) =>
-    scaledAt(p, x, y, g.animalScale, () =>
-      highlandCow(p, 0, 0, time, i * 2 + 1),
+    scaledAt(
+      p,
+      x + (i === 3 && time ? Math.round(Math.sin(time * 0.18)) * 6 : 0),
+      y,
+      g.animalScale,
+      () => poses[i](p, 0, 0, time, 1),
     ),
   );
 }
@@ -722,6 +825,109 @@ function river(p, area) {
   }
 }
 
+function railway(p, area) {
+  const y = area.y + area.height * 0.61;
+  const tunnelScale = area.height > 260 ? 2 : 1;
+  p.path(
+    [
+      [0, y - 28],
+      [190, y - 34],
+      [400, y - 27],
+      [620, y - 33],
+      [960, y - 24],
+      [960, y + 29],
+      [690, y + 35],
+      [410, y + 27],
+      [184, y + 34],
+      [0, y + 27],
+    ],
+    "#505a4b",
+  );
+  for (let x = 0; x < 960; x += 22) {
+    p.rect(x, y - 23, 8, 46, "#69513a");
+    p.rect(x + 2, y - 20, 3, 40, "#947149");
+    p.rect(x - 6, y - 31 + (x % 7), 7, 4, "#858775");
+    p.rect(x + 9, y + 25 - (x % 5), 9, 4, "#727e67");
+  }
+  for (const dy of [-13, 13]) {
+    p.rect(0, y + dy, 960, 5, "#354743");
+    p.rect(0, y + dy, 960, 2, "#9aa799");
+    for (let x = 0; x < 960; x += 22)
+      p.rect(x - 1, y + dy - 2, 12, 2, "#697a70");
+  }
+  const tx = tunnelScale === 2 ? 798 : 882;
+  scaledAt(p, tx, y, tunnelScale, () => {
+    p.path(
+      [
+        [-77, 30],
+        [-71, -23],
+        [-48, -62],
+        [-10, -75],
+        [43, -59],
+        [70, -22],
+        [78, 30],
+      ],
+      "#4a5b4e",
+    );
+    p.path(
+      [
+        [-65, 27],
+        [-60, -21],
+        [-35, -54],
+        [4, -65],
+        [40, -49],
+        [60, -19],
+        [67, 27],
+      ],
+      "#78816b",
+    );
+    p.path(
+      [
+        [-43, 30],
+        [-43, -17],
+        [-24, -40],
+        [0, -46],
+        [27, -37],
+        [44, -15],
+        [44, 30],
+      ],
+      "#142425",
+    );
+    p.path(
+      [
+        [-33, 30],
+        [-30, -13],
+        [-14, -29],
+        [8, -30],
+        [29, -13],
+        [31, 30],
+      ],
+      "#1c2e2d",
+    );
+    for (const [dx, dy] of [
+      [-57, -20],
+      [-34, -48],
+      [5, -58],
+      [39, -35],
+      [54, 3],
+    ]) {
+      p.rect(dx - 5, dy, 16, 8, "#a0a68b");
+      p.rect(dx - 5, dy + 6, 16, 2, "#566855");
+    }
+    for (const dy of [-13, 13]) p.rect(-43, dy, 87, 2, "#849b90");
+    for (const dx of [-67, 60]) p.ellipse(dx, 24, 32, 12, "#526c48");
+  });
+  const sx = tunnelScale === 2 ? 580 : 768;
+  p.rect(sx, y - 47, 5, 52, "#8b7954");
+  p.rect(sx - 5, y - 48, 17, 22, "#34473d");
+  p.rect(sx - 2, y - 43, 10, 10, "#8caf76");
+  p.rect(sx - 1, y - 42, 6, 6, "#c5d59b");
+  for (const x of [50, 334]) {
+    mushroom(p, x, y + 41);
+    p.rect(x + 22, y + 33, 2, 13, "#839168");
+  }
+}
+
 function landmarks(layout) {
   const scenes = layout.sections.flatMap((section) => {
     const x = layout.mobile ? 690 : section.x < 200 ? 840 : 114;
@@ -740,7 +946,9 @@ function landmarks(layout) {
         {
           paint: pond,
           x: layout.mobile ? 720 : x,
-          y: layout.mobile ? section.y - 100 : section.y + section.height - 100,
+          y: layout.mobile
+            ? section.y - 100
+            : Math.max(section.y + section.height - 100, section.y + 420),
           rx: 125,
           ry: 110,
         },
@@ -765,6 +973,14 @@ function landmarks(layout) {
       y: layout.divider.y + layout.divider.height / 2,
       rx: WIDTH / 2 + 40,
       ry: layout.divider.height / 2 + 25,
+    });
+  if (layout.railway)
+    scenes.push({
+      paint: railway,
+      x: WIDTH / 2,
+      y: layout.railway.y + layout.railway.height / 2,
+      rx: WIDTH / 2 + 40,
+      ry: layout.railway.height / 2 + 18,
     });
   return scenes;
 }
@@ -835,6 +1051,7 @@ export function paintJourney(painter, layout, includeActors = true) {
     if (scene.paint === farm)
       farm(p, layout.stable, layout.mobile, includeActors);
     else if (scene.paint === river) river(p, layout.divider);
+    else if (scene.paint === railway) railway(p, layout.railway);
     else scene.paint(p, scene.x, scene.y, includeActors);
     if (includeActors && scene.paint === cave)
       bear(p, scene.x - 39, scene.y + 72);
@@ -933,6 +1150,14 @@ export function animateJourney(p, layout) {
       bear(p, x - 39, y + 72, time);
     } else if (scene.paint === farm) {
       farmActors(p, layout.stable, layout.mobile, time);
+    } else if (scene.paint === railway) {
+      const area = layout.railway,
+        trackY = area.y + area.height * 0.61;
+      const signalX = area.height > 260 ? 580 : 768;
+      p.ctx.globalAlpha = p.reduced
+        ? 0.3
+        : 0.2 + (1 + Math.sin(time * 0.6)) * 0.1;
+      p.rect(signalX - 1, trackY - 42, 6, 6, "#e0eab1");
     } else if (scene.paint === river) {
       const area = layout.divider;
       for (let i = 0; i < 30; i++) {
@@ -970,4 +1195,14 @@ export function animateJourney(p, layout) {
     }
     p.ctx.restore();
   }
+}
+
+export function journeyGeometry(layout) {
+  return landmarks(layout).map(({ paint, x, y, rx, ry }) => ({
+    kind: paint.name,
+    x,
+    y,
+    rx,
+    ry,
+  }));
 }

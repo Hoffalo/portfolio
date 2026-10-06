@@ -37,9 +37,18 @@ try {
     const dividerBox = document
       .querySelector(".river-divider")
       .getBoundingClientRect();
+    const railwayBox = document
+      .querySelector(".railway-clearing")
+      .getBoundingClientRect();
     painter.setLayout(
       {
         scale,
+        railway: {
+          x: (railwayBox.left - box.left) / scale,
+          y: (railwayBox.top - box.top) / scale,
+          width: railwayBox.width / scale,
+          height: railwayBox.height / scale,
+        },
         divider: {
           x: (dividerBox.left - box.left) / scale,
           y: (dividerBox.top - box.top) / scale,
