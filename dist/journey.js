@@ -1,3 +1,5 @@
+import { paintGround, paintFern } from "./ground.js";
+
 const WIDTH = 960;
 
 function random(seed) {
@@ -19,174 +21,6 @@ function log(p, x, y) {
   p.ellipse(x + 27, y, 12, 16, "#aa8b59");
   p.ellipse(x + 27, y, 6, 10, "#6c5038");
   p.rect(x - 13, y + 4, 18, 3, "#405339");
-}
-
-function pond(p, x, y) {
-  p.ellipse(x, y + 3, 218, 154, "#192a27");
-  p.ellipse(x, y, 202, 140, "#537067");
-  p.ellipse(x, y - 3, 192, 128, "#223d45");
-  p.ellipse(x + 12, y - 8, 158, 96, "#2b4850");
-  for (let i = 0; i < 8; i++) {
-    const xx = x - 65 + ((i * 37) % 132),
-      yy = y - 40 + ((i * 23) % 80);
-    p.rect(xx, yy, 18 + (i % 3) * 4, 2, "#466166");
-  }
-  for (const [dx, dy] of [
-    [-56, -18],
-    [48, 20],
-    [12, -38],
-  ]) {
-    p.ellipse(x + dx, y + dy, 20, 10, "#718653");
-    p.rect(x + dx, y + dy - 3, 8, 3, "#304743");
-    p.rect(x + dx - 4, y + dy - 5, 4, 4, "#d2a5ac");
-  }
-  p.rect(x - 54, y + 24, 60, 66, "#423b2d");
-  for (let i = 0; i < 8; i++)
-    p.rect(x - 52, y + 26 + i * 8, 56, 6, i % 2 ? "#967852" : "#816748");
-  for (const dx of [-55, 5]) p.rect(x + dx, y + 76, 6, 22, "#b19869");
-  p.lantern(x - 53, y + 88);
-  p.rect(x - 39, y + 63, 14, 6, "#d4b585");
-  p.rect(x - 36, y + 59, 8, 4, "#795a46");
-}
-
-function pod(p, x, y) {
-  p.ellipse(x, y + 29, 186, 20, "#182b25");
-  p.ellipse(x, y - 17, 152, 118, "#365046");
-  p.ellipse(x, y - 19, 140, 106, "#715f44");
-  p.ellipse(x, y - 23, 128, 96, "#968063");
-  p.rect(x - 62, y - 30, 124, 49, "#715b43");
-  for (let i = 0; i < 7; i++) p.rect(x - 62, y - 25 + i * 7, 124, 2, "#4d4535");
-  p.rect(x - 16, y - 28, 32, 51, "#322d27");
-  p.rect(x - 12, y - 24, 24, 45, "#a87946");
-  p.rect(x - 9, y - 21, 18, 20, "#eed498");
-  p.rect(x - 1, y - 22, 3, 22, "#73573b");
-  p.rect(x + 7, y + 8, 3, 3, "#e1c27e");
-  for (const dx of [-45, 34]) {
-    p.rect(x + dx - 3, y - 25, 25, 25, "#423a2c");
-    p.rect(x + dx, y - 22, 19, 19, "#dbb473");
-    p.rect(x + dx + 8, y - 22, 3, 19, "#735637");
-  }
-  p.rect(x - 24, y + 21, 48, 8, "#9e8053");
-  p.rect(x + 27, y - 85, 13, 30, "#50534a");
-  p.rect(x + 25, y - 86, 17, 5, "#828070");
-  p.lantern(x - 79, y + 30);
-  log(p, x + 21, y + 94);
-  p.ellipse(x - 36, y + 74, 35, 19, "#48534a");
-  p.rect(x - 47, y + 73, 23, 4, "#725943");
-  p.path(
-    [
-      [x - 44, y + 71],
-      [x - 39, y + 52],
-      [x - 33, y + 64],
-      [x - 29, y + 56],
-      [x - 24, y + 71],
-    ],
-    "#d29956",
-  );
-  p.rect(x - 37, y + 63, 6, 9, "#edd19a");
-  p.rect(x + 38, y + 87, 7, 7, "#d6b98e");
-}
-
-function cave(p, x, y) {
-  p.path(
-    [
-      [x - 97, y + 34],
-      [x - 98, y - 13],
-      [x - 72, y - 53],
-      [x - 28, y - 72],
-      [x + 24, y - 66],
-      [x + 80, y - 41],
-      [x + 103, y + 34],
-    ],
-    "#4d6157",
-  );
-  p.path(
-    [
-      [x - 92, y + 28],
-      [x - 78, y - 19],
-      [x - 37, y - 57],
-      [x + 16, y - 57],
-      [x + 66, y - 30],
-      [x + 95, y + 28],
-    ],
-    "#657367",
-  );
-  p.path(
-    [
-      [x - 58, y + 29],
-      [x - 52, y - 16],
-      [x - 29, y - 40],
-      [x + 17, y - 44],
-      [x + 43, y - 17],
-      [x + 53, y + 29],
-    ],
-    "#101e21",
-  );
-  p.path(
-    [
-      [x - 34, y + 27],
-      [x - 24, y - 21],
-      [x + 13, y - 31],
-      [x + 34, y + 27],
-    ],
-    "#182a2b",
-  );
-  for (const [dx, dy] of [
-    [-75, -16],
-    [-45, -50],
-    [49, -30],
-    [76, 12],
-  ]) {
-    p.rect(x + dx, y + dy, 12, 8, "#527f81");
-    p.rect(x + dx + 2, y + dy - 2, 4, 6, "#89b5ad");
-    p.rect(x + dx + 8, y + dy + 4, 4, 4, "#bbcfb0");
-  }
-  for (const dx of [-94, -62, 44, 84]) p.rect(x + dx, y + 22, 20, 6, "#748052");
-  for (const dx of [-40, 38]) {
-    p.rect(x + dx, y + 16, 4, 12, "#ccb58a");
-    p.rect(x + dx, y + 10, 4, 6, "#f1cc76");
-    p.rect(x + dx - 2, y + 26, 8, 3, "#80735a");
-  }
-  p.rect(x + 13, y + 22, 28, 3, "#433b2c");
-  p.rect(x + 15, y + 12, 4, 14, "#987952");
-  p.rect(x + 13, y + 10, 18, 4, "#929789");
-}
-
-function sleepers(p, x, y) {
-  p.ellipse(x, y + 8, 196, 112, "#344b35");
-  p.ellipse(x - 35, y, 55, 25, "#a97242");
-  p.ellipse(x - 13, y - 3, 21, 17, "#bc8952");
-  p.path(
-    [
-      [x - 22, y - 10],
-      [x - 20, y - 19],
-      [x - 12, y - 9],
-    ],
-    "#b7834f",
-  );
-  p.ellipse(x - 51, y + 6, 30, 14, "#b98147");
-  p.ellipse(x - 60, y + 6, 12, 11, "#e0c59b");
-  p.rect(x - 14, y - 3, 6, 2, "#45362b");
-  p.ellipse(x + 40, y + 36, 49, 22, "#88765c");
-  p.ellipse(x + 58, y + 29, 23, 16, "#a8916c");
-  p.path(
-    [
-      [x + 58, y + 22],
-      [x + 63, y + 12],
-      [x + 69, y + 23],
-    ],
-    "#a48d68",
-  );
-  p.rect(x + 59, y + 29, 7, 2, "#463e32");
-  for (const dx of [25, 36, 44]) p.rect(x + dx, y + 32, 3, 3, "#c3b28c");
-  p.ellipse(x + 35, y - 33, 27, 18, "#b5b29a");
-  p.ellipse(x + 46, y - 37, 15, 12, "#c8c2a8");
-  p.rect(x + 44, y - 55, 5, 15, "#c8c2a8");
-  p.rect(x + 49, y - 53, 5, 14, "#c8c2a8");
-  p.rect(x + 46, y - 55, 2, 11, "#947c72");
-  p.rect(x + 47, y - 38, 5, 2, "#4f5045");
-  mushroom(p, x - 84, y + 34);
-  mushroom(p, x + 80, y - 25);
 }
 
 function campfire(p, x, y) {
@@ -350,20 +184,6 @@ function campfire(p, x, y) {
   );
   p.rect(x + 45, y + 94, 6, 2, "#5d4c3a");
   p.ellipse(x + 25, y + 101, 15, 8, "#d0ad7e");
-}
-
-function bear(p, x, y, time = 0) {
-  const breath = Math.round((1 + Math.sin(time * 0.75)) * 0.8) * 2;
-  p.ellipse(x, y + 10, 86, 23, "#1b2b25");
-  p.ellipse(x, y - breath / 2, 73, 36 + breath, "#725b42");
-  p.ellipse(x - 10, y - 7 - breath / 2, 51, 26 + breath, "#8c7352");
-  p.ellipse(x + 31, y - 3, 31, 27, "#977c56");
-  p.ellipse(x + 21, y - 15, 12, 12, "#977c56");
-  p.ellipse(x + 42, y + 4, 20, 13, "#c3a678");
-  p.rect(x + 48, y + 1, 6, 4, "#3b362c");
-  p.rect(x + 33, y - 5, 7, 2, "#42372d");
-  p.ellipse(x - 17, y + 11, 27, 12, "#9c8059");
-  for (const dx of [-24, -17, -10]) p.rect(x + dx, y + 12, 3, 3, "#c0a479");
 }
 
 function stallHorse(p, x, y, feeding, time = 0) {
@@ -782,6 +602,42 @@ function farm(p, area, includeActors) {
     p.rect(-26, 80, 5, 12, "#96ad92");
   });
   for (const x of [30, 926]) p.lantern(x, area.y + 370);
+  for (const [x, y] of [
+    [-10, 175],
+    [-8, 300],
+    [970, 172],
+    [972, 300],
+  ])
+    p.tree({ x, y: area.y + y, s: 0.9, tone: 0.1 });
+  for (let x = 100; x <= 370; x += 18) {
+    const y = area.y + 14 + Math.sin(((x - 100) / 270) * Math.PI) * 9;
+    p.rect(x, y, 18, 2, "#6c785a");
+    if ((x - 100) % 54 === 0) {
+      p.rect(x + 6, y + 3, 5, 8, "#bd9e57");
+      p.rect(x + 7, y + 4, 3, 5, "#efda94");
+    }
+  }
+  p.rect(345, area.y + 294, 65, 23, "#886641");
+  p.rect(342, area.y + 314, 72, 5, "#c29d61");
+  for (const x of [355, 399]) {
+    p.ellipse(x, area.y + 323, 17, 17, "#3f4130");
+    p.ellipse(x, area.y + 323, 9, 9, "#b99560");
+  }
+  p.rect(349, area.y + 279, 56, 17, "#c2a159");
+  for (let x = 352; x < 405; x += 9)
+    p.rect(x, area.y + 276 + (x % 3) * 3, 3, 17, "#e0bf71");
+  p.ellipse(124, area.y + 317, 90, 25, "#7c7656");
+  p.ellipse(124, area.y + 312, 78, 15, "#527776");
+  for (const [x, y] of [
+    [151, 346],
+    [272, 342],
+  ]) {
+    p.ellipse(x, area.y + y, 15, 11, "#d1cdb0");
+    p.ellipse(x + 7, area.y + y - 5, 8, 8, "#e5dcc0");
+    p.rect(x + 5, area.y + y - 12, 4, 4, "#bd7955");
+    p.rect(x + 11, area.y + y - 4, 4, 2, "#c8a35b");
+    p.rect(x - 3, area.y + y + 4, 2, 5, "#c8a35b");
+  }
   if (includeActors) farmActors(p, area);
   farmFence(p, area, true);
 }
@@ -843,175 +699,72 @@ function river(p, area) {
 }
 
 export function railwayGeometry(area) {
-  const points = [
-    [0, 198],
-    [180, 190],
-    [380, 164],
-    [600, 145],
-    [730, 143],
-    [806, 147],
-    [828, 137],
-    [866, 123],
-  ].map(([x, y]) => [x, area.y + y]);
+  const tunnel = (x) => ({
+    x,
+    y: area.y + 134,
+    mouthLeft: x - 43,
+    mouthRight: x + 44,
+    mouthTop: area.y + 88,
+    mouthBottom: area.y + 164,
+  });
   return {
-    points,
-    tunnel: {
-      x: 866,
-      y: area.y + 110,
-      mouthLeft: 823,
-      mouthRight: 910,
-      mouthTop: area.y + 64,
-      mouthBottom: area.y + 140,
-    },
+    points: [
+      [0, area.y + 150],
+      [960, area.y + 150],
+    ],
+    leftTunnel: tunnel(80),
+    rightTunnel: tunnel(880),
+    openAir: { left: 157, right: 803, top: area.y + 20, bottom: area.y + 210 },
   };
 }
 
-function railway(p, area) {
-  const { points, tunnel } = railwayGeometry(area);
-  // The entrance is cut into an irregular outcrop, rather than a lone arch.
-  p.path(
-    [
-      [745, area.y + 188],
-      [756, area.y + 116],
-      [788, area.y + 51],
-      [826, area.y + 29],
-      [855, area.y + 10],
-      [900, area.y + 24],
-      [929, area.y + 13],
-      [960, area.y + 45],
-      [960, area.y + 204],
-      [916, area.y + 193],
-      [866, area.y + 205],
-      [806, area.y + 190],
-    ],
-    "#354b3b",
-  );
-  p.path(
-    [
-      [765, area.y + 176],
-      [776, area.y + 113],
-      [805, area.y + 55],
-      [856, area.y + 24],
-      [897, area.y + 39],
-      [939, area.y + 28],
-      [960, area.y + 63],
-      [960, area.y + 187],
-      [909, area.y + 181],
-      [855, area.y + 193],
-    ],
-    "#556452",
-  );
-  p.path(
-    [
-      [789, area.y + 103],
-      [808, area.y + 65],
-      [861, area.y + 33],
-      [918, area.y + 55],
-      [940, area.y + 44],
-      [960, area.y + 78],
-      [960, area.y + 107],
-      [914, area.y + 94],
-      [862, area.y + 113],
-    ],
-    "#677461",
-  );
-  for (const [x, y, w] of [
-    [783, 76, 23],
-    [814, 47, 20],
-    [874, 29, 28],
-    [928, 69, 23],
-    [946, 111, 16],
-    [765, 156, 24],
-    [923, 173, 26],
-  ]) {
-    p.ellipse(x, area.y + y, w, 10, "#87907b");
-    p.rect(x - w / 3, area.y + y - 3, w / 2, 2, "#a0a38c");
-  }
-  for (const [x, y] of [
-    [767, 124],
-    [820, 34],
-    [944, 164],
-    [896, 188],
-  ]) {
-    p.ellipse(x, area.y + y + 2, 25, 10, "#3d593d");
-    for (let i = 0; i < 4; i++) {
+export function trainState(time, reduced = false) {
+  if (reduced) return { frontX: 620, moving: false, phase: 0 };
+  const phase = ((time % 64) + 64) % 64;
+  const moving = phase >= 6 && phase < 50;
+  const frontX =
+    phase < 6 ? -40 : phase >= 50 ? 1240 : -40 + ((phase - 6) / 44) * 1280;
+  return { frontX: Math.round(frontX / 2) * 2, moving, phase };
+}
+
+function tunnelRing(p, tunnel, foregroundOnly = false) {
+  scaledAt(p, tunnel.x, tunnel.y, 1, () => {
+    const outer = [
+      [-77, 30],
+      [-71, -23],
+      [-48, -62],
+      [-10, -75],
+      [43, -59],
+      [70, -22],
+      [78, 30],
+    ];
+    const inner = [
+      [-43, 30],
+      [-43, -17],
+      [-24, -40],
+      [0, -46],
+      [27, -37],
+      [44, -15],
+      [44, 30],
+    ];
+    if (!foregroundOnly) {
+      p.path(inner, "#142425");
       p.path(
         [
-          [x, area.y + y],
-          [x - 12 + i * 7, area.y + y - 15 - (i % 2) * 5],
-          [x - 8 + i * 7, area.y + y - 12],
-          [x + 2, area.y + y],
+          [-33, 30],
+          [-30, -13],
+          [-14, -29],
+          [8, -30],
+          [29, -13],
+          [31, 30],
         ],
-        "#70864c",
+        "#1c2e2d",
       );
     }
-  }
-  const edge = (offset) =>
-    points.map(([x, y], i) => [x, y + offset * (1 - i * 0.09)]);
-  p.path([...edge(-29), ...edge(29).reverse()], "#505a4b");
-  // Timber sleepers follow the winding centerline, narrowing near the tunnel.
-  for (let i = 0; i < points.length - 1; i++) {
-    const [ax, ay] = points[i],
-      [bx, by] = points[i + 1];
-    for (let x = Math.ceil(ax / 22) * 22; x < bx; x += 22) {
-      const y = ay + ((by - ay) * (x - ax)) / (bx - ax);
-      const half = 23 * (1 - i * 0.09);
-      p.rect(x, y - half, 7, half * 2, "#69513a");
-      p.rect(x + 2, y - half + 2, 2, half * 2 - 4, "#947149");
-      p.rect(x - 7, y + half + 5, 7, 4, "#858775");
-    }
-  }
-  for (const offset of [-13, 13]) {
-    p.path([...edge(offset - 2), ...edge(offset + 3).reverse()], "#354743");
-    p.path([...edge(offset - 1), ...edge(offset + 1).reverse()], "#a5aea0");
-  }
-  scaledAt(p, tunnel.x, tunnel.y, 1, () => {
+    // Joined outer/inner contours form a pixel stone ring with an open mouth.
     p.path(
-      [
-        [-77, 30],
-        [-71, -23],
-        [-48, -62],
-        [-10, -75],
-        [43, -59],
-        [70, -22],
-        [78, 30],
-      ],
-      "#4a5b4e",
-    );
-    p.path(
-      [
-        [-65, 27],
-        [-60, -21],
-        [-35, -54],
-        [4, -65],
-        [40, -49],
-        [60, -19],
-        [67, 27],
-      ],
+      [...outer, outer[0], inner[0], ...inner.slice(1).reverse(), inner[0]],
       "#78816b",
-    );
-    p.path(
-      [
-        [-43, 30],
-        [-43, -17],
-        [-24, -40],
-        [0, -46],
-        [27, -37],
-        [44, -15],
-        [44, 30],
-      ],
-      "#142425",
-    );
-    p.path(
-      [
-        [-33, 30],
-        [-30, -13],
-        [-14, -29],
-        [8, -30],
-        [29, -13],
-        [31, 30],
-      ],
-      "#1c2e2d",
     );
     for (const [dx, dy] of [
       [-57, -20],
@@ -1023,58 +776,210 @@ function railway(p, area) {
       p.rect(dx - 5, dy, 16, 8, "#a0a68b");
       p.rect(dx - 5, dy + 6, 16, 2, "#566855");
     }
-    // Only these receding rail tips occupy the arch floor; none cross masonry.
-    p.path(
-      [
-        [-43, 29],
-        [-42, 25],
-        [-2, 7],
-        [-2, 9],
-      ],
-      "#9ba99a",
-    );
-    p.path(
-      [
-        [-43, 17],
-        [-42, 15],
-        [-2, 4],
-        [-2, 6],
-      ],
-      "#8ba397",
-    );
-    for (const [dx, dy] of [
-      [-32, 22],
-      [-19, 15],
-      [-9, 10],
-    ])
-      p.rect(dx, dy - 3, 3, 8, "#77674b");
     for (const dx of [-67, 60]) p.ellipse(dx, 24, 32, 12, "#526c48");
   });
-  const signalY = area.y + 120;
-  p.rect(734, signalY - 47, 5, 52, "#8b7954");
-  p.rect(729, signalY - 48, 17, 22, "#34473d");
-  p.rect(732, signalY - 43, 10, 10, "#8caf76");
-  p.rect(733, signalY - 42, 6, 6, "#c5d59b");
-  for (const x of [50, 334]) {
-    const mushroomY = area.y + (x === 50 ? 234 : 218);
-    mushroom(p, x, mushroomY);
-    p.rect(x + 22, mushroomY - 8, 2, 13, "#839168");
+}
+
+function tunnelHill(p, area, left) {
+  const map = (x, y) => [left ? 960 - x : x, area.y + y];
+  p.path(
+    [
+      [803, 193],
+      [803, 99],
+      [830, 40],
+      [868, 11],
+      [912, 27],
+      [943, 10],
+      [960, 36],
+      [960, 205],
+      [911, 193],
+      [857, 207],
+    ].map(([x, y]) => map(x, y)),
+    "#354b3b",
+  );
+  p.path(
+    [
+      [814, 178],
+      [816, 99],
+      [842, 47],
+      [875, 28],
+      [916, 43],
+      [950, 28],
+      [960, 58],
+      [960, 187],
+      [902, 183],
+    ].map(([x, y]) => map(x, y)),
+    "#556452",
+  );
+  for (const [x, y] of [
+    [842, 46],
+    [917, 57],
+    [948, 112],
+    [929, 184],
+  ]) {
+    const [xx, yy] = map(x, y);
+    p.ellipse(xx, yy, 22, 10, "#87907b");
+    p.rect(xx - 7, yy - 3, 12, 2, "#a0a38c");
+  }
+  for (const [x, y] of [
+    [815, 181],
+    [953, 157],
+  ]) {
+    const [xx, yy] = map(x, y);
+    p.ellipse(xx, yy + 2, 25, 10, "#3d593d");
+    for (let i = 0; i < 4; i++)
+      p.path(
+        [
+          [xx, yy],
+          [xx - 12 + i * 7, yy - 15 - (i % 2) * 5],
+          [xx - 8 + i * 7, yy - 12],
+          [xx + 2, yy],
+        ],
+        "#70864c",
+      );
   }
 }
 
+function train(p, area, time, reduced) {
+  const state = trainState(time, reduced),
+    x = state.frontX,
+    y = area.y + 150;
+  const { leftTunnel, rightTunnel, openAir } = railwayGeometry(area);
+  p.ctx.save();
+  p.ctx.beginPath();
+  p.ctx.rect(
+    openAir.left,
+    openAir.top,
+    openAir.right - openAir.left,
+    openAir.bottom - openAir.top,
+  );
+  for (const tunnel of [leftTunnel, rightTunnel])
+    p.ctx.rect(
+      tunnel.mouthLeft,
+      tunnel.mouthTop,
+      tunnel.mouthRight - tunnel.mouthLeft,
+      tunnel.mouthBottom - tunnel.mouthTop,
+    );
+  p.ctx.clip();
+  for (let i = 0; i < 2; i++) {
+    const cx = x - 270 + i * 98;
+    p.rect(cx, y - 38, 87, 39, i ? "#744d3c" : "#496653");
+    p.path(
+      [
+        [cx - 3, y - 38],
+        [cx + 4, y - 43],
+        [cx + 81, y - 43],
+        [cx + 90, y - 38],
+      ],
+      "#354940",
+    );
+    p.rect(cx + 2, y - 1, 83, 6, "#b09057");
+    for (let j = 0; j < 4; j++) {
+      p.rect(cx + 7 + j * 20, y - 31, 15, 18, "#263b35");
+      p.rect(cx + 9 + j * 20, y - 29, 11, 14, "#e1c78d");
+      p.rect(cx + 12 + j * 20, y - 29, 2, 14, "#9e8658");
+    }
+    for (const dx of [19, 68]) trainWheel(p, cx + dx, y + 7, time, reduced);
+    p.rect(cx + 87, y - 4, 12, 4, "#88764d");
+  }
+  p.rect(x - 72, y - 28, 67, 29, "#476552");
+  p.rect(x - 70, y - 49, 25, 30, "#76513e");
+  p.rect(x - 75, y - 53, 34, 5, "#3c4d40");
+  p.rect(x - 65, y - 45, 15, 18, "#e4c990");
+  p.rect(x - 57, y - 45, 2, 18, "#9d8457");
+  p.ellipse(x - 29, y - 24, 45, 22, "#63816c");
+  p.rect(x - 27, y - 56, 11, 34, "#3c4d40");
+  p.rect(x - 31, y - 60, 19, 6, "#a3a078");
+  p.rect(x - 40, y - 39, 13, 15, "#b99e65");
+  p.rect(x - 72, y - 1, 74, 6, "#b89b63");
+  p.path(
+    [
+      [x - 4, y - 1],
+      [x + 8, y + 7],
+      [x - 5, y + 7],
+    ],
+    "#8b7951",
+  );
+  p.rect(x - 4, y - 26, 6, 9, "#efdba0");
+  for (const dx of [-56, -23]) trainWheel(p, x + dx, y + 7, time, reduced);
+  p.rect(x - 55, y + 6, 34, 3, "#c8b684");
+  p.ctx.globalAlpha = 0.45;
+  for (let i = 0; i < 5; i++) {
+    const rise = reduced ? i * 10 : (time * 15 + i * 16) % 75;
+    p.ellipse(
+      x - 22 - rise * 0.55,
+      y - 65 - rise * 0.45,
+      12 + rise * 0.35,
+      8 + rise * 0.14,
+      "#a1b1a0",
+    );
+  }
+  p.ctx.restore();
+  // Repaint masonry around the mouth after the train; its hole remains open.
+  tunnelRing(p, leftTunnel, true);
+  tunnelRing(p, rightTunnel, true);
+}
+
+function trainWheel(p, x, y, time, reduced) {
+  p.ellipse(x, y, 15, 15, "#263a32");
+  p.ellipse(x, y, 9, 9, "#a4a385");
+  const angle = reduced ? 0 : time * 2;
+  p.rect(
+    x + Math.cos(angle) * 3 - 1,
+    y + Math.sin(angle) * 3 - 1,
+    3,
+    3,
+    "#e0cf9e",
+  );
+}
+
+function railway(p, area, includeActors) {
+  const y = area.y + 150,
+    { leftTunnel, rightTunnel } = railwayGeometry(area);
+  p.rect(0, y - 28, 960, 56, "#505a4b");
+  for (let x = 0; x < 960; x += 22) {
+    p.rect(x, y - 23, 8, 46, "#69513a");
+    p.rect(x + 2, y - 20, 3, 40, "#947149");
+    p.rect(x - 6, y + 28, 7, 4, "#858775");
+  }
+  for (const dy of [-13, 13]) {
+    p.rect(0, y + dy, 960, 5, "#354743");
+    p.rect(0, y + dy, 960, 2, "#9aa799");
+  }
+  // Outcrops cover the straight bed; only the tunnel floors reveal its rails.
+  tunnelHill(p, area, true);
+  tunnelHill(p, area, false);
+  for (const tunnel of [leftTunnel, rightTunnel]) {
+    tunnelRing(p, tunnel);
+    for (const dy of [-13, 13])
+      p.rect(
+        tunnel.mouthLeft,
+        y + dy,
+        tunnel.mouthRight - tunnel.mouthLeft,
+        2,
+        "#80968a",
+      );
+    tunnelRing(p, tunnel, true);
+  }
+  p.rect(734, area.y + 73, 5, 52, "#8b7954");
+  p.rect(729, area.y + 72, 17, 22, "#34473d");
+  p.rect(732, area.y + 77, 10, 10, "#8caf76");
+  for (const x of [230, 610]) mushroom(p, x, area.y + 218);
+  if (includeActors) train(p, area, 0, true);
+}
+
 function landmarks(layout) {
-  const scenes = (layout.clearings || []).flatMap((area) => {
-    const y = area.y + area.height / 2;
-    if (area.id === "about")
-      return [
-        { paint: campfire, x: 260, y, rx: 145, ry: 150 },
-        { paint: pond, x: 700, y, rx: 125, ry: 110 },
-      ];
-    const paint = { projects: pod, career: cave, gamedev: sleepers }[area.id];
-    return paint
-      ? [{ paint, x: 480, y, rx: 135, ry: area.id === "gamedev" ? 90 : 145 }]
-      : [];
-  });
+  const scenes = layout.invitation
+    ? [
+        {
+          paint: campfire,
+          x: 220,
+          y: layout.invitation.y + 150,
+          rx: 145,
+          ry: 150,
+        },
+      ]
+    : [];
   if (layout.stable)
     scenes.push({
       paint: farm,
@@ -1109,46 +1014,29 @@ export function paintJourney(painter, layout, includeActors = true) {
   p.ctx.save();
   // Paint complete canopies across the clearing boundary. Clipping at the
   // ground transition would slice the tops of this first forest row.
-  p.rect(0, start, WIDTH, Math.max(0, layout.height - start), "#22332e");
+  paintGround(
+    p,
+    {
+      x: 0,
+      y: start,
+      width: WIDTH,
+      height: Math.max(0, layout.height - start),
+    },
+    9031,
+  );
   const rand = random(3917);
-  for (let i = 0; i < Math.ceil(layout.height * 1.8); i++) {
+  for (let i = 0; i < Math.ceil((layout.height - start) / 180); i++) {
     const x = rand() * WIDTH,
       y = start + rand() * Math.max(0, layout.height - start);
-    p.rect(x, y, 2 + rand() * 5, 2, rand() > 0.55 ? "#2b4035" : "#293a2e");
-    if (i % 11 === 0) p.rect(x + 2, y - 3, 2, 4, "#3b5038");
-  }
-  for (let i = 0; i < Math.ceil((layout.height - start) / 48); i++) {
-    const x = rand() * WIDTH,
-      y = start + rand() * Math.max(0, layout.height - start);
-    const size = 12 + rand() * 37;
-    p.ellipse(
-      x,
-      y,
-      size * 1.8,
-      size * 0.55,
-      i % 4 === 0 ? "#3d3a2e" : "#2c4030",
-    );
-    if (i % 3 === 0) {
-      p.ellipse(x + 9, y + 3, 10, 6, "#596153");
-      p.rect(x + 6, y + 1, 5, 2, "#78816b");
-    }
-    if (i % 2 === 0) p.rect(x - 8, y + 3, 5, 3, "#766844");
+    paintFern(p, x, y, 0.7 + rand() * 0.5);
   }
   const trees = [];
-  for (let y = start + 35; y < layout.height + 90; y += 74) {
-    for (let x = 25; x < WIDTH; x += 69) {
+  for (let y = start + 35; y < layout.height + 90; y += 62) {
+    for (let x = 25; x < WIDTH; x += 54) {
       const tx = x + (rand() - 0.5) * 38,
         ty = y + (rand() - 0.5) * 34;
       const tree = { x: tx, y: ty, s: 0.75 + rand() * 0.45, tone: rand() };
       const footprint = treeFootprint(tree);
-      const besidePanel = (layout.sections || []).some((section) =>
-        intersects(footprint, {
-          left: section.x - 12,
-          right: section.x + section.width + 12,
-          top: section.y - 12,
-          bottom: section.y + section.height + 12,
-        }),
-      );
       const scenicOpening = scenery.some((scene) =>
         intersects(footprint, {
           left: scene.x - scene.rx,
@@ -1157,25 +1045,15 @@ export function paintJourney(painter, layout, includeActors = true) {
           bottom: scene.y + scene.ry,
         }),
       );
-      if (!besidePanel && !scenicOpening) trees.push(tree);
+      if (!scenicOpening) trees.push(tree);
     }
   }
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
-  for (const area of layout.clearings || []) {
-    const y = area.y + area.height - 40;
-    for (const side of [72, 886]) {
-      p.lantern(side, y);
-      mushroom(p, side + 22, y + 13);
-      p.ellipse(side - 15, y + 24, 18, 10, "#617065");
-    }
-  }
   for (const scene of scenery) {
     if (scene.paint === farm) farm(p, layout.stable, includeActors);
     else if (scene.paint === river) river(p, layout.divider);
-    else if (scene.paint === railway) railway(p, layout.railway);
+    else if (scene.paint === railway) railway(p, layout.railway, includeActors);
     else scene.paint(p, scene.x, scene.y, includeActors);
-    if (includeActors && scene.paint === cave)
-      bear(p, scene.x - 39, scene.y + 72);
   }
   p.ctx.restore();
 }
@@ -1224,61 +1102,10 @@ export function animateJourney(p, layout) {
           "#d6ab64",
         );
       }
-    } else if (scene.paint === pond) {
-      for (let i = 0; i < 3; i++) {
-        const fx = x + Math.sin(time * 0.23 + i * 2.1) * 60;
-        const fy = y - 13 + Math.cos(time * 0.19 + i * 1.7) * 26;
-        p.rect(fx, fy, 10, 4, i === 1 ? "#b69862" : "#8fa69a");
-        p.path(
-          [
-            [fx - 2, fy + 2],
-            [fx - 7, fy - 1],
-            [fx - 7, fy + 5],
-          ],
-          "#7b968d",
-        );
-        const ripple = p.reduced ? 0 : Math.floor(time * 0.7 + i) % 3;
-        p.rect(fx - 11 - ripple * 2, fy + 7, 16 + ripple * 4, 2, "#4c7275");
-      }
-    } else if (scene.paint === pod) {
-      p.ctx.globalAlpha = 0.45;
-      for (let i = 0; i < 4; i++) {
-        const rise = p.reduced ? i * 10 : (time * 9 + i * 13) % 51;
-        p.ellipse(
-          x + 33 + Math.sin(time * 0.4 + i) * 5,
-          y - 89 - rise,
-          10 + rise * 0.2,
-          6,
-          "#8b998e",
-        );
-      }
-      p.ctx.globalAlpha = p.reduced
-        ? 0.15
-        : 0.12 + (Math.sin(time * 1.1) + 1) * 0.06;
-      for (const dx of [-45, 34]) p.rect(x + dx, y - 22, 19, 19, "#ffe0a2");
-    } else if (scene.paint === cave) {
-      p.ctx.globalAlpha = p.reduced
-        ? 0.3
-        : 0.2 + (Math.sin(time * 0.7) + 1) * 0.2;
-      for (const [dx, dy] of [
-        [-75, -16],
-        [-45, -50],
-        [49, -30],
-        [76, 12],
-      ])
-        p.rect(x + dx + 2, y + dy - 2, 4, 6, "#b2ded2");
-      p.ctx.globalAlpha = 1;
-      bear(p, x - 39, y + 72, time);
     } else if (scene.paint === farm) {
       farmActors(p, layout.stable, time);
     } else if (scene.paint === railway) {
-      const area = layout.railway,
-        trackY = area.y + 120;
-      const signalX = 734;
-      p.ctx.globalAlpha = p.reduced
-        ? 0.3
-        : 0.2 + (1 + Math.sin(time * 0.6)) * 0.1;
-      p.rect(signalX - 1, trackY - 42, 6, 6, "#e0eab1");
+      train(p, layout.railway, time, p.reduced);
     } else if (scene.paint === river) {
       const area = layout.divider;
       for (let i = 0; i < 30; i++) {

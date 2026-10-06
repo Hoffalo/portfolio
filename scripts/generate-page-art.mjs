@@ -40,18 +40,27 @@ try {
     const railwayBox = document
       .querySelector(".railway-clearing")
       .getBoundingClientRect();
-    const clearings = [...document.querySelectorAll(".scene-clearing")].map(
-      (element) => ({
-        id: element.dataset.scene,
-        x: 0,
-        y: (element.getBoundingClientRect().top - box.top) / scale,
-        width: 960,
-        height: Number(element.style.getPropertyValue("--scene-height")),
-      }),
-    );
+    const invitationBox = document
+      .querySelector(".reading-invitation")
+      .getBoundingClientRect();
+    const moonBox = document
+      .querySelector(".moon-clearing")
+      .getBoundingClientRect();
     painter.setLayout(
       {
-        clearings,
+        clearings: [],
+        invitation: {
+          x: 0,
+          y: (invitationBox.top - box.top) / scale,
+          width: 960,
+          height: 280,
+        },
+        moonArea: {
+          x: 0,
+          y: (moonBox.top - box.top) / scale,
+          width: 960,
+          height: 130,
+        },
         scale,
         railway: {
           x: (railwayBox.left - box.left) / scale,
@@ -76,13 +85,6 @@ try {
         skyHeight:
           document.querySelector(".sky-header").getBoundingClientRect().height /
           scale,
-        moonY:
-          (document.querySelector(".header").getBoundingClientRect().top -
-            box.top +
-            document.querySelector(".header").getBoundingClientRect().height *
-              0.45) /
-          scale,
-        mobile: false,
       },
       true,
     );

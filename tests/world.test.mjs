@@ -216,3 +216,15 @@ test("a drawing exception restores every surface transform and context", () => {
   assert.equal(depth, 0);
   assert.equal(world.ctx, original);
 });
+
+test("moon remains centered in its fixed scene at every resolution", () => {
+  const world = Object.create(World.prototype);
+  for (const scale of [0.333, 0.75, 1.5]) {
+    world.layout = {
+      scale,
+      mobile: scale < 1,
+      moonArea: { y: 200, height: 130 },
+    };
+    assert.deepEqual(world.moonPosition(), { x: 480, y: 265, diameter: 118 });
+  }
+});
