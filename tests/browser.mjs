@@ -47,7 +47,54 @@ try {
       .locator(".social-links")
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 20),
   );
-  assert.match(await page.locator(".email-link").innerText(), /Contact:/);
+  assert.equal(await page.locator(".email-icon").count(), 1);
+  assert.doesNotMatch(
+    await page.locator(".email-link").innerText(),
+    /Contact:/,
+  );
+  assert.deepEqual(await page.locator(".social-emoji").allTextContents(), [
+    "🐙",
+    "💼",
+  ]);
+  assert.doesNotMatch(
+    await page.locator(".keyboard-hint").innerText(),
+    /click a building/,
+  );
+  assert.equal(await page.locator("#panel-footer-note").count(), 0);
+  assert.match(
+    await page.locator("#return-world").innerText(),
+    /Close section/,
+  );
+  assert.doesNotMatch(
+    await page.locator("body").innerText(),
+    /back to the woodlands|a page from the archive/i,
+  );
+  const scenery = await page.evaluate(async () => {
+    const styles = [
+      getComputedStyle(document.body).backgroundImage,
+      getComputedStyle(document.body, "::before").backgroundImage,
+    ];
+    const sources = styles.join(",").matchAll(/url\("?([^"\)]+)"?\)/g);
+    return Promise.all(
+      [...sources].map(
+        ([, src]) =>
+          new Promise((resolve) => {
+            const image = new Image();
+            image.onload = () => resolve(image.naturalWidth > 0);
+            image.onerror = () => resolve(false);
+            image.src = src;
+          }),
+      ),
+    );
+  });
+  assert.equal(scenery.length, 3);
+  assert.ok(scenery.every(Boolean));
+  assert.equal(
+    await page.evaluate(
+      () => getComputedStyle(document.body, "::before").pointerEvents,
+    ),
+    "none",
+  );
   assert.deepEqual(await page.locator(".house-label").allTextContents(), [
     "Projects",
     "Career",
@@ -190,6 +237,20 @@ try {
   );
   await page.locator("#close-panel").click();
   await page.screenshot({ path: "/tmp/midnight-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 320, height: 844 });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+    true,
+  );
+  await page.locator(".email-link").scrollIntoViewIfNeeded();
+  assert.equal(
+    await page
+      .locator(".email-link")
+      .evaluate((el) => el.getBoundingClientRect().right <= innerWidth),
+    true,
+  );
   const reduced = await browser.newPage({ reducedMotion: "reduce" });
   await reduced.goto(process.env.TEST_URL || "http://localhost:5173");
   assert.equal(

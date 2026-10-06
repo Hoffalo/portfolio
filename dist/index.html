@@ -12,7 +12,7 @@
     <meta property="og:title" content="Issam Arida's Portfolio" />
     <meta
       property="og:description"
-      content="A little world of things I've built. Explore a playable developer portfolio."
+      content="Issam Arida’s projects, education, experience, and interactive graphics work."
     />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./style.css" />
@@ -38,7 +38,29 @@
           <h1>Issam Arida</h1>
         </div>
         <a class="email-link" href="mailto:issamaarida@gmail.com"
-          ><span class="contact-label">Contact:</span> issamaarida@gmail.com</a
+          ><svg
+            class="email-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <rect
+              x="3"
+              y="5"
+              width="18"
+              height="14"
+              rx="2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+            />
+            <path
+              d="m3 6 9 7 9-7"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+            /></svg
+          ><span class="sr-only">Email:</span> issamaarida@gmail.com</a
         >
       </header>
       <main>
@@ -91,10 +113,7 @@
               <span
                 ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd
                 ><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> walk</span
-              ><span
-                ><kbd>E</kbd> enter <span class="hint-dot">·</span> click a
-                building to visit</span
-              >
+              ><span><kbd>E</kbd> enter</span>
             </div>
             <div class="touch-pad" aria-label="Touch movement controls">
               <button data-move="up" aria-label="Move up">▲</button
@@ -125,13 +144,13 @@
             href="https://github.com/issamarida"
             target="_blank"
             rel="noopener noreferrer"
-            >github</a
+            ><span class="social-emoji" aria-hidden="true">🐙</span> GitHub</a
           ><span aria-hidden="true">·</span
           ><a
             href="https://www.linkedin.com/in/issam-arida/"
             target="_blank"
             rel="noopener noreferrer"
-            >linkedin</a
+            ><span class="social-emoji" aria-hidden="true">💼</span> LinkedIn</a
           >
         </nav>
         <div class="reading-invitation">
@@ -377,13 +396,13 @@
             </div>
             <div class="section-body">
               <p class="section-lead">
-                Sometimes the best way to explain how you think is to make
-                something people can play. This little woodland is one of those
-                experiments.
+                This portfolio is a browser game built with Canvas 2D. It
+                combines pixel rendering, movement, collision detection, and
+                accessible navigation.
               </p>
               <div class="tech-list">
                 <article>
-                  <h3>A world drawn in code</h3>
+                  <h3>Canvas rendering</h3>
                   <p>
                     A custom Canvas 2D renderer, layered pixel scenery, and
                     deterministic terrain. No game engine or runtime
@@ -391,21 +410,21 @@
                   </p>
                 </article>
                 <article>
-                  <h3>Small systems, real interaction</h3>
+                  <h3>Movement and interaction</h3>
                   <p>
                     Time-based movement, collision boundaries, proximity
                     interactions, and keyboard and touch controls.
                   </p>
                 </article>
                 <article>
-                  <h3>Atmosphere by design</h3>
+                  <h3>Lighting and sound</h3>
                   <p>
                     Warm light against a cold forest, animated rain, wandering
                     fireflies, and an optional synthesized nighttime soundscape.
                   </p>
                 </article>
                 <article>
-                  <h3>Play, at your own pace</h3>
+                  <h3>Accessibility</h3>
                   <p>
                     Reduced-motion support, keyboard-accessible destinations,
                     and an instant route to every portfolio section.
@@ -424,8 +443,7 @@
       </div>
       <div class="panel-content" id="panel-content"></div>
       <div class="panel-footer">
-        <span id="panel-footer-note">A page from the archive.</span
-        ><button id="return-world">BACK TO THE WOODLANDS <kbd>ESC</kbd></button>
+        <button id="return-world">Close section <kbd>ESC</kbd></button>
       </div>
     </dialog>
     <script type="module" src="./app.js"></script>
