@@ -256,7 +256,7 @@ export class World {
   }
   moonPosition() {
     return {
-      x: this.layout.mobile ? 800 : 650,
+      x: this.layout.mobile ? 800 : this.layout.tablet ? 500 : 610,
       y: this.layout.moonY ?? 55,
       diameter: this.layout.mobile ? 160 : 118,
     };

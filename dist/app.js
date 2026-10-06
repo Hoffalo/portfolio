@@ -66,6 +66,7 @@ function resizeJourney() {
             (innerWidth <= 700 ? 0.42 : 0.55)) /
         worldScale,
       mobile: innerWidth <= 700,
+      tablet: innerWidth > 700 && innerWidth <= 1100,
     });
   }
   updateViewport();

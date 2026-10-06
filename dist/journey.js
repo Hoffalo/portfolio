@@ -363,9 +363,8 @@ export function paintJourney(painter, layout) {
   const start = (layout.skyHeight || 0) + 540;
   const scenery = landmarks(layout);
   p.ctx.save();
-  p.ctx.beginPath();
-  p.ctx.rect(0, start, WIDTH, Math.max(0, layout.height - start));
-  p.ctx.clip();
+  // Paint complete canopies across the clearing boundary. Clipping at the
+  // ground transition would slice the tops of this first forest row.
   p.rect(0, start, WIDTH, Math.max(0, layout.height - start), "#22332e");
   const rand = random(3917);
   for (let i = 0; i < Math.ceil(layout.height * 1.8); i++) {
