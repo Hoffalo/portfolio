@@ -352,8 +352,122 @@ function campfire(p, x, y) {
   p.ellipse(x + 25, y + 101, 15, 8, "#d0ad7e");
 }
 
+function bear(p, x, y, time = 0) {
+  const breath = Math.round((1 + Math.sin(time * 0.75)) * 0.8) * 2;
+  p.ellipse(x, y + 10, 86, 23, "#1b2b25");
+  p.ellipse(x, y - breath / 2, 73, 36 + breath, "#725b42");
+  p.ellipse(x - 10, y - 7 - breath / 2, 51, 26 + breath, "#8c7352");
+  p.ellipse(x + 31, y - 3, 31, 27, "#977c56");
+  p.ellipse(x + 21, y - 15, 12, 12, "#977c56");
+  p.ellipse(x + 42, y + 4, 20, 13, "#c3a678");
+  p.rect(x + 48, y + 1, 6, 4, "#3b362c");
+  p.rect(x + 33, y - 5, 7, 2, "#42372d");
+  p.ellipse(x - 17, y + 11, 27, 12, "#9c8059");
+  for (const dx of [-24, -17, -10]) p.rect(x + dx, y + 12, 3, 3, "#c0a479");
+}
+
+function horse(p, x, y, tone, time = 0, phase = 0) {
+  const bob = time ? Math.round(Math.sin(time * 0.6 + phase)) * 2 : 0;
+  const tail = time ? Math.round(Math.sin(time * 1.2 + phase)) * 4 : 0;
+  p.ellipse(x, y + 34, 91, 15, "#1b2b25");
+  for (const dx of [-24, -12, 20, 30]) {
+    p.rect(x + dx, y + 7, 8, 27, tone);
+    p.rect(x + dx - 1, y + 31, 10, 5, "#302c28");
+  }
+  p.ellipse(x, y, 77, 39, tone);
+  p.path(
+    [
+      [x + 15, y - 8],
+      [x + 25, y - 47 + bob],
+      [x + 43, y - 39 + bob],
+      [x + 34, y + 10],
+    ],
+    tone,
+  );
+  p.ellipse(x + 39, y - 40 + bob, 34, 20, tone);
+  p.rect(x + 44, y - 37 + bob, 16, 9, "#baa586");
+  p.rect(x + 29, y - 57 + bob, 6, 14, tone);
+  p.rect(x + 39, y - 55 + bob, 6, 12, tone);
+  p.rect(x + 41, y - 43 + bob, 3, 3, "#242d28");
+  p.path(
+    [
+      [x + 21, y - 42 + bob],
+      [x + 27, y - 50 + bob],
+      [x + 30, y - 17],
+      [x + 22, y - 2],
+    ],
+    "#3e362d",
+  );
+  p.path(
+    [
+      [x - 33, y - 9],
+      [x - 41, y - 7],
+      [x - 48 + tail, y + 25],
+      [x - 41 + tail, y + 25],
+    ],
+    "#3e362d",
+  );
+  p.rect(x - 16, y - 9, 30, 6, "#a98a61");
+}
+
+function stable(p, x, y, includeActors = true) {
+  p.ellipse(x, y + 75, 440, 148, "#354333");
+  p.ellipse(x, y + 69, 392, 113, "#5a4933");
+  // A compact open-front timber stable, with hay and warm hanging lanterns.
+  p.rect(x - 116, y - 65, 232, 121, "#483b2c");
+  for (let dx = -112; dx < 114; dx += 16) {
+    p.rect(x + dx, y - 62, 13, 114, "#76553b");
+    p.rect(x + dx, y - 62, 3, 114, "#8b6746");
+  }
+  for (const dx of [-98, 18]) {
+    p.rect(x + dx, y - 47, 80, 101, "#27302a");
+    p.rect(x + dx + 4, y - 43, 72, 97, "#403c2d");
+    p.rect(x + dx + 9, y + 25, 62, 27, "#a78b4c");
+    for (let i = 0; i < 7; i++)
+      p.rect(x + dx + 11 + i * 8, y + 22 + (i % 3) * 4, 3, 27, "#c2a662");
+  }
+  p.path(
+    [
+      [x - 136, y - 63],
+      [x - 103, y - 113],
+      [x + 101, y - 113],
+      [x + 136, y - 63],
+    ],
+    "#293e38",
+  );
+  for (let row = 0; row < 5; row++) {
+    const inset = (4 - row) * 7;
+    p.rect(
+      x - 131 + inset,
+      y - 107 + row * 9,
+      262 - inset * 2,
+      7,
+      row % 2 ? "#446052" : "#365349",
+    );
+  }
+  p.rect(x - 138, y - 63, 276, 7, "#9c7b50");
+  for (const dx of [-118, -4, 110]) {
+    p.rect(x + dx, y - 57, 8, 115, "#b08a54");
+    p.rect(x + dx + 2, y - 55, 3, 110, "#d0aa6e");
+  }
+  for (const side of [-1, 1]) {
+    const sx = x + side * 179;
+    p.rect(sx, y + 30, 7, 78, "#8c714b");
+    p.rect(sx - 31, y + 46, 64, 7, "#a58b60");
+    p.rect(sx - 31, y + 71, 64, 6, "#a58b60");
+  }
+  p.lantern(x - 113, y + 3);
+  p.lantern(x + 117, y + 3);
+  if (includeActors) {
+    horse(p, x - 102, y + 89, "#8c6543");
+    horse(p, x + 104, y + 98, "#b5b09a");
+  }
+  p.ellipse(x + 19, y + 132, 47, 20, "#665845");
+  p.ellipse(x + 19, y + 127, 40, 15, "#3b5860");
+}
+
 function landmarks(layout) {
-  return layout.sections.flatMap((section) => {
+  const scenes = layout.sections.flatMap((section) => {
     const x = layout.mobile ? 690 : section.x < 200 ? 840 : 114;
     const y = layout.mobile
       ? section.y - 140
@@ -380,9 +494,20 @@ function landmarks(layout) {
     ];
     return paint ? [{ paint, x, y, rx: 135, ry: 145 }] : [];
   });
+  if (layout.stable) {
+    scenes.push({
+      paint: stable,
+      x: layout.stable.x + layout.stable.width / 2,
+      y: layout.stable.y + layout.stable.height / 2 - 12,
+      rx: layout.mobile ? 488 : 244,
+      ry: layout.mobile ? 320 : 160,
+      scale: layout.mobile ? 2 : 1,
+    });
+  }
+  return scenes;
 }
 
-export function paintJourney(painter, layout) {
+export function paintJourney(painter, layout, includeActors = true) {
   const p = painter;
   const start = (layout.skyHeight || 0) + 540;
   const scenery = landmarks(layout);
@@ -427,6 +552,115 @@ export function paintJourney(painter, layout) {
     p.ellipse(side - 15, y + 24, 18, 10, "#617065");
     p.rect(side - 21, y + 20, 7, 2, "#859085");
   }
-  for (const scene of scenery) scene.paint(p, scene.x, scene.y);
+  for (const scene of scenery) {
+    if (scene.scale && scene.scale !== 1) {
+      p.ctx.save();
+      p.ctx.translate(Math.round(scene.x / 2) * 2, Math.round(scene.y / 2) * 2);
+      p.ctx.scale(scene.scale, scene.scale);
+      scene.paint(p, 0, 0, includeActors);
+      p.ctx.restore();
+    } else scene.paint(p, scene.x, scene.y, includeActors);
+    if (includeActors && scene.paint === cave)
+      bear(p, scene.x - 39, scene.y + 72);
+  }
   p.ctx.restore();
+}
+
+// World restores the cached visible band before these small animated overlays.
+export function animateJourney(p, layout) {
+  const time = p.reduced ? 0 : p.time;
+  const viewport = p.viewport || { top: 0, bottom: layout.height };
+  for (const scene of landmarks(layout)) {
+    if (
+      scene.y + scene.ry < viewport.top ||
+      scene.y - scene.ry > viewport.bottom
+    )
+      continue;
+    const { x, y } = scene;
+    p.ctx.save();
+    if (scene.paint === campfire) {
+      const flicker = p.reduced ? 0 : Math.floor(time * 5) % 3;
+      p.path(
+        [
+          [x - 13, y + 15],
+          [x - 14, y - 3],
+          [x - 5, y + 1],
+          [x + 3, y - 27],
+          [x + 10, y - 7],
+          [x + 14, y + 15],
+        ],
+        ["#f0bb64", "#edaa53", "#f4c975"][flicker],
+      );
+      p.path(
+        [
+          [x - 5, y + 15],
+          [x - 3, y - 3 - flicker * 2],
+          [x + 3, y - 12 - flicker * 2],
+          [x + 7, y + 15],
+        ],
+        "#ffe1a0",
+      );
+      for (let i = 0; i < 5; i++) {
+        const rise = p.reduced ? i * 9 : (time * 18 + i * 17) % 70;
+        p.rect(
+          x + Math.sin(time * 0.7 + i * 2) * 15,
+          y - 19 - rise,
+          2,
+          3,
+          "#d6ab64",
+        );
+      }
+    } else if (scene.paint === pond) {
+      for (let i = 0; i < 3; i++) {
+        const fx = x + Math.sin(time * 0.23 + i * 2.1) * 60;
+        const fy = y - 13 + Math.cos(time * 0.19 + i * 1.7) * 26;
+        p.rect(fx, fy, 10, 4, i === 1 ? "#b69862" : "#8fa69a");
+        p.path(
+          [
+            [fx - 2, fy + 2],
+            [fx - 7, fy - 1],
+            [fx - 7, fy + 5],
+          ],
+          "#7b968d",
+        );
+        const ripple = p.reduced ? 0 : Math.floor(time * 0.7 + i) % 3;
+        p.rect(fx - 11 - ripple * 2, fy + 7, 16 + ripple * 4, 2, "#4c7275");
+      }
+    } else if (scene.paint === pod) {
+      p.ctx.globalAlpha = 0.45;
+      for (let i = 0; i < 4; i++) {
+        const rise = p.reduced ? i * 10 : (time * 9 + i * 13) % 51;
+        p.ellipse(
+          x + 33 + Math.sin(time * 0.4 + i) * 5,
+          y - 89 - rise,
+          10 + rise * 0.2,
+          6,
+          "#8b998e",
+        );
+      }
+      p.ctx.globalAlpha = p.reduced
+        ? 0.15
+        : 0.12 + (Math.sin(time * 1.1) + 1) * 0.06;
+      for (const dx of [-45, 34]) p.rect(x + dx, y - 22, 19, 19, "#ffe0a2");
+    } else if (scene.paint === cave) {
+      p.ctx.globalAlpha = p.reduced
+        ? 0.3
+        : 0.2 + (Math.sin(time * 0.7) + 1) * 0.2;
+      for (const [dx, dy] of [
+        [-75, -16],
+        [-45, -50],
+        [49, -30],
+        [76, 12],
+      ])
+        p.rect(x + dx + 2, y + dy - 2, 4, 6, "#b2ded2");
+      p.ctx.globalAlpha = 1;
+      bear(p, x - 39, y + 72, time);
+    } else if (scene.paint === stable) {
+      p.ctx.translate(Math.round(x / 2) * 2, Math.round(y / 2) * 2);
+      p.ctx.scale(scene.scale, scene.scale);
+      horse(p, -102, 89, "#8c6543", time, 0);
+      horse(p, 104, 98, "#b5b09a", time, 2);
+    }
+    p.ctx.restore();
+  }
 }

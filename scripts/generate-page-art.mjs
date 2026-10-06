@@ -31,20 +31,32 @@ try {
     canvas.width = 480;
     canvas.height = 270;
     const painter = new World(canvas, () => {});
-    painter.setLayout({
-      height: Math.ceil(box.height / scale / 2) * 2,
-      sections,
-      skyHeight:
-        document.querySelector(".sky-header").getBoundingClientRect().height /
-        scale,
-      moonY:
-        (document.querySelector(".header").getBoundingClientRect().top -
-          box.top +
-          document.querySelector(".header").getBoundingClientRect().height *
-            0.2) /
-        scale,
-      mobile: false,
-    });
+    const stableBox = document
+      .querySelector(".stable-clearing")
+      .getBoundingClientRect();
+    painter.setLayout(
+      {
+        stable: {
+          x: (stableBox.left - box.left) / scale,
+          y: (stableBox.top - box.top) / scale,
+          width: stableBox.width / scale,
+          height: stableBox.height / scale,
+        },
+        height: Math.ceil(box.height / scale / 2) * 2,
+        sections,
+        skyHeight:
+          document.querySelector(".sky-header").getBoundingClientRect().height /
+          scale,
+        moonY:
+          (document.querySelector(".header").getBoundingClientRect().top -
+            box.top +
+            document.querySelector(".header").getBoundingClientRect().height *
+              0.2) /
+          scale,
+        mobile: false,
+      },
+      true,
+    );
     return painter.scene.toDataURL("image/png").split(",")[1];
   });
   await writeFile("dist/art/journey.png", Buffer.from(data, "base64"));

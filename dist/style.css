@@ -1392,3 +1392,65 @@ dialog {
 .game-bottom {
   background: none;
 }
+
+/* Weathered woodland scrolls: muted rolled edges around a quiet reading field. */
+.reading-section,
+dialog {
+  clip-path: none;
+  border: 16px solid transparent;
+  border-image: url("./art/scroll-frame.svg") 24 / 16px / 0 round;
+  background-color: #30382d;
+  background-image:
+    linear-gradient(#30382de8, #30382de8), url("./art/cave.svg");
+  background-size:
+    auto,
+    128px 128px;
+  background-clip: padding-box;
+  box-shadow: none;
+}
+.reading-section {
+  padding: 26px 30px 30px;
+}
+.panel-top,
+.panel-footer {
+  background: #30382d;
+}
+#journey-world {
+  padding-bottom: 48px;
+}
+.stable-clearing {
+  width: 100%;
+  height: 420px;
+  margin-top: 180px;
+  pointer-events: none;
+}
+@media (max-width: 700px) {
+  .reading-section {
+    padding: 22px 12px 26px;
+    border-width: 12px;
+    border-image-width: 12px;
+  }
+  dialog {
+    border-width: 12px;
+    border-image-width: 12px;
+  }
+  .panel-content {
+    padding: 18px;
+  }
+  .stable-clearing {
+    height: 260px;
+    margin-top: 140px;
+  }
+}
+.reading-section,
+dialog {
+  border-width: 24px 8px;
+  border-image-width: 24px 8px;
+}
+@media (max-width: 700px) {
+  .reading-section,
+  dialog {
+    border-width: 20px 6px;
+    border-image-width: 20px 6px;
+  }
+}
