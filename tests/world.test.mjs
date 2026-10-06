@@ -36,7 +36,7 @@ test("diagonal movement uses equal speed and frame spikes are capped", () => {
   const c = { x: 482, y: 355 };
   movePlayer(c, 1, 0, 20);
   assert.ok(Math.abs(c.x - (482 + WALK_SPEED * 0.04)) < 1e-6);
-  assert.ok(Math.abs(a.x - (482 + 160 * 0.02)) < 1e-6);
+  assert.ok(Math.abs(a.x - (482 + 184 * 0.02)) < 1e-6);
 });
 test("all entrances are reachable from spawn through collision map", () => {
   const grid = 4,

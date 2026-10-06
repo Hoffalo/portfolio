@@ -53,7 +53,16 @@ function resizeJourney() {
         };
       },
     );
+    const stableBox = document
+      .querySelector(".stable-clearing")
+      .getBoundingClientRect();
     world.setLayout({
+      stable: {
+        x: (stableBox.left - box.left) / worldScale,
+        y: (stableBox.top - box.top) / worldScale,
+        width: stableBox.width / worldScale,
+        height: stableBox.height / worldScale,
+      },
       height: Math.ceil(box.height / worldScale / 2) * 2,
       sections,
       skyHeight:
