@@ -54,6 +54,8 @@ export const destinations = [
 export function canWalk(x, y) {
   if (x < 158 || x > 818 || y < 274 || y > 478) return false;
   if (x > 430 && x < 521 && y < 280) return false;
+  // The fountain is solid; the four paths remain open around its basin.
+  if (Math.hypot((x - 482) / 1.15, y - 324) < 25) return false;
   return !destinations.some(
     (d) =>
       x > d.x - 9 && x < d.x + d.w + 9 && y > d.y + 18 && y < d.y + d.h + 3,
@@ -102,7 +104,7 @@ const FOX_ROUTES = [
     [553, 410],
   ],
 ];
-export function foxState(time, index, reduced = false) {
+export function foxState(time, index, reduced = false, lead = 0) {
   const route = FOX_ROUTES[index];
   const lengths = route.map((point, i) =>
     Math.hypot(
@@ -112,7 +114,7 @@ export function foxState(time, index, reduced = false) {
   );
   const total = lengths.reduce((sum, length) => sum + length, 0);
   let distance =
-    ((reduced ? 0 : time) * (index ? 32 : 38) + index * 79) % total;
+    ((reduced ? 0 : time) * (index ? 32 : 38) + index * 79 + lead) % total;
   let segment = 0;
   while (distance > lengths[segment]) distance -= lengths[segment++];
   const start = route[segment],
@@ -124,6 +126,10 @@ export function foxState(time, index, reduced = false) {
     facing: end[0] >= start[0] ? 1 : -1,
     frame: reduced ? 0 : Math.floor(time * 10 + index) % 4,
   };
+}
+// A rabbit stays ahead of each fox on the same loop, including at corners.
+export function rabbitState(time, index, reduced = false) {
+  return foxState(time, index, reduced, 58);
 }
 function seeded(seed) {
   return () => {
@@ -278,6 +284,52 @@ export class World {
       if (Math.hypot(sx - x, sy - y) > d * 0.7)
         this.rect(sx, sy, 2, 2, "#7d9693");
     }
+    const base = this.layout.skyHeight + 8;
+    for (const [mx, height, w] of [
+      [-20, 68, 180],
+      [162, 104, 230],
+      [370, 70, 220],
+      [598, 110, 240],
+      [840, 76, 210],
+      [1020, 112, 210],
+    ]) {
+      const peak = this.layout.mobile ? height : height * 0.5;
+      this.path(
+        [
+          [mx - w / 2, base],
+          [mx, base - peak],
+          [mx + w / 2, base],
+        ],
+        "#344b50",
+      );
+      this.path(
+        [
+          [mx, base - peak],
+          [mx + w / 2, base],
+          [mx + 12, base - 20],
+        ],
+        "#263e45",
+      );
+      this.path(
+        [
+          [mx - w * 0.18, base - peak * 0.64],
+          [mx, base - peak],
+          [mx + w * 0.2, base - peak * 0.61],
+          [mx + w * 0.07, base - peak * 0.72],
+          [mx - 4, base - peak * 0.6],
+          [mx - w * 0.06, base - peak * 0.76],
+        ],
+        "#b3c7c4",
+      );
+      this.path(
+        [
+          [mx, base - peak],
+          [mx + w * 0.2, base - peak * 0.61],
+          [mx + w * 0.07, base - peak * 0.72],
+        ],
+        "#769fa4",
+      );
+    }
   }
   // All art is drawn on a 480×270 framebuffer, with a two-unit pixel grid.
   rect(x, y, w, h, color) {
@@ -354,6 +406,26 @@ export class World {
       ],
       "#2b4240",
     );
+    for (const [x, y] of [
+      [196, 57],
+      [380, 73],
+      [545, 62],
+      [745, 69],
+      [937, 79],
+    ]) {
+      this.path(
+        [
+          [x - 30, y + 26],
+          [x, y],
+          [x + 33, y + 28],
+          [x + 13, y + 20],
+          [x + 3, y + 30],
+          [x - 8, y + 18],
+        ],
+        "#a6bfbd",
+      );
+      this.rect(x - 4, y + 8, 6, 4, "#d0d8ce");
+    }
     [
       [79, 35],
       [191, 22],
@@ -406,68 +478,85 @@ export class World {
       this.rect(450 + Math.sin(y) * 9, y, 18, 2, "#456864");
       this.rect(479 + Math.cos(y) * 5, y + 8, 9, 2, "#233e47");
     }
-    // Winding dirt paths, edged with scattered warm stones.
-    const trail = [
-      [289, 277],
-      [327, 277],
-      [365, 316],
-      [471, 309],
-      [643, 283],
-      [706, 278],
-      [721, 306],
-      [647, 314],
-      [514, 346],
-      [558, 382],
-      [698, 426],
-      [735, 427],
-      [730, 458],
-      [683, 452],
-      [528, 401],
-      [468, 367],
-      [388, 396],
-      [272, 455],
-      [238, 445],
-      [249, 416],
-      [376, 368],
-      [429, 343],
-      [350, 345],
+    // Four separate spokes connect the fountain courtyard to the cabin doors.
+    const paths = [
+      [
+        [312, 287],
+        [374, 307],
+        [446, 324],
+      ],
+      [
+        [687, 289],
+        [605, 307],
+        [518, 324],
+      ],
+      [
+        [251, 435],
+        [350, 393],
+        [461, 351],
+      ],
+      [
+        [714, 440],
+        [610, 397],
+        [503, 351],
+      ],
     ];
-    this.path(trail, "#3b4436");
-    this.path(
-      trail.map(([x, y]) => [x, y - 4]),
-      "#78664c",
-    );
+    for (const route of paths) {
+      for (let i = 0; i < route.length - 1; i++) {
+        const [ax, ay] = route[i],
+          [bx, by] = route[i + 1];
+        const angle = Math.atan2(by - ay, bx - ax);
+        const nx = Math.sin(angle) * 12,
+          ny = Math.cos(angle) * 12;
+        this.path(
+          [
+            [ax - nx, ay + ny],
+            [bx - nx, by + ny],
+            [bx + nx, by - ny],
+            [ax + nx, ay - ny],
+          ],
+          "#534e3c",
+        );
+        for (let t = 0; t < 1; t += 0.075) {
+          const x = ax + (bx - ax) * t,
+            y = ay + (by - ay) * t;
+          this.ellipse(x, y, 27, 20, "#847352");
+          this.rect(x - 5 + r() * 8, y - 4, 6, 2, "#b09a6b");
+          this.rect(x - 10, y + 4, 4, 2, "#62583f");
+        }
+      }
+    }
+    this.ellipse(482, 338, 92, 32, "#20352e");
+    this.ellipse(482, 330, 86, 48, "#656c60");
+    this.ellipse(482, 325, 80, 40, "#9aa18c");
+    this.ellipse(482, 322, 66, 28, "#344f55");
+    this.ellipse(482, 322, 58, 22, "#568b8b");
+    for (let x = 448; x <= 516; x += 12) {
+      this.rect(x, 329, 2, 8, "#454f48");
+      this.rect(x + 2, 336, 8, 2, "#869281");
+    }
+    // A moonlit stone owl on a tiered pedestal watches over the village.
+    this.ellipse(482, 321, 24, 10, "#a7ae98");
+    this.rect(476, 295, 12, 26, "#7a897d");
+    this.rect(478, 296, 4, 22, "#a5b5a0");
+    this.rect(470, 291, 24, 6, "#b5bfaa");
+    this.ellipse(482, 279, 23, 25, "#849689");
+    this.rect(471, 264, 6, 10, "#a3b5a4");
+    this.rect(489, 264, 6, 10, "#a3b5a4");
+    this.ellipse(477, 274, 8, 8, "#cbd0b8");
+    this.ellipse(487, 274, 8, 8, "#cbd0b8");
+    this.rect(476, 274, 2, 2, "#3b514d");
+    this.rect(486, 274, 2, 2, "#3b514d");
     this.path(
       [
-        [465, 339],
-        [493, 339],
-        [502, 468],
-        [509, 493],
-        [457, 493],
-        [465, 468],
+        [480, 277],
+        [484, 277],
+        [482, 282],
       ],
-      "#6f6048",
+      "#c4b58a",
     );
-    for (let i = 0; i < 340; i++) {
-      const x = 220 + r() * 535,
-        y = 286 + r() * 254;
-      if (
-        Math.abs(y - (340 + Math.abs(x - 480) * 0.3)) < 17 ||
-        (Math.abs(x - 481) < 15 && y > 340)
-      )
-        this.rect(x, y, 4 + r() * 4, 2, r() > 0.55 ? "#93805a" : "#594f3e");
-    }
-    this.rect(442, 278, 84, 36, "#252f29");
-    for (let x = 448; x < 520; x += 8) {
-      this.rect(x, 278, 6, 36, "#967949");
-      this.rect(x, 280, 2, 32, "#b0925d");
-    }
-    this.rect(438, 273, 90, 5, "#b39260");
-    this.rect(438, 314, 90, 5, "#594936");
-    [440, 524].forEach((x) => {
-      this.rect(x, 269, 4, 53, "#72603f");
-      this.rect(x, 267, 6, 4, "#b89a62");
-    });
+    this.rect(478, 285, 8, 2, "#c0c9b3");
+    this.waterfalls();
     // Tiny garden by the cabin: squash, flowers, and a crooked fence.
     this.rect(790, 384, 48, 62, "#182b28");
     for (let y = 392; y < 443; y += 16)
@@ -843,6 +932,81 @@ export class World {
       this.ctx.globalAlpha = 1;
     }
   }
+  waterfalls() {
+    for (const [x, y, h] of [
+      [164, 162, 93],
+      [804, 145, 110],
+    ]) {
+      this.path(
+        [
+          [x - 28, y - 12],
+          [x + 29, y - 8],
+          [x + 35, y + h],
+          [x - 35, y + h],
+        ],
+        "#374b44",
+      );
+      this.rect(x - 15, y, 30, h, "#3e727a");
+      this.rect(x - 7, y, 10, h, "#83b4b5");
+      this.rect(x + 9, y, 4, h, "#a9ccc1");
+      this.ellipse(x, y + h + 5, 70, 24, "#294b51");
+      this.ellipse(x, y + h + 1, 44, 12, "#719e99");
+      const phase = this.reduced ? 0 : Math.floor(this.time * 17) % 18;
+      for (let yy = phase; yy < h; yy += 18) {
+        this.rect(x - 11, y + yy, 7, 8, "#bdd5c7");
+        this.rect(x + 3, y + ((yy + 8) % h), 5, 5, "#659b9f");
+      }
+      for (let j = 0; j < 5; j++)
+        this.rect(
+          x - 22 + j * 10,
+          y + h - 4 + ((j + phase) % 3) * 2,
+          4,
+          3,
+          "#c1d2bb",
+        );
+      this.rect(x - 27, y - 4, 54, 5, "#819587");
+    }
+  }
+  fountainWater() {
+    const phase = this.reduced ? 0 : Math.floor(this.time * 6) % 4;
+    for (const side of [-1, 1]) {
+      this.path(
+        [
+          [482 + side * 9, 291],
+          [482 + side * 18, 298],
+          [482 + side * 24, 316],
+          [482 + side * 21, 316],
+          [482 + side * 15, 300],
+        ],
+        "#8ebbb2",
+      );
+      this.rect(482 + side * 23, 311 + phase * 2, 3, 5, "#c3dace");
+      this.rect(482 + side * 22 - 5, 322, 12, 2, "#abd0c0");
+    }
+    this.rect(449 + phase * 3, 318, 15, 2, "#8ab6af");
+    this.rect(499 - phase * 2, 323, 11, 2, "#bad0b8");
+  }
+  rabbit(state, index) {
+    const c = this.ctx;
+    c.save();
+    c.translate(Math.round(state.x / 2) * 2, Math.round(state.y / 2) * 2);
+    c.scale(state.facing, 1);
+    const hop = this.reduced ? 0 : [0, -3, -6, -2][state.frame];
+    this.ellipse(0, 2, 22, 5, "#172920");
+    const fur = index ? "#b9b4a0" : "#d8d6c0";
+    this.ellipse(-2, -7 + hop, 17, 12, fur);
+    this.rect(-12, -9 + hop, 5, 5, "#efdfc7");
+    this.ellipse(7, -12 + hop, 10, 10, fur);
+    this.rect(5, -27 + hop, 4, 13, fur);
+    this.rect(11, -25 + hop, 4, 11, fur);
+    this.rect(7, -23 + hop, 2, 6, "#bd8e89");
+    this.rect(13, -22 + hop, 2, 5, "#bd8e89");
+    this.rect(10, -14 + hop, 2, 2, "#354138");
+    this.rect(13, -10 + hop, 3, 2, "#b48d7a");
+    this.rect(-6, -2 + hop, 6, 3, fur);
+    this.rect(5, -2 + hop, 6, 3, fur);
+    c.restore();
+  }
   fox(state) {
     const c = this.ctx;
     c.save();
@@ -976,6 +1140,7 @@ export class World {
       c.translate(0, this.layout.skyHeight);
       this.skyClouds();
       this.moonlight();
+      this.waterfalls();
       for (let i = 0; i < 7; i++) {
         const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
         this.rect(
@@ -990,13 +1155,22 @@ export class World {
         foxState(this.time, 0, this.reduced),
         foxState(this.time, 1, this.reduced),
       ];
+      const rabbits = [
+        rabbitState(this.time, 0, this.reduced),
+        rabbitState(this.time, 1, this.reduced),
+      ];
       const sorted = [
+        { y: 344, draw: () => this.fountainWater() },
         ...destinations.map((d) => ({
           y: d.y + d.h,
           draw: () => this.building(d),
         })),
         ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
         ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
+        ...rabbits.map((rabbit, i) => ({
+          y: rabbit.y,
+          draw: () => this.rabbit(rabbit, i),
+        })),
         { y: this.player.y, draw: () => this.character() },
       ].sort((a, b) => a.y - b.y);
       sorted.forEach((o) => o.draw());

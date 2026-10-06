@@ -63,7 +63,7 @@ function resizeJourney() {
         (document.querySelector(".header").getBoundingClientRect().top -
           box.top +
           document.querySelector(".header").getBoundingClientRect().height *
-            (innerWidth <= 700 ? 0.42 : 0.55)) /
+            (innerWidth <= 700 ? 0.42 : 0.2)) /
         worldScale,
       mobile: innerWidth <= 700,
       tablet: innerWidth > 700 && innerWidth <= 1100,
@@ -165,8 +165,6 @@ window.addEventListener("keyup", (e) => {
 window.addEventListener("blur", () => world.keys.clear());
 document.addEventListener("visibilitychange", () => {
   world.keys.clear();
-  if (document.hidden && audioContext) audioContext.suspend();
-  else if (soundEnabled && audioContext) audioContext.resume();
 });
 canvas.addEventListener("pointerdown", (event) => {
   const y =
@@ -198,96 +196,9 @@ canvas.addEventListener("click", (e) => {
   )
     openArea(world.near);
 });
-const motion = document.querySelector("#motion");
-function updateMotion() {
-  motion.setAttribute("aria-pressed", String(world.reduced));
-  motion.querySelector("span").textContent = world.reduced
-    ? "wind still"
-    : "wind on";
-  motion.setAttribute(
-    "aria-label",
-    world.reduced ? "Enable ambient motion" : "Reduce ambient motion",
-  );
-}
-motion.addEventListener("click", () => {
-  world.reduced = !world.reduced;
-  updateMotion();
-});
 matchMedia("(prefers-reduced-motion: reduce)").addEventListener(
   "change",
   (e) => {
     world.reduced = e.matches;
-    updateMotion();
   },
 );
-updateMotion();
-let audioContext = null,
-  soundEnabled = false;
-function createAmbience() {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return null;
-  const context = new AudioContext();
-  const master = context.createGain();
-  master.gain.value = 0.035;
-  master.connect(context.destination);
-  // A quiet harmonic drone under filtered, looping rain. Audio begins only after a user gesture.
-  [130.81, 196, 261.63, 329.63].forEach((frequency, i) => {
-    const osc = context.createOscillator(),
-      gain = context.createGain();
-    osc.type = "sine";
-    osc.frequency.value = frequency;
-    gain.gain.value = 0.07;
-    osc.connect(gain);
-    gain.connect(master);
-    osc.start();
-    const lfo = context.createOscillator(),
-      lfoGain = context.createGain();
-    lfo.frequency.value = 0.09 + i * 0.02;
-    lfoGain.gain.value = 0.025;
-    lfo.connect(lfoGain);
-    lfoGain.connect(gain.gain);
-    lfo.start();
-  });
-  const buffer = context.createBuffer(
-    1,
-    context.sampleRate * 4,
-    context.sampleRate,
-  );
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-  const rain = context.createBufferSource(),
-    filter = context.createBiquadFilter();
-  rain.buffer = buffer;
-  rain.loop = true;
-  filter.type = "lowpass";
-  filter.frequency.value = 650;
-  rain.connect(filter);
-  filter.connect(master);
-  rain.start();
-  return context;
-}
-document.querySelector("#sound").addEventListener("click", async () => {
-  const button = document.querySelector("#sound");
-  try {
-    audioContext ??= createAmbience();
-    if (!audioContext) {
-      button.querySelector("span").textContent = "UNAVAILABLE";
-      button.setAttribute("aria-label", "Ambient sound unavailable");
-      return;
-    }
-    soundEnabled = !soundEnabled;
-    await (soundEnabled ? audioContext.resume() : audioContext.suspend());
-    button.setAttribute("aria-pressed", String(soundEnabled));
-    button.setAttribute(
-      "aria-label",
-      soundEnabled ? "Disable ambient sound" : "Enable ambient sound",
-    );
-    button.querySelector("span").textContent = soundEnabled
-      ? "sound on"
-      : "sound off";
-  } catch {
-    soundEnabled = false;
-    button.setAttribute("aria-pressed", "false");
-    button.querySelector("span").textContent = "sound off";
-  }
-});
