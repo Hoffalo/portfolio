@@ -235,3 +235,6 @@ agents/
 .agents/
 .codex/
 .claude/
+
+# Keep the requested local context handoff private
+/agents/context_1.md
