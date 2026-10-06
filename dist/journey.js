@@ -366,48 +366,64 @@ function bear(p, x, y, time = 0) {
   for (const dx of [-24, -17, -10]) p.rect(x + dx, y + 12, 3, 3, "#c0a479");
 }
 
-function horse(p, x, y, tone, time = 0, phase = 0) {
-  const bob = time ? Math.round(Math.sin(time * 0.6 + phase)) * 2 : 0;
-  const tail = time ? Math.round(Math.sin(time * 1.2 + phase)) * 4 : 0;
-  p.ellipse(x, y + 34, 91, 15, "#1b2b25");
-  for (const dx of [-24, -12, 20, 30]) {
-    p.rect(x + dx, y + 7, 8, 27, tone);
-    p.rect(x + dx - 1, y + 31, 10, 5, "#302c28");
+function stallHorse(p, x, y, feeding, time = 0) {
+  const bob = time
+    ? Math.round(Math.sin(time * (feeding ? 1.4 : 0.55))) * 2
+    : 0;
+  const tone = feeding ? "#aa7c4d" : "#c1bda4";
+  const headY = y + (feeding ? 9 : -20) + bob;
+  p.ellipse(x, y + 18, 59, 9, "#32372b");
+  for (const dx of [-19, -9, 10, 19]) {
+    p.rect(x + dx, y + 5, 5, 24, tone);
+    p.rect(x + dx - 1, y + 26, 7, 4, "#39332a");
   }
-  p.ellipse(x, y, 77, 39, tone);
+  p.ellipse(x - 2, y, 48, 28, tone);
   p.path(
     [
-      [x + 15, y - 8],
-      [x + 25, y - 47 + bob],
-      [x + 43, y - 39 + bob],
-      [x + 34, y + 10],
+      [x + 11, y - 9],
+      [x + 20, headY - 7],
+      [x + 29, headY + 2],
+      [x + 21, y + 7],
     ],
     tone,
   );
-  p.ellipse(x + 39, y - 40 + bob, 34, 20, tone);
-  p.rect(x + 44, y - 37 + bob, 16, 9, "#baa586");
-  p.rect(x + 29, y - 57 + bob, 6, 14, tone);
-  p.rect(x + 39, y - 55 + bob, 6, 12, tone);
-  p.rect(x + 41, y - 43 + bob, 3, 3, "#242d28");
+  p.ellipse(x + 25, headY, 22, 15, tone);
+  p.rect(x + 30, headY + 2, 8, 5, "#d0bfa0");
+  p.rect(x + 19, headY - 16, 4, 11, tone);
+  p.rect(x + 26, headY - 15, 4, 10, tone);
+  p.rect(x + 28, headY - 3, 3, 2, "#3b372d");
   p.path(
     [
-      [x + 21, y - 42 + bob],
-      [x + 27, y - 50 + bob],
-      [x + 30, y - 17],
-      [x + 22, y - 2],
+      [x + 12, y - 8],
+      [x + 16, headY - 9],
+      [x + 21, headY - 8],
+      [x + 17, y + 2],
     ],
-    "#3e362d",
+    "#4d4030",
   );
   p.path(
     [
-      [x - 33, y - 9],
-      [x - 41, y - 7],
-      [x - 48 + tail, y + 25],
-      [x - 41 + tail, y + 25],
+      [x - 22, y - 6],
+      [x - 28, y - 4],
+      [x - 30 + (time ? Math.round(Math.sin(time)) * 2 : 0), y + 16],
+      [x - 25, y + 18],
     ],
-    "#3e362d",
+    "#4d4030",
   );
-  p.rect(x - 16, y - 9, 30, 6, "#a98a61");
+  if (feeding) {
+    p.rect(x + 29, headY + 5, 10, 2, "#a89751");
+    p.rect(x + 35, headY + 6, 2, 7, "#cab772");
+  }
+}
+
+function stallFront(p) {
+  for (const dx of [-98, 18]) {
+    p.rect(dx, 35, 80, 6, "#9e7c4b");
+    p.rect(dx, 47, 80, 5, "#85613c");
+    p.rect(dx + 2, 31, 5, 27, "#c29a5d");
+    p.rect(dx + 73, 31, 5, 27, "#c29a5d");
+    p.rect(dx + 6, 36, 66, 2, "#c4a16a");
+  }
 }
 
 function barn(p, x, y) {
@@ -533,77 +549,34 @@ function highlandCow(p, x, y, time = 0, phase = 0) {
   );
 }
 
-function cropField(p, x, y, width, height, kind) {
-  p.path(
-    [
-      [x + 8, y],
-      [x + width - 12, y - 5],
-      [x + width, y + 12],
-      [x + width - 7, y + height],
-      [x + 4, y + height + 6],
-      [x - 8, y + 13],
-    ],
-    "#514030",
-  );
-  for (let row = 0; row < Math.floor(height / 22); row++) {
-    p.rect(x + 2, y + 11 + row * 22, width - 10, 7, "#3e352b");
-    for (let col = 0; col < Math.floor((width - 12) / 23); col++) {
-      const cx = x + 13 + col * 23,
-        cy = y + 8 + row * 22;
-      if (kind === 0) {
-        p.ellipse(cx, cy + 5, 15, 10, "#b78035");
-        p.rect(cx - 1, cy - 2, 3, 6, "#84934f");
-        p.rect(cx - 3, cy + 1, 2, 7, "#d39b48");
-      } else if (kind === 1) {
-        p.rect(cx, cy - 8, 2, 19, "#a09553");
-        p.rect(cx - 4, cy - 7, 4, 12, "#c6af66");
-        p.rect(cx + 2, cy - 10, 4, 13, "#bda25a");
-        p.rect(cx - 3, cy - 12, 3, 5, "#ddc17b");
-      } else {
-        p.ellipse(cx, cy + 5, 9, 8, "#cec2a0");
-        p.path(
-          [
-            [cx, cy + 3],
-            [cx - 9, cy - 5],
-            [cx - 3, cy - 7],
-            [cx, cy - 2],
-            [cx + 6, cy - 9],
-            [cx + 10, cy - 5],
-          ],
-          "#718c4a",
-        );
-        p.rect(cx - 1, cy - 7, 3, 9, "#9aab68");
-      }
-    }
-  }
-}
-
 function farmGeometry(area, mobile) {
   return mobile
     ? {
         barn: [480, area.y + 260, 2],
-        horses: [
-          [250, area.y + 560],
-          [665, area.y + 560],
-        ],
         cows: [
-          [250, area.y + 745],
-          [655, area.y + 750],
-        ],
-        cropsY: area.y + Math.min(area.height - 135, 915),
+          [245, 560],
+          [670, 575],
+          [245, 755],
+          [670, 770],
+          [245, 955],
+          [670, 965],
+        ].map(([x, y]) => [x, area.y + y]),
         animalScale: 2,
       }
     : {
-        barn: [235, area.y + Math.min(139, area.height * 0.45), 1],
-        horses: [
-          [140, area.y + Math.min(290, area.height - 55)],
-          [345, area.y + Math.min(285, area.height - 60)],
-        ],
+        barn: [235, area.y + 139, 1],
         cows: [
-          [605, area.y + Math.min(298, area.height - 50)],
-          [802, area.y + Math.min(292, area.height - 56)],
-        ],
-        cropsY: area.y + 69,
+          [526, 110],
+          [686, 117],
+          [846, 105],
+          [526, 220],
+          [686, 229],
+          [846, 215],
+          [487, 330],
+          [624, 334],
+          [760, 326],
+          [891, 333],
+        ].map(([x, y]) => [x, area.y + y]),
         animalScale: 1,
       };
 }
@@ -618,11 +591,11 @@ function scaledAt(p, x, y, scale, paint) {
 
 function farmActors(p, area, mobile, time = 0) {
   const g = farmGeometry(area, mobile);
-  g.horses.forEach(([x, y], i) =>
-    scaledAt(p, x, y, g.animalScale, () =>
-      horse(p, 0, 0, i ? "#b5b09a" : "#8c6543", time, i * 2),
-    ),
-  );
+  scaledAt(p, ...g.barn, () => {
+    stallHorse(p, -58, 8, true, time);
+    stallHorse(p, 56, 8, false, time);
+    stallFront(p);
+  });
   g.cows.forEach(([x, y], i) =>
     scaledAt(p, x, y, g.animalScale, () =>
       highlandCow(p, 0, 0, time, i * 2 + 1),
@@ -663,26 +636,33 @@ function farm(p, area, mobile, includeActors) {
       y = area.y + 20 + rand() * (area.height - 40);
     p.rect(x, y, 4 + rand() * 8, 2, i % 3 ? "#67714a" : "#82734e");
   }
-  if (mobile) {
-    for (let i = 0; i < 3; i++)
-      cropField(p, 38 + i * 300, g.cropsY, 280, 106, i);
-  } else {
-    for (let i = 0; i < 3; i++)
-      cropField(p, 469 + i * 154, g.cropsY + (i % 2) * 15, 139, 130, i);
-  }
-  const fenceY = mobile
-    ? area.y + 660
-    : area.y + Math.min(238, area.height - 145);
-  for (let x = 20; x < WIDTH; x += 92) {
-    p.rect(x, fenceY - 11, 7, 42, "#8a7047");
-    p.rect(x + 3, fenceY - 9, 3, 38, "#b19660");
-    if (x < 880) {
-      p.rect(x + 7, fenceY + 1, 86, 6, "#ac9060");
-      p.rect(x + 7, fenceY + 17, 86, 5, "#967b50");
+  // A roomy grazing paddock replaces cultivated fields entirely.
+  const fenceY = area.y + (mobile ? 444 : 47);
+  const fenceStart = mobile ? 20 : 425;
+  for (let x = fenceStart; x < 932; x += 84) {
+    p.rect(x, fenceY - 11, 7, 40, "#8a7047");
+    p.rect(x + 3, fenceY - 9, 3, 37, "#b19660");
+    if (x < 856) {
+      p.rect(x + 7, fenceY + 1, 78, 6, "#ac9060");
+      p.rect(x + 7, fenceY + 16, 78, 5, "#967b50");
     }
   }
-  scaledAt(p, ...g.barn, () => barn(p, 0, 0));
-  for (const x of [30, 926]) p.lantern(x, area.y + (mobile ? 835 : 356));
+  scaledAt(p, ...g.barn, () => {
+    barn(p, 0, 0);
+    stallFront(p);
+    // Straw bales, a water bucket and a spare warm blanket by the stalls.
+    p.rect(-111, 84, 66, 29, "#a58a4b");
+    p.rect(-107, 87, 58, 4, "#d1b76a");
+    for (const dx of [-99, -76, -56]) p.rect(dx, 87, 2, 23, "#d1b76a");
+    p.rect(-107, 102, 58, 3, "#786438");
+    p.ellipse(107, 91, 28, 21, "#737469");
+    p.rect(95, 88, 24, 20, "#737469");
+    p.ellipse(107, 88, 27, 12, "#a3a68d");
+    p.ellipse(107, 89, 20, 7, "#42666a");
+    p.rect(-30, 73, 35, 7, "#6f8c7b");
+    p.rect(-26, 80, 5, 12, "#96ad92");
+  });
+  for (const x of [30, 926]) p.lantern(x, area.y + (mobile ? 890 : 370));
   if (includeActors) farmActors(p, area, mobile);
 }
 

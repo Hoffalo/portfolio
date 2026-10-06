@@ -236,13 +236,8 @@ export class World {
   }
   setLayout(layout, includeActors = false) {
     this.layout = layout;
-    this.canvas.width = WIDTH / 2;
-    this.canvas.height = Math.ceil(layout.height / 2);
-    this.ctx = this.canvas.getContext("2d");
-    this.ctx.imageSmoothingEnabled = false;
-    this.ctx.scale(0.5, 0.5);
     this.scene.width = WIDTH / 2;
-    this.scene.height = this.canvas.height;
+    this.scene.height = Math.ceil(layout.height / 2);
     const main = this.ctx,
       reduced = this.reduced,
       time = this.time;
@@ -251,27 +246,51 @@ export class World {
     this.ctx.scale(0.5, 0.5);
     this.reduced = true;
     this.time = 0;
-    this.drawSky();
-    this.ctx.save();
-    this.ctx.translate(0, layout.skyHeight);
-    this.drawTerrain();
-    this.ctx.restore();
-    paintJourney(this, layout, includeActors);
-    this.ctx = main;
-    this.reduced = reduced;
-    this.time = time;
-    this.ctx.drawImage(this.scene, 0, 0, WIDTH, layout.height);
+    try {
+      this.rect(0, 0, WIDTH, layout.height, "#22332e");
+      this.drawSky();
+      this.ctx.save();
+      this.ctx.translate(0, layout.skyHeight);
+      this.drawTerrain();
+      this.ctx.restore();
+      paintJourney(this, layout, includeActors);
+    } finally {
+      this.ctx = main;
+      this.reduced = reduced;
+      this.time = time;
+    }
+
     if (!canWalk(this.player.x, this.player.y))
       this.player = { x: 482, y: 355, facing: "down" };
+  }
+  setViewport(viewport, scale, screenHeight) {
+    this.viewport = viewport;
+    const capacity = Math.max(2, Math.ceil((screenHeight / scale + 44) / 2));
+    if (this.canvas.width !== WIDTH / 2 || this.canvas.height !== capacity) {
+      this.canvas.width = WIDTH / 2;
+      this.canvas.height = capacity;
+      this.ctx = this.canvas.getContext("2d");
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.scale(0.5, 0.5);
+    }
+    this.renderScale = scale;
+    this.canvas.style.height = `${capacity * 2 * scale}px`;
   }
   isWalkable(x, y) {
     return canWalk(x, y);
   }
   moonPosition() {
     return {
-      x: this.layout.mobile ? 800 : this.layout.tablet ? 500 : 610,
+      x:
+        this.layout.compactHeader || this.layout.mobile
+          ? 800
+          : this.layout.tablet
+            ? 500
+            : 610,
       y: this.layout.moonY ?? 55,
-      diameter: this.layout.mobile ? 160 : 118,
+      diameter: this.layout.mobile
+        ? 160
+        : Math.min(118, 180 / (this.layout.scale || 1)),
     };
   }
   drawSky() {
@@ -352,7 +371,7 @@ export class World {
       );
     }
   }
-  // All art is drawn on a 480×270 framebuffer, with a two-unit pixel grid.
+  // Art uses a 480-pixel-wide framebuffer and a two-unit pixel grid.
   rect(x, y, w, h, color) {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(
@@ -1235,7 +1254,9 @@ export class World {
       );
     const height = Math.max(0, bottom - top);
     if (!height) return;
+    this.canvas.style.top = `${top * (this.renderScale || 1)}px`;
     c.save();
+    c.translate(0, -top);
     c.beginPath();
     c.rect(0, top, WIDTH, height);
     c.clip();
@@ -1344,6 +1365,7 @@ export class World {
     c.restore();
   }
   frame(now) {
+    requestAnimationFrame(this.frame);
     const dt = this.last ? Math.min((now - this.last) / 1000, 0.04) : 0;
     this.last = now;
     if (!document.hidden && this.visible) {
@@ -1365,6 +1387,5 @@ export class World {
       this.time += dt;
       this.draw();
     }
-    requestAnimationFrame(this.frame);
   }
 }

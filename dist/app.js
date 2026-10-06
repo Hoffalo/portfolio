@@ -17,14 +17,15 @@ const world = new World(canvas, (id) => {
 const journey = document.querySelector("#journey-world");
 let worldTop = 0,
   worldScale = 1,
-  layoutWidth = 0,
-  layoutHeight = 0;
+  layoutSignature = "",
+  resizePending = false;
 function updateViewport() {
   const top = (scrollY - worldTop) / worldScale;
-  world.viewport = {
+  const viewport = {
     top: Math.max(0, top - 20),
     bottom: Math.min(world.layout.height, top + innerHeight / worldScale + 20),
   };
+  world.setViewport(viewport, worldScale, innerHeight);
   world.visible = world.viewport.bottom > world.viewport.top;
   world.gameVisible =
     world.viewport.bottom > world.layout.skyHeight + 274 &&
@@ -33,67 +34,77 @@ function updateViewport() {
 }
 function resizeJourney() {
   const box = journey.getBoundingClientRect();
+  if (box.width <= 0 || box.height <= 0) return;
   worldTop = scrollY + box.top;
   worldScale = box.width / 960;
-  if (
-    Math.abs(box.width - layoutWidth) > 1 ||
-    Math.abs(box.height - layoutHeight) > 1
-  ) {
-    layoutWidth = box.width;
-    layoutHeight = box.height;
-    const sections = [...document.querySelectorAll(".reading-section")].map(
-      (section) => {
-        const rect = section.getBoundingClientRect();
-        return {
-          id: section.id,
-          x: (rect.left - box.left) / worldScale,
-          y: (rect.top - box.top) / worldScale,
-          width: rect.width / worldScale,
-          height: rect.height / worldScale,
-        };
-      },
-    );
-    const stableBox = document
-      .querySelector(".stable-clearing")
-      .getBoundingClientRect();
-    const dividerBox = document
-      .querySelector(".river-divider")
-      .getBoundingClientRect();
-    world.setLayout({
-      divider: {
-        x: (dividerBox.left - box.left) / worldScale,
-        y: (dividerBox.top - box.top) / worldScale,
-        width: dividerBox.width / worldScale,
-        height: dividerBox.height / worldScale,
-      },
-      stable: {
-        x: (stableBox.left - box.left) / worldScale,
-        y: (stableBox.top - box.top) / worldScale,
-        width: stableBox.width / worldScale,
-        height: stableBox.height / worldScale,
-      },
-      height: Math.ceil(box.height / worldScale / 2) * 2,
-      sections,
-      skyHeight:
-        document.querySelector(".sky-header").getBoundingClientRect().height /
-        worldScale,
-      moonY:
-        (document.querySelector(".header").getBoundingClientRect().top -
-          box.top +
-          document.querySelector(".header").getBoundingClientRect().height *
-            (innerWidth <= 700 ? 0.42 : 0.2)) /
-        worldScale,
-      mobile: innerWidth <= 700,
-      tablet: innerWidth > 700 && innerWidth <= 1100,
-    });
+  const sections = [...document.querySelectorAll(".reading-section")].map(
+    (section) => {
+      const rect = section.getBoundingClientRect();
+      return {
+        id: section.id,
+        x: (rect.left - box.left) / worldScale,
+        y: (rect.top - box.top) / worldScale,
+        width: rect.width / worldScale,
+        height: rect.height / worldScale,
+      };
+    },
+  );
+  const stableBox = document
+    .querySelector(".stable-clearing")
+    .getBoundingClientRect();
+  const dividerBox = document
+    .querySelector(".river-divider")
+    .getBoundingClientRect();
+  const layout = {
+    scale: worldScale,
+    divider: {
+      x: (dividerBox.left - box.left) / worldScale,
+      y: (dividerBox.top - box.top) / worldScale,
+      width: dividerBox.width / worldScale,
+      height: dividerBox.height / worldScale,
+    },
+    stable: {
+      x: (stableBox.left - box.left) / worldScale,
+      y: (stableBox.top - box.top) / worldScale,
+      width: stableBox.width / worldScale,
+      height: stableBox.height / worldScale,
+    },
+    height: Math.ceil(box.height / worldScale / 2) * 2,
+    sections,
+    skyHeight:
+      document.querySelector(".sky-header").getBoundingClientRect().height /
+      worldScale,
+    moonY:
+      (document.querySelector(".header").getBoundingClientRect().top -
+        box.top +
+        document.querySelector(".header").getBoundingClientRect().height *
+          (innerWidth <= 740 ? (innerWidth > 500 ? 0.28 : 0.42) : 0.2)) /
+      worldScale,
+    compactHeader: innerWidth <= 740,
+    mobile: innerWidth <= 700,
+    tablet: innerWidth > 700 && innerWidth <= 1100,
+  };
+  const signature = JSON.stringify([box.width, layout]);
+  if (signature !== layoutSignature) {
+    world.setLayout(layout);
+    layoutSignature = signature;
   }
   updateViewport();
 }
 resizeJourney();
-new ResizeObserver(resizeJourney).observe(journey);
-document.fonts.ready.then(resizeJourney);
+function scheduleResize() {
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => {
+    resizePending = false;
+    resizeJourney();
+  });
+}
+new ResizeObserver(scheduleResize).observe(journey);
+document.fonts.ready.then(scheduleResize);
 addEventListener("scroll", updateViewport, { passive: true });
-addEventListener("resize", resizeJourney);
+addEventListener("resize", scheduleResize);
+window.visualViewport?.addEventListener("resize", scheduleResize);
 function stopExploring() {
   world.keys.clear();
   if (document.activeElement === canvas) canvas.blur();
