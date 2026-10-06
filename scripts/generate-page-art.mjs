@@ -34,6 +34,15 @@ try {
     painter.setLayout({
       height: Math.ceil(box.height / scale / 2) * 2,
       sections,
+      skyHeight:
+        document.querySelector(".sky-header").getBoundingClientRect().height /
+        scale,
+      moonY:
+        (document.querySelector(".header").getBoundingClientRect().top -
+          box.top +
+          document.querySelector(".header").getBoundingClientRect().height *
+            0.55) /
+        scale,
       mobile: false,
     });
     return painter.scene.toDataURL("image/png").split(",")[1];

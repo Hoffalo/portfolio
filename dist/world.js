@@ -1,4 +1,4 @@
-import { paintJourney, pathAt } from "./journey.js";
+import { paintJourney } from "./journey.js";
 export const WIDTH = 960,
   HEIGHT = 540;
 export const destinations = [
@@ -52,7 +52,7 @@ export const destinations = [
   },
 ];
 export function canWalk(x, y) {
-  if (x < 48 || x > 912 || y < 134 || y > 499) return false;
+  if (x < 158 || x > 818 || y < 274 || y > 478) return false;
   if (x > 430 && x < 521 && y < 280) return false;
   return !destinations.some(
     (d) =>
@@ -143,7 +143,14 @@ export class World {
     this.near = null;
     this.active = true;
     this.visible = true;
-    this.layout = { height: HEIGHT, sections: [], mobile: false };
+    this.layout = {
+      height: HEIGHT,
+      skyHeight: 0,
+      moonY: 55,
+      sections: [],
+      mobile: false,
+    };
+    this.gameVisible = true;
     this.viewport = { top: 0, bottom: HEIGHT };
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.time = 0;
@@ -231,24 +238,46 @@ export class World {
     this.ctx.scale(0.5, 0.5);
     this.reduced = true;
     this.time = 0;
+    this.drawSky();
+    this.ctx.save();
+    this.ctx.translate(0, layout.skyHeight);
     this.drawTerrain();
+    this.ctx.restore();
     paintJourney(this, layout);
     this.ctx = main;
     this.reduced = reduced;
     this.time = time;
     this.ctx.drawImage(this.scene, 0, 0, WIDTH, layout.height);
-    this.player.y = Math.min(this.player.y, layout.height - 30);
-    if (
-      this.player.y > HEIGHT &&
-      !this.isWalkable(this.player.x, this.player.y)
-    )
-      this.player.x = pathAt(this.player.y, layout);
+    if (!canWalk(this.player.x, this.player.y))
+      this.player = { x: 482, y: 355, facing: "down" };
   }
   isWalkable(x, y) {
-    if (y < 499) return canWalk(x, y);
-    if (y < HEIGHT) return x > 438 && x < 544;
-    if (x < 12 || x > 948 || y > this.layout.height - 24) return false;
-    return Math.abs(x - pathAt(y, this.layout)) < 38;
+    return canWalk(x, y);
+  }
+  moonPosition() {
+    return {
+      x: this.layout.mobile ? 800 : 650,
+      y: this.layout.moonY ?? 55,
+      diameter: this.layout.mobile ? 160 : 118,
+    };
+  }
+  drawSky() {
+    this.rect(0, 0, WIDTH, this.layout.skyHeight || 0, "#17242b");
+    const { x, y, diameter: d } = this.moonPosition();
+    this.ellipse(x, y, d + 22, d + 22, "#253c40");
+    this.ellipse(x, y, d + 10, d + 10, "#486360");
+    this.ellipse(x, y, d, d, "#c6d3b5");
+    this.ellipse(x - 2, y - 2, d - 6, d - 6, "#e5e4c7");
+    this.ellipse(x - d * 0.23, y - d * 0.2, d * 0.19, d * 0.14, "#c6ceb4");
+    this.ellipse(x + d * 0.22, y + d * 0.09, d * 0.23, d * 0.18, "#c9d0b9");
+    this.ellipse(x - d * 0.03, y + d * 0.3, d * 0.13, d * 0.09, "#cbd2b8");
+    const rand = seeded(714);
+    for (let i = 0; i < 45; i++) {
+      const sx = rand() * WIDTH,
+        sy = rand() * this.layout.skyHeight;
+      if (Math.hypot(sx - x, sy - y) > d * 0.7)
+        this.rect(sx, sy, 2, 2, "#7d9693");
+    }
   }
   // All art is drawn on a 480×270 framebuffer, with a two-unit pixel grid.
   rect(x, y, w, h, color) {
@@ -325,14 +354,6 @@ export class World {
       ],
       "#2b4240",
     );
-    // A luminous full moon, with soft pixel craters and a restrained halo.
-    this.ellipse(828, 46, 62, 62, "#233637");
-    this.ellipse(828, 46, 52, 52, "#3d5048");
-    this.ellipse(828, 46, 44, 44, "#bbc4ab");
-    this.ellipse(827, 45, 40, 40, "#e2dfbd");
-    this.ellipse(817, 38, 8, 6, "#c9d0b4");
-    this.ellipse(837, 49, 10, 8, "#c9d0b4");
-    this.ellipse(827, 57, 5, 5, "#c9d0b4");
     [
       [79, 35],
       [191, 22],
@@ -421,8 +442,8 @@ export class World {
         [465, 339],
         [493, 339],
         [502, 468],
-        [544, 540],
-        [444, 540],
+        [509, 493],
+        [457, 493],
         [465, 468],
       ],
       "#6f6048",
@@ -888,11 +909,13 @@ export class World {
     c.save();
     // Pixel-stepped shafts are rendered before scenery, which occludes the light.
     const breathe = this.reduced ? 1 : 0.94 + Math.sin(this.time * 0.24) * 0.06;
+    const moon = this.moonPosition(),
+      originY = moon.y - this.layout.skyHeight;
     const shafts = [
       {
         points: [
-          [814, 52],
-          [823, 52],
+          [moon.x - 14, originY + 14],
+          [moon.x - 5, originY + 14],
           [390, 540],
           [270, 540],
         ],
@@ -900,8 +923,8 @@ export class World {
       },
       {
         points: [
-          [824, 51],
-          [832, 51],
+          [moon.x - 4, originY + 15],
+          [moon.x + 4, originY + 15],
           [655, 540],
           [485, 540],
         ],
@@ -909,8 +932,8 @@ export class World {
       },
       {
         points: [
-          [835, 50],
-          [841, 50],
+          [moon.x + 7, originY + 12],
+          [moon.x + 13, originY + 12],
           [892, 530],
           [744, 530],
         ],
@@ -948,7 +971,9 @@ export class World {
       WIDTH,
       height,
     );
-    if (top < 620) {
+    if (top < this.layout.skyHeight + 620) {
+      c.save();
+      c.translate(0, this.layout.skyHeight);
       this.skyClouds();
       this.moonlight();
       for (let i = 0; i < 7; i++) {
@@ -1013,8 +1038,7 @@ export class World {
         this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
         this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
       }
-    } else {
-      this.character();
+      c.restore();
     }
     if (!this.reduced) {
       c.globalAlpha = 0.35;
@@ -1031,14 +1055,13 @@ export class World {
     const dt = this.last ? Math.min((now - this.last) / 1000, 0.04) : 0;
     this.last = now;
     if (!document.hidden && this.visible) {
-      if (this.active) {
+      if (this.active && this.gameVisible) {
         const dx =
             Number(this.keys.has("right")) - Number(this.keys.has("left")),
           dy = Number(this.keys.has("down")) - Number(this.keys.has("up"));
         this.walking = movePlayer(this.player, dx, dy, dt, (x, y) =>
           this.isWalkable(x, y),
         );
-        if (this.walking) this.onMove?.(this.player);
         if (this.walking) this.walkTime += dt;
         else this.walkTime = 0;
         const near = nearbyArea(this.player.x, this.player.y);

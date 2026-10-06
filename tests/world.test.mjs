@@ -1,4 +1,3 @@
-import { pathAt } from "../dist/journey.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -92,36 +91,21 @@ test("both fox routes stay in reachable clearings and freeze under reduced motio
   }
 });
 
-test("the village exit connects to the full-height woodland trail", () => {
+test("scrollable scenery never expands the playable cabin clearing", () => {
   const world = Object.create(World.prototype);
-  world.layout = {
-    height: 3200,
-    mobile: false,
-    sections: [
-      { id: "about", x: 86, y: 980, width: 557, height: 600 },
-      { id: "projects", x: 317, y: 1840, width: 557, height: 700 },
-    ],
-  };
-  assert.ok(world.isWalkable(494, 510));
-  assert.ok(world.isWalkable(494, 540));
-  for (let y = 540; y < world.layout.height - 24; y += 12)
-    assert.ok(world.isWalkable(pathAt(y, world.layout), y));
-  assert.equal(world.isWalkable(494, 3200), false);
-  assert.equal(world.isWalkable(480, 1400), false);
-});
-test("the mobile trail stays beside the reading panels", () => {
-  const layout = {
-    height: 6200,
-    mobile: true,
-    sections: [
-      { id: "about", x: 40, y: 1600, width: 880, height: 1600 },
-      { id: "projects", x: 40, y: 3700, width: 880, height: 1900 },
-    ],
-  };
-  assert.equal(pathAt(2000, layout), 26);
-  assert.equal(pathAt(4200, layout), 934);
-  for (let y = 540; y < 6100; y += 10)
-    assert.ok(pathAt(y, layout) >= 26 && pathAt(y, layout) <= 934);
+  world.layout = { height: 6200, skyHeight: 400, mobile: true, sections: [] };
+  for (const point of [
+    [482, 540],
+    [482, 1400],
+    [100, 355],
+    [900, 355],
+    [482, 250],
+  ])
+    assert.equal(world.isWalkable(...point), false);
+  assert.ok(world.isWalkable(482, 355));
+  const player = { x: 482, y: 355 };
+  for (let i = 0; i < 600; i++) movePlayer(player, 0, 1, 0.04);
+  assert.ok(player.y <= 478);
 });
 
 test("capped-frame movement cannot skip a narrow obstacle", () => {
