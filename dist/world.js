@@ -137,9 +137,99 @@ function seeded(seed) {
     return seed / 4294967296;
   };
 }
+export function riverCenter(x) {
+  return 165 + Math.sin(x * 0.011) * 9 + Math.sin(x * 0.026) * 4;
+}
+export function riverBounds(x) {
+  const center = riverCenter(x),
+    halfWidth = 15 + Math.sin(x * 0.019) * 3;
+  return { top: center - halfWidth, bottom: center + halfWidth };
+}
+export function treeFootprint(tree) {
+  // Includes canopy sway, raster rounding, trunk and the ground shadow.
+  const x = Math.round(tree.x / 2) * 2,
+    y = Math.round(tree.y / 2) * 2;
+  const halfWidth = 42 * tree.s + 8;
+  return {
+    left: x - halfWidth,
+    right: x + halfWidth,
+    top: y - Math.max(80 * tree.s + 6, 68 * tree.s + 22),
+    bottom: y + 10,
+  };
+}
+export function treeClearsRiver(tree) {
+  const box = treeFootprint(tree);
+  for (let x = box.left; x <= box.right; x += 2) {
+    const river = riverBounds(x);
+    if (box.bottom >= river.top - 3 && box.top <= river.bottom + 3)
+      return false;
+  }
+  return true;
+}
+export function villageTrees() {
+  const rand = seeded(827),
+    trees = [];
+  const place = (tree) => {
+    if (!treeClearsRiver(tree)) return;
+    const b = treeFootprint(tree);
+    // Southern/side crowns never obscure cabin panels or their nameplates.
+    if (
+      tree.y > 250 &&
+      destinations.some(
+        (d) =>
+          b.left < d.x + d.w + 16 &&
+          b.right > d.x - 16 &&
+          b.top < d.y + d.h + 38 &&
+          b.bottom > d.y - 34,
+      )
+    )
+      return;
+    trees.push(tree);
+  };
+  for (let row = 0; row < 6; row++)
+    for (let col = 0; col < 24; col++) {
+      const x = col * 45 + (rand() - 0.5) * 22,
+        y = 85 + row * 71 + (rand() - 0.5) * 27;
+      const tree = { x, y, s: 0.65 + rand() * 0.5, tone: rand() };
+      if (y > 160 && (x < 150 || x > 818)) place(tree);
+    }
+  // Uneven staggered rows stay on the northern bank and mask mountain feet.
+  for (let row = 0; row < 2; row++)
+    for (let x = -28; x < WIDTH + 45; x += 34) {
+      const tree = {
+        x: x + row * 17 + (rand() - 0.5) * 8,
+        y: 91 + row * 23 + (rand() - 0.5) * 10,
+        s: 0.78 + rand() * 0.22,
+        tone: rand(),
+      };
+      // Limit the trunk bottom against the lowest river edge across its crown.
+      const box = treeFootprint(tree);
+      let northLimit = Infinity;
+      for (let sx = box.left; sx <= box.right; sx += 2)
+        northLimit = Math.min(northLimit, riverBounds(sx).top - 15);
+      tree.y = Math.min(tree.y, northLimit);
+      place(tree);
+    }
+  for (const tree of [
+    { x: 82, y: 534, s: 1.02, tone: 0.65 },
+    { x: 158, y: 552, s: 1.15, tone: 0.22 },
+    { x: 231, y: 552, s: 0.96, tone: 0.71 },
+    { x: 304, y: 542, s: 0.93, tone: 0.34 },
+    { x: 372, y: 556, s: 1.05, tone: 0.18 },
+    { x: 604, y: 556, s: 1, tone: 0.62 },
+    { x: 676, y: 554, s: 1.08, tone: 0.3 },
+    { x: 749, y: 556, s: 0.98, tone: 0.76 },
+    { x: 832, y: 550, s: 1.15, tone: 0.21 },
+    { x: 918, y: 538, s: 1.02, tone: 0.58 },
+  ])
+    place(tree);
+  return trees;
+}
 export class World {
   constructor(canvas, onNear) {
     this.canvas = canvas;
+    this.surfaceLayer = canvas.parentElement;
+    this.surfaces = [];
     this.ctx = canvas.getContext("2d");
     this.ctx.imageSmoothingEnabled = false;
     this.ctx.scale(0.5, 0.5);
@@ -169,43 +259,7 @@ export class World {
       y: 110 + rand() * 430,
       v: rand(),
     }));
-    this.trees = [];
-    for (let row = 0; row < 6; row++)
-      for (let col = 0; col < 24; col++) {
-        const x = col * 45 + (rand() - 0.5) * 22,
-          y = 85 + row * 71 + (rand() - 0.5) * 27;
-        const size = 0.65 + rand() * 0.5,
-          tone = rand();
-        if (y > 160 && (x < 150 || x > 818 || (x > 384 && x < 577 && y < 235)))
-          this.trees.push({ x, y, s: size, tone });
-      }
-    // Two staggered forest layers cover the complete mountain foothills.
-    // Their canopies overlap, while their trunks finish above the cabin roofs.
-    for (let row = 0; row < 2; row++) {
-      for (let x = -28; x < WIDTH + 45; x += 34) {
-        this.trees.push({
-          x: x + row * 17 + (rand() - 0.5) * 8,
-          y: 111 + row * 27 + (rand() - 0.5) * 10,
-          s: 0.78 + rand() * 0.22,
-          tone: rand(),
-        });
-      }
-    }
-    // Frame the southern edge without closing the central entrance path.
-    this.trees.push(
-      ...[
-        { x: 82, y: 534, s: 1.02, tone: 0.65 },
-        { x: 158, y: 552, s: 1.15, tone: 0.22 },
-        { x: 231, y: 552, s: 0.96, tone: 0.71 },
-        { x: 304, y: 542, s: 0.93, tone: 0.34 },
-        { x: 372, y: 556, s: 1.05, tone: 0.18 },
-        { x: 604, y: 556, s: 1.0, tone: 0.62 },
-        { x: 676, y: 554, s: 1.08, tone: 0.3 },
-        { x: 749, y: 556, s: 0.98, tone: 0.76 },
-        { x: 832, y: 550, s: 1.15, tone: 0.21 },
-        { x: 918, y: 538, s: 1.02, tone: 0.58 },
-      ],
-    );
+    this.trees = villageTrees();
     this.clouds = [
       { x: 100, y: 16, w: 170, h: 24, speed: 2.0 },
       { x: 410, y: 30, w: 200, h: 26, speed: 1.2 },
@@ -231,6 +285,11 @@ export class World {
   }
   setLayout(layout, includeActors = false) {
     this.layout = layout;
+    this.trees = villageTrees().filter(
+      (tree) =>
+        !layout.divider ||
+        treeFootprint(tree).bottom + layout.skyHeight < layout.divider.y - 8,
+    );
     this.scene.width = WIDTH / 2;
     this.scene.height = Math.ceil(layout.height / 2);
     const main = this.ctx,
@@ -257,19 +316,50 @@ export class World {
 
     if (!canWalk(this.player.x, this.player.y))
       this.player = { x: 482, y: 355, facing: "down" };
+    this.buildSurfaces();
   }
-  setViewport(viewport, scale, screenHeight) {
-    this.viewport = viewport;
-    const capacity = Math.max(2, Math.ceil((screenHeight / scale + 44) / 2));
-    if (this.canvas.width !== WIDTH / 2 || this.canvas.height !== capacity) {
-      this.canvas.width = WIDTH / 2;
-      this.canvas.height = capacity;
-      this.ctx = this.canvas.getContext("2d");
-      this.ctx.imageSmoothingEnabled = false;
-      this.ctx.scale(0.5, 0.5);
+  buildSurfaces() {
+    if (!this.surfaceLayer) return;
+    for (const surface of this.surfaces)
+      if (surface.canvas !== this.canvas) surface.canvas.remove();
+    this.surfaces = [];
+    const firstHeight =
+      Math.ceil(Math.max(1024, this.layout.skyHeight + 540) / 2) * 2;
+    for (let top = 0; top < this.layout.height;) {
+      const height = Math.min(
+        top === 0 ? firstHeight : 1024,
+        this.layout.height - top,
+      );
+      const canvas = top === 0 ? this.canvas : document.createElement("canvas");
+      canvas.width = WIDTH / 2;
+      canvas.height = Math.ceil(height / 2);
+      canvas.dataset.worldSurface = "";
+      if (top !== 0) canvas.setAttribute("aria-hidden", "true");
+      canvas.style.top = `${Math.round(top * this.layout.scale)}px`;
+      canvas.style.height = `${Math.round((top + height) * this.layout.scale) - Math.round(top * this.layout.scale)}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.scale(0.5, 0.5);
+      this.surfaces.push({ canvas, ctx, top, height });
+      if (top !== 0) this.surfaceLayer.append(canvas);
+      top += height;
     }
-    this.renderScale = scale;
-    this.canvas.style.height = `${capacity * 2 * scale}px`;
+    const viewport = this.viewport;
+    try {
+      for (const surface of this.surfaces) {
+        this.viewport = {
+          top: surface.top,
+          bottom: surface.top + surface.height,
+        };
+        this.drawSurface(surface);
+      }
+    } finally {
+      this.viewport = viewport;
+      this.ctx = this.surfaces[0].ctx;
+    }
+  }
+  setViewport(viewport) {
+    this.viewport = viewport;
   }
   isWalkable(x, y) {
     return canWalk(x, y);
@@ -988,7 +1078,7 @@ export class World {
     }
   }
   riverCenter(x) {
-    return 165 + Math.sin(x * 0.011) * 9 + Math.sin(x * 0.026) * 4;
+    return riverCenter(x);
   }
   riverBanks() {
     // The river continues through both canvas edges, behind the cabin roofs.
@@ -1241,114 +1331,137 @@ export class World {
     c.restore();
   }
   draw() {
-    const c = this.ctx;
-    const top = Math.max(0, Math.floor(this.viewport.top / 2) * 2),
-      bottom = Math.min(
-        this.layout.height,
-        Math.ceil(this.viewport.bottom / 2) * 2,
-      );
-    const height = Math.max(0, bottom - top);
-    if (!height) return;
-    this.canvas.style.top = `${top * (this.renderScale || 1)}px`;
-    c.save();
-    c.translate(0, -top);
-    c.beginPath();
-    c.rect(0, top, WIDTH, height);
-    c.clip();
-    c.clearRect(0, top, WIDTH, height);
-    c.drawImage(
-      this.scene,
-      0,
-      top / 2,
-      WIDTH / 2,
-      height / 2,
-      0,
-      top,
-      WIDTH,
-      height,
-    );
-    animateJourney(this, this.layout);
-    if (top < this.layout.skyHeight + 620) {
-      c.save();
-      c.translate(0, this.layout.skyHeight);
-      this.skyClouds();
-      this.crows();
-      this.moonlight();
-      this.riverLife();
-      for (let i = 0; i < 7; i++) {
-        const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
-        this.rect(
-          458 + Math.sin(i * 2) * 10 + phase * 2,
-          148 + i * 19,
-          12,
-          2,
-          "#51736b",
-        );
+    const main = this.ctx;
+    try {
+      for (const surface of this.surfaces) {
+        if (
+          surface.top < this.viewport.bottom &&
+          surface.top + surface.height > this.viewport.top
+        )
+          this.drawSurface(surface);
       }
-      const foxes = [
-        foxState(this.time, 0, this.reduced),
-        foxState(this.time, 1, this.reduced),
-      ];
-      const rabbits = [
-        rabbitState(this.time, 0, this.reduced),
-        rabbitState(this.time, 1, this.reduced),
-      ];
-      const sorted = [
-        { y: 344, draw: () => this.fountainWater() },
-        ...destinations.map((d) => ({
-          y: d.y + d.h,
-          draw: () => this.building(d),
-        })),
-        ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
-        ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
-        ...rabbits.map((rabbit, i) => ({
-          y: rabbit.y,
-          draw: () => this.rabbit(rabbit, i),
-        })),
-        { y: this.player.y, draw: () => this.character() },
-      ].sort((a, b) => a.y - b.y);
-      sorted.forEach((o) => o.draw());
-      destinations.forEach((d) => this.smoke(d));
-      [
-        [363, 289],
-        [596, 314],
-        [334, 420],
-        [633, 452],
-        [458, 460],
-      ].forEach(([x, y]) => this.lantern(x, y));
-      this.rect(531, 318, 4, 30, "#796343");
-      this.rect(516, 318, 37, 10, "#b69b66");
-      this.rect(519, 320, 29, 2, "#78613e");
-      this.fire();
-      // A sleeping cat beside the cabin: only its tail stirs.
-      this.rect(626, 426, 17, 8, "#9f9472");
-      this.rect(623, 424, 7, 8, "#9f9472");
-      this.rect(623, 421, 3, 4, "#b4a17b");
-      this.rect(627, 429, 2, 2, "#4c4e37");
-      this.rect(636, 431, 9, 2, "#756f50");
-      this.rect(
-        643,
-        424 + (this.reduced ? 0 : Math.round(Math.sin(this.time * 0.7)) * 2),
-        7,
-        3,
-        "#aaa07b",
-      );
-      this.flies.forEach((f) => {
-        const t = this.reduced ? f.phase : this.time;
-        const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
-          y = f.y + Math.cos(t * 0.7 + f.phase) * 6;
-        c.globalAlpha = 0.4 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
-        this.rect(x, y, 2, 2, "#cfcb85");
-        c.globalAlpha = 1;
-      });
-      if (this.near) {
-        const d = destinations.find((d) => d.id === this.near);
-        this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
-        this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
-      }
-      c.restore();
+    } finally {
+      this.ctx = main;
     }
-    c.restore();
+  }
+  drawSurface(surface) {
+    const c = surface.ctx,
+      previousContext = this.ctx;
+    this.ctx = c;
+    const top = surface.top,
+      bottom = Math.min(this.layout.height, top + surface.height);
+    const height = Math.max(0, bottom - top);
+    if (!height) {
+      this.ctx = previousContext;
+      return;
+    }
+    c.save();
+    try {
+      c.translate(0, -top);
+      c.beginPath();
+      c.rect(0, top, WIDTH, height);
+      c.clip();
+      c.clearRect(0, top, WIDTH, height);
+      c.drawImage(
+        this.scene,
+        0,
+        top / 2,
+        WIDTH / 2,
+        height / 2,
+        0,
+        top,
+        WIDTH,
+        height,
+      );
+      animateJourney(this, this.layout);
+      if (top < this.layout.skyHeight + 620) {
+        c.save();
+        try {
+          c.translate(0, this.layout.skyHeight);
+          this.skyClouds();
+          this.crows();
+          this.moonlight();
+          this.riverLife();
+          for (let i = 0; i < 7; i++) {
+            const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
+            this.rect(
+              458 + Math.sin(i * 2) * 10 + phase * 2,
+              148 + i * 19,
+              12,
+              2,
+              "#51736b",
+            );
+          }
+          const foxes = [
+            foxState(this.time, 0, this.reduced),
+            foxState(this.time, 1, this.reduced),
+          ];
+          const rabbits = [
+            rabbitState(this.time, 0, this.reduced),
+            rabbitState(this.time, 1, this.reduced),
+          ];
+          const sorted = [
+            { y: 344, draw: () => this.fountainWater() },
+            ...destinations.map((d) => ({
+              y: d.y + d.h,
+              draw: () => this.building(d),
+            })),
+            ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
+            ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
+            ...rabbits.map((rabbit, i) => ({
+              y: rabbit.y,
+              draw: () => this.rabbit(rabbit, i),
+            })),
+            { y: this.player.y, draw: () => this.character() },
+          ].sort((a, b) => a.y - b.y);
+          sorted.forEach((o) => o.draw());
+          destinations.forEach((d) => this.smoke(d));
+          [
+            [363, 289],
+            [596, 314],
+            [334, 420],
+            [633, 452],
+            [458, 460],
+          ].forEach(([x, y]) => this.lantern(x, y));
+          this.rect(531, 318, 4, 30, "#796343");
+          this.rect(516, 318, 37, 10, "#b69b66");
+          this.rect(519, 320, 29, 2, "#78613e");
+          this.fire();
+          // A sleeping cat beside the cabin: only its tail stirs.
+          this.rect(626, 426, 17, 8, "#9f9472");
+          this.rect(623, 424, 7, 8, "#9f9472");
+          this.rect(623, 421, 3, 4, "#b4a17b");
+          this.rect(627, 429, 2, 2, "#4c4e37");
+          this.rect(636, 431, 9, 2, "#756f50");
+          this.rect(
+            643,
+            424 +
+              (this.reduced ? 0 : Math.round(Math.sin(this.time * 0.7)) * 2),
+            7,
+            3,
+            "#aaa07b",
+          );
+          this.flies.forEach((f) => {
+            const t = this.reduced ? f.phase : this.time;
+            const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
+              y = f.y + Math.cos(t * 0.7 + f.phase) * 6;
+            c.globalAlpha = 0.4 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
+            this.rect(x, y, 2, 2, "#cfcb85");
+            c.globalAlpha = 1;
+          });
+          if (this.near) {
+            const d = destinations.find((d) => d.id === this.near);
+            this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
+            this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
+          }
+        } finally {
+          c.restore();
+        }
+      }
+    } finally {
+      c.restore();
+      this.ctx = previousContext;
+    }
   }
   frame(now) {
     requestAnimationFrame(this.frame);

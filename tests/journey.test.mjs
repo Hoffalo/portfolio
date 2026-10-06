@@ -1,10 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { animateJourney, journeyGeometry } from "../dist/journey.js";
+import {
+  animateJourney,
+  journeyGeometry,
+  railwayGeometry,
+  treeFootprint,
+  intersects,
+} from "../dist/journey.js";
 
 const layout = {
   height: 7000,
   mobile: false,
+  clearings: [
+    { id: "about", y: 1000, height: 400 },
+    { id: "projects", y: 2200, height: 320 },
+    { id: "career", y: 3400, height: 340 },
+    { id: "gamedev", y: 4300, height: 280 },
+  ],
   sections: [
     { id: "about", x: 86, y: 1000, width: 557, height: 900 },
     { id: "projects", x: 317, y: 2200, width: 557, height: 900 },
@@ -48,14 +60,24 @@ test("offscreen scenery has no animated draw calls", () => {
   assert.deepEqual(render(2, false, { top: 0, bottom: 500 }), []);
 });
 
-test("pond and campfire never overlap even beside a short reading section", () => {
-  for (const height of [220, 320, 500, 900]) {
-    const scenes = journeyGeometry({
-      ...layout,
-      sections: [{ id: "about", x: 86, y: 1000, width: 557, height }],
-    });
-    const camp = scenes.find((s) => s.kind === "campfire");
-    const pond = scenes.find((s) => s.kind === "pond");
-    assert.ok(camp.y + camp.ry + 16 <= pond.y - pond.ry);
-  }
+test("fixed scene compositions are identical at every resolution", () => {
+  assert.deepEqual(
+    journeyGeometry({ ...layout, mobile: true }),
+    journeyGeometry({ ...layout, mobile: false }),
+  );
+  const scenes = journeyGeometry(layout);
+  const camp = scenes.find((s) => s.kind === "campfire"),
+    pond = scenes.find((s) => s.kind === "pond");
+  assert.ok(camp.x + camp.rx + 16 < pond.x - pond.rx);
+});
+test("railway curves into the tunnel opening instead of crossing masonry", () => {
+  const { points, tunnel } = railwayGeometry(layout.railway),
+    end = points.at(-1);
+  assert.ok(end[0] > tunnel.mouthLeft && end[0] < tunnel.mouthRight);
+  assert.ok(end[1] > tunnel.mouthTop && end[1] < tunnel.mouthBottom);
+  assert.ok(new Set(points.map((p) => p[1])).size > 3);
+});
+test("tree exclusion tests canopies instead of just trunk centers", () => {
+  const box = treeFootprint({ x: 300, y: 100, s: 1 });
+  assert.ok(intersects(box, { left: 250, right: 350, top: 30, bottom: 50 }));
 });

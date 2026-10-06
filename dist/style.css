@@ -338,7 +338,7 @@ kbd {
   box-shadow: 6px 7px #13251ad6;
   scroll-margin-top: 32px;
 }
-.reading-section:nth-child(even) {
+.reading-section:nth-of-type(even) {
   margin-left: auto;
   margin-right: 9%;
 }
@@ -840,7 +840,7 @@ dialog::backdrop {
     background: none;
   }
   .reading-section,
-  .reading-section:nth-child(even) {
+  .reading-section:nth-of-type(even) {
     width: calc(100% - 32px);
     margin: 190px 16px 0;
     padding: 28px 22px 32px;
@@ -1764,5 +1764,96 @@ dialog {
   }
   .reading-section::after {
     bottom: -20px;
+  }
+}
+/* Stationary scene surfaces scroll with the document; compositions never rearrange. */
+.world-layer canvas {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  aspect-ratio: auto;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.world-layer #world {
+  pointer-events: auto;
+}
+.scene-clearing {
+  width: 100%;
+  aspect-ratio: 960 / var(--scene-height);
+  margin-top: 120px;
+  pointer-events: none;
+}
+.reading-section {
+  margin-top: 24px;
+}
+.stable-clearing {
+  height: auto;
+  aspect-ratio: 960 / 400;
+  margin-top: 90px;
+}
+.railway-clearing {
+  height: auto;
+  aspect-ratio: 960 / 240;
+  margin-top: 100px;
+}
+.river-divider {
+  height: auto;
+  aspect-ratio: 960 / 140;
+}
+.game-bottom {
+  justify-content: center;
+  width: max-content;
+  max-width: calc(100% - 32px);
+}
+.keyboard-hint {
+  justify-content: center;
+}
+.identity,
+.email-link {
+  color: #fff6d9;
+  text-shadow:
+    2px 2px #101a1e,
+    0 0 10px #d9eab68c;
+}
+.identity::before,
+.email-link::before {
+  background: radial-gradient(
+    ellipse,
+    #d4e6b75c 10%,
+    #c3d7a833 55%,
+    transparent 75%
+  );
+}
+.identity::after,
+.email-link::after {
+  background: linear-gradient(#cee2af3d, #c7dab31c 75%, transparent);
+}
+.identity img {
+  box-shadow:
+    0 0 0 2px #e7e7cb,
+    0 0 30px #dbe9ae88;
+}
+@media (max-width: 700px) {
+  .scene-clearing {
+    margin-top: 70px;
+  }
+  .reading-section,
+  .reading-section:nth-of-type(even) {
+    margin-top: 24px;
+  }
+  .stable-clearing {
+    height: auto;
+    margin-top: 60px;
+  }
+  .railway-clearing {
+    height: auto;
+    margin-top: 70px;
+  }
+  .river-divider {
+    height: auto;
+  }
+  .game-bottom {
+    width: calc(100% - 32px);
   }
 }

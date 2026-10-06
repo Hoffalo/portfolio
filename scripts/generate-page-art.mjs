@@ -40,8 +40,18 @@ try {
     const railwayBox = document
       .querySelector(".railway-clearing")
       .getBoundingClientRect();
+    const clearings = [...document.querySelectorAll(".scene-clearing")].map(
+      (element) => ({
+        id: element.dataset.scene,
+        x: 0,
+        y: (element.getBoundingClientRect().top - box.top) / scale,
+        width: 960,
+        height: Number(element.style.getPropertyValue("--scene-height")),
+      }),
+    );
     painter.setLayout(
       {
+        clearings,
         scale,
         railway: {
           x: (railwayBox.left - box.left) / scale,
@@ -70,7 +80,7 @@ try {
           (document.querySelector(".header").getBoundingClientRect().top -
             box.top +
             document.querySelector(".header").getBoundingClientRect().height *
-              0.2) /
+              0.45) /
           scale,
         mobile: false,
       },

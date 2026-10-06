@@ -25,7 +25,7 @@ function updateViewport() {
     top: Math.max(0, top - 20),
     bottom: Math.min(world.layout.height, top + innerHeight / worldScale + 20),
   };
-  world.setViewport(viewport, worldScale, innerHeight);
+  world.setViewport(viewport);
   world.visible = world.viewport.bottom > world.viewport.top;
   world.gameVisible =
     world.viewport.bottom > world.layout.skyHeight + 274 &&
@@ -58,7 +58,20 @@ function resizeJourney() {
   const railwayBox = document
     .querySelector(".railway-clearing")
     .getBoundingClientRect();
+  const clearings = [...document.querySelectorAll(".scene-clearing")].map(
+    (element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        id: element.dataset.scene,
+        x: 0,
+        y: (rect.top - box.top) / worldScale,
+        width: 960,
+        height: Number(element.style.getPropertyValue("--scene-height")),
+      };
+    },
+  );
   const layout = {
+    clearings,
     railway: {
       x: (railwayBox.left - box.left) / worldScale,
       y: (railwayBox.top - box.top) / worldScale,
@@ -87,13 +100,15 @@ function resizeJourney() {
       (document.querySelector(".header").getBoundingClientRect().top -
         box.top +
         document.querySelector(".header").getBoundingClientRect().height *
-          (innerWidth <= 740 ? (innerWidth > 500 ? 0.28 : 0.42) : 0.2)) /
+          (innerWidth <= 740 ? (innerWidth > 500 ? 0.28 : 0.42) : 0.45)) /
       worldScale,
     compactHeader: innerWidth <= 740,
     mobile: innerWidth <= 700,
     tablet: innerWidth > 700 && innerWidth <= 1100,
   };
-  const signature = JSON.stringify([box.width, layout]);
+  const signature = JSON.stringify([box.width, layout], (key, value) =>
+    typeof value === "number" ? Math.round(value * 100) / 100 : value,
+  );
   if (signature !== layoutSignature) {
     world.setLayout(layout);
     layoutSignature = signature;

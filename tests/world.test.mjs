@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   World,
+  villageTrees,
+  treeClearsRiver,
   foxState,
   rabbitState,
   WALK_SPEED,
@@ -170,4 +172,47 @@ test("a transient render error cannot stop the next animation frame", () => {
     if (previousDocument === undefined) delete globalThis.document;
     else globalThis.document = previousDocument;
   }
+});
+
+test("every complete village tree stays out of the river", () => {
+  assert.ok(villageTrees().length > 30);
+  assert.ok(villageTrees().every(treeClearsRiver));
+  assert.equal(treeClearsRiver({ x: 480, y: 180, s: 1, tone: 0.5 }), false);
+  assert.deepEqual(villageTrees(), villageTrees());
+});
+
+test("a drawing exception restores every surface transform and context", () => {
+  let depth = 0;
+  const ctx = {
+    save() {
+      depth++;
+    },
+    restore() {
+      depth--;
+    },
+    translate() {},
+    beginPath() {},
+    rect() {},
+    clip() {},
+    clearRect() {},
+    drawImage() {},
+  };
+  const original = {};
+  const world = {
+    ctx: original,
+    layout: { height: 540, skyHeight: 0, clearings: [] },
+    viewport: { top: 0, bottom: 540 },
+    time: 0,
+    reduced: false,
+    scene: {},
+    skyClouds() {
+      throw new Error("paint failure");
+    },
+  };
+  assert.throws(
+    () => World.prototype.drawSurface.call(world, { ctx, top: 0, height: 540 }),
+    /paint failure/,
+  );
+  assert.equal(depth, 0);
+  assert.equal(world.ctx, original);
 });
