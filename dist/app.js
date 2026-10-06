@@ -56,7 +56,16 @@ function resizeJourney() {
     const stableBox = document
       .querySelector(".stable-clearing")
       .getBoundingClientRect();
+    const dividerBox = document
+      .querySelector(".river-divider")
+      .getBoundingClientRect();
     world.setLayout({
+      divider: {
+        x: (dividerBox.left - box.left) / worldScale,
+        y: (dividerBox.top - box.top) / worldScale,
+        width: dividerBox.width / worldScale,
+        height: dividerBox.height / worldScale,
+      },
       stable: {
         x: (stableBox.left - box.left) / worldScale,
         y: (stableBox.top - box.top) / worldScale,

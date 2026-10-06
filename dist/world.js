@@ -176,14 +176,21 @@ export class World {
           y = 85 + row * 71 + (rand() - 0.5) * 27;
         const size = 0.65 + rand() * 0.5,
           tone = rand();
-        // Leave a break in the treeline so the moon can light the clearing.
-        const moonOpening = x > 754 && x < 904 && y < 157;
-        if (
-          !moonOpening &&
-          (y < 150 || x < 150 || x > 818 || (x > 384 && x < 577 && y < 235))
-        )
+        if (y > 160 && (x < 150 || x > 818 || (x > 384 && x < 577 && y < 235)))
           this.trees.push({ x, y, s: size, tone });
       }
+    // Two staggered forest layers cover the complete mountain foothills.
+    // Their canopies overlap, while their trunks finish above the cabin roofs.
+    for (let row = 0; row < 2; row++) {
+      for (let x = -28; x < WIDTH + 45; x += 34) {
+        this.trees.push({
+          x: x + row * 17 + (rand() - 0.5) * 8,
+          y: 111 + row * 27 + (rand() - 0.5) * 10,
+          s: 0.78 + rand() * 0.22,
+          tone: rand(),
+        });
+      }
+    }
     // Frame the southern edge without closing the central entrance path.
     this.trees.push(
       ...[
@@ -420,6 +427,55 @@ export class World {
       "#2b4240",
     );
     const r = seeded(832);
+    // Broad irregular soil, moss and gravel islands keep the ground varied.
+    const earth = seeded(9031);
+    const patches = [
+      "#293b30",
+      "#2b3d31",
+      "#303c30",
+      "#343b2e",
+      "#26372d",
+      "#383c2f",
+    ];
+    for (let i = 0; i < 82; i++) {
+      const x = earth() * WIDTH,
+        y = 195 + earth() * 330,
+        w = 20 + earth() * 70,
+        h = 8 + earth() * 27;
+      this.path(
+        [
+          [x - w * 0.5, y],
+          [x - w * 0.3, y - h * 0.45],
+          [x + w * 0.2, y - h * 0.5],
+          [x + w * 0.5, y - h * 0.15],
+          [x + w * 0.4, y + h * 0.3],
+          [x - w * 0.1, y + h * 0.5],
+        ],
+        patches[i % patches.length],
+      );
+      for (let j = 0; j < 7; j++) {
+        const px = x + (earth() - 0.5) * w * 0.7,
+          py = y + (earth() - 0.5) * h * 0.7;
+        this.rect(
+          px,
+          py,
+          2 + earth() * 5,
+          2,
+          i % 3 === 0 ? "#505344" : i % 3 === 1 ? "#3c5138" : "#414631",
+        );
+      }
+    }
+    for (let i = 0; i < 155; i++) {
+      const x = earth() * WIDTH,
+        y = 190 + earth() * 330;
+      if (i % 3 === 0) {
+        this.rect(x, y, 4, 2, "#78684a");
+        this.rect(x + 2, y - 2, 2, 2, "#586146");
+      } else {
+        this.rect(x, y, 4, 2, "#455246");
+        this.rect(x + 1, y - 2, 2, 2, "#5b6556");
+      }
+    }
     this.grass.forEach((g) => {
       if (g.y < 137) return;
       this.rect(g.x, g.y, 2 + g.v * 3, 2, g.v > 0.55 ? "#304438" : "#1c2c29");
@@ -917,91 +973,76 @@ export class World {
       this.ctx.globalAlpha = 1;
     }
   }
+  riverCenter(x) {
+    return 165 + Math.sin(x * 0.011) * 9 + Math.sin(x * 0.026) * 4;
+  }
   riverBanks() {
-    // A gently curving headwater joins the existing creek without entering paths.
-    const bank = [
-      [66, 153],
-      [146, 127],
-      [232, 130],
-      [294, 145],
-      [372, 127],
-      [438, 136],
-      [479, 163],
-      [490, 185],
-      [465, 215],
-      [436, 223],
-      [466, 175],
-      [423, 160],
-      [377, 156],
-      [301, 172],
-      [227, 155],
-      [150, 153],
-      [87, 175],
-    ];
-    this.path(bank, "#536553");
-    this.path(
-      [
-        [76, 157],
-        [147, 136],
-        [231, 139],
-        [295, 155],
-        [373, 137],
-        [433, 146],
-        [478, 168],
-        [479, 181],
-        [455, 205],
-        [443, 216],
-        [466, 176],
-        [423, 153],
-        [379, 148],
-        [301, 163],
-        [228, 147],
-        [150, 144],
-        [85, 166],
-      ],
-      "#34585f",
-    );
+    // The river continues through both canvas edges, behind the cabin roofs.
+    const upper = [],
+      lower = [],
+      waterUpper = [],
+      waterLower = [];
+    for (let x = -24; x <= WIDTH + 24; x += 12) {
+      const y = this.riverCenter(x);
+      const width = 15 + Math.sin(x * 0.019) * 3;
+      upper.push([x, y - width - 7]);
+      lower.unshift([x, y + width + 7]);
+      waterUpper.push([x, y - width]);
+      waterLower.unshift([x, y + width]);
+    }
+    this.path([...upper, ...lower], "#4e604a");
+    this.path([...waterUpper, ...waterLower], "#31565c");
     const rand = seeded(1957);
-    for (let i = 0; i < 32; i++) {
-      const x = 84 + rand() * 342,
-        y = 133 + Math.sin(x * 0.023) * 12;
-      this.ellipse(x, y, 7 + rand() * 8, 4 + rand() * 4, "#758174");
+    for (let i = 0; i < 96; i++) {
+      const x = rand() * WIDTH,
+        y = this.riverCenter(x);
+      const side = i % 2 === 0 ? -1 : 1,
+        bankY = y + side * (19 + rand() * 5);
+      this.ellipse(x, bankY, 6 + rand() * 11, 4 + rand() * 5, "#6c796a");
+      this.rect(x - 2, bankY - 2, 4, 2, "#879281");
       if (i % 3 === 0) {
-        this.rect(x + 4, y - 10, 2, 12, "#899565");
-        this.rect(x + 7, y - 7, 2, 9, "#647f59");
-        this.rect(x + 4, y - 12, 2, 5, "#b09464");
+        this.rect(x + 4, bankY - 10, 2, 12, "#899565");
+        this.rect(x + 7, bankY - 7, 2, 9, "#647f59");
+        this.rect(x + 4, bankY - 12, 2, 5, "#b09464");
+      }
+      if (i % 5 === 0) {
+        this.ellipse(x, y, 16, 6, "#3b6669");
+        this.rect(x - 4, y, 8, 2, "#557c78");
       }
     }
-    this.ellipse(293, 157, 28, 9, "#446c70");
-    this.rect(251, 143, 14, 2, "#718f85");
-    this.rect(360, 145, 15, 2, "#718f85");
+    // Soft moon reflections remain short, interrupted by the gentle current.
+    for (let x = 560; x < 640; x += 14)
+      this.rect(x, this.riverCenter(x) - 6 + (x % 3) * 3, 10, 2, "#78988b");
   }
   riverLife() {
-    const phase = this.reduced ? 0 : Math.floor(this.time * 3) % 5;
+    const phase = this.reduced ? 0 : Math.floor(this.time * 3) % 6;
+    for (let x = 8; x < WIDTH; x += 36) {
+      const flowX = x + phase * 2,
+        y = this.riverCenter(flowX);
+      this.rect(flowX, y - 5, 12, 2, "#6a948c");
+      this.rect(flowX + 8 - phase, y + 5, 7, 2, "#466f72");
+    }
     for (const [x, y] of [
-      [105, 156],
-      [174, 142],
-      [269, 154],
-      [331, 151],
-      [410, 146],
       [470, 188],
       [456, 222],
       [473, 252],
     ]) {
-      this.rect(x + phase * 2, y, 12, 2, "#799f97");
+      this.rect(x + phase, y, 12, 2, "#799f97");
       this.rect(x + 8 - phase, y + 5, 7, 2, "#456f72");
     }
-    // A mallard and duckling drift quietly in the sheltered bend.
+    // A mallard and duckling drift quietly in a sheltered bend.
     const drift = this.reduced
       ? 0
       : Math.round(Math.sin(this.time * 0.3) * 7) * 2;
-    this.ellipse(296 + drift, 157, 20, 5, "#203f45");
-    this.ellipse(296 + drift, 152, 15, 8, "#ab9d75");
-    this.rect(300 + drift, 144, 7, 9, "#476b59");
-    this.rect(307 + drift, 148, 5, 2, "#d1b26a");
-    this.rect(303 + drift, 146, 2, 2, "#182d29");
-    this.ellipse(275 + drift, 154, 8, 5, "#d4b879");
-    this.rect(279 + drift, 152, 3, 2, "#cc9757");
+    const x = 550 + drift,
+      y = this.riverCenter(x);
+    this.ellipse(x, y + 5, 20, 5, "#203f45");
+    this.ellipse(x, y, 15, 8, "#ab9d75");
+    this.rect(x + 4, y - 8, 7, 9, "#476b59");
+    this.rect(x + 11, y - 4, 5, 2, "#d1b26a");
+    this.rect(x + 7, y - 6, 2, 2, "#182d29");
+    this.ellipse(x - 21, y + 2, 8, 5, "#d4b879");
+    this.rect(x - 17, y, 3, 2, "#cc9757");
   }
   crows() {
     for (let i = 0; i < 4; i++) {

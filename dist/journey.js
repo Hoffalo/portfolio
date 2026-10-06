@@ -410,7 +410,7 @@ function horse(p, x, y, tone, time = 0, phase = 0) {
   p.rect(x - 16, y - 9, 30, 6, "#a98a61");
 }
 
-function stable(p, x, y, includeActors = true) {
+function barn(p, x, y) {
   p.ellipse(x, y + 75, 440, 148, "#354333");
   p.ellipse(x, y + 69, 392, 113, "#5a4933");
   // A compact open-front timber stable, with hay and warm hanging lanterns.
@@ -458,12 +458,288 @@ function stable(p, x, y, includeActors = true) {
   }
   p.lantern(x - 113, y + 3);
   p.lantern(x + 117, y + 3);
-  if (includeActors) {
-    horse(p, x - 102, y + 89, "#8c6543");
-    horse(p, x + 104, y + 98, "#b5b09a");
-  }
   p.ellipse(x + 19, y + 132, 47, 20, "#665845");
   p.ellipse(x + 19, y + 127, 40, 15, "#3b5860");
+}
+
+function highlandCow(p, x, y, time = 0, phase = 0) {
+  const bob = time ? Math.round(Math.sin(time * 0.65 + phase)) * 2 : 0;
+  const tail = time ? Math.round(Math.sin(time * 0.9 + phase)) * 4 : 0;
+  p.ellipse(x, y + 35, 105, 19, "#24342a");
+  for (const dx of [-27, -13, 21, 34]) {
+    p.rect(x + dx, y + 10, 10, 25, "#955e34");
+    p.rect(x + dx - 1, y + 32, 12, 6, "#3f3429");
+  }
+  p.path(
+    [
+      [x - 42, y - 10],
+      [x - 48, y - 4],
+      [x - 53 + tail, y + 23],
+      [x - 46 + tail, y + 27],
+    ],
+    "#b98042",
+  );
+  p.ellipse(x - 4, y, 91, 57, "#a86b35");
+  p.ellipse(x - 13, y - 11, 65, 32, "#c28a47");
+  for (let i = 0; i < 12; i++) {
+    const dx = -43 + i * 7;
+    p.rect(
+      x + dx,
+      y + 6 + (i % 3) * 3,
+      7,
+      12 + (i % 4) * 3,
+      i % 3 ? "#ad743a" : "#ca924a",
+    );
+    p.rect(x + dx + 2, y - 13 + (i % 3) * 7, 3, 13, "#d19c53");
+  }
+  const hx = x + 30,
+    hy = y - 8 + bob;
+  for (const side of [-1, 1]) {
+    p.path(
+      [
+        [hx + side * 15, hy - 12],
+        [hx + side * 31, hy - 15],
+        [hx + side * 36, hy - 28],
+        [hx + side * 32, hy - 31],
+        [hx + side * 26, hy - 20],
+        [hx + side * 12, hy - 19],
+      ],
+      "#ddd0aa",
+    );
+    p.ellipse(hx + side * 22, hy, 17, 10, "#a66938");
+    p.rect(hx + side * 20 - 4, hy - 2, 8, 4, "#c38a4b");
+  }
+  p.ellipse(hx, hy + 4, 41, 44, "#b8793e");
+  p.ellipse(hx, hy - 10, 45, 22, "#d09a50");
+  for (let i = 0; i < 7; i++)
+    p.rect(
+      hx - 21 + i * 6,
+      hy - 10,
+      7,
+      17 + (i % 3) * 4,
+      i % 2 ? "#c58b43" : "#d6a45a",
+    );
+  const blink = time && Math.floor(time * 0.32 + phase) % 8 === 0;
+  for (const dx of [-12, 10])
+    p.rect(hx + dx, hy + 4, 3, blink ? 2 : 4, "#3d3529");
+  p.ellipse(hx, hy + 21, 28, 15, "#d0a56d");
+  for (const dx of [-8, 5]) p.rect(hx + dx, hy + 19, 3, 3, "#80603c");
+  p.rect(
+    hx - 5,
+    hy + 25,
+    10,
+    time && Math.floor(time * 1.5 + phase) % 2 ? 3 : 2,
+    "#82613d",
+  );
+}
+
+function cropField(p, x, y, width, height, kind) {
+  p.path(
+    [
+      [x + 8, y],
+      [x + width - 12, y - 5],
+      [x + width, y + 12],
+      [x + width - 7, y + height],
+      [x + 4, y + height + 6],
+      [x - 8, y + 13],
+    ],
+    "#514030",
+  );
+  for (let row = 0; row < Math.floor(height / 22); row++) {
+    p.rect(x + 2, y + 11 + row * 22, width - 10, 7, "#3e352b");
+    for (let col = 0; col < Math.floor((width - 12) / 23); col++) {
+      const cx = x + 13 + col * 23,
+        cy = y + 8 + row * 22;
+      if (kind === 0) {
+        p.ellipse(cx, cy + 5, 15, 10, "#b78035");
+        p.rect(cx - 1, cy - 2, 3, 6, "#84934f");
+        p.rect(cx - 3, cy + 1, 2, 7, "#d39b48");
+      } else if (kind === 1) {
+        p.rect(cx, cy - 8, 2, 19, "#a09553");
+        p.rect(cx - 4, cy - 7, 4, 12, "#c6af66");
+        p.rect(cx + 2, cy - 10, 4, 13, "#bda25a");
+        p.rect(cx - 3, cy - 12, 3, 5, "#ddc17b");
+      } else {
+        p.ellipse(cx, cy + 5, 9, 8, "#cec2a0");
+        p.path(
+          [
+            [cx, cy + 3],
+            [cx - 9, cy - 5],
+            [cx - 3, cy - 7],
+            [cx, cy - 2],
+            [cx + 6, cy - 9],
+            [cx + 10, cy - 5],
+          ],
+          "#718c4a",
+        );
+        p.rect(cx - 1, cy - 7, 3, 9, "#9aab68");
+      }
+    }
+  }
+}
+
+function farmGeometry(area, mobile) {
+  return mobile
+    ? {
+        barn: [480, area.y + 260, 2],
+        horses: [
+          [250, area.y + 560],
+          [665, area.y + 560],
+        ],
+        cows: [
+          [250, area.y + 745],
+          [655, area.y + 750],
+        ],
+        cropsY: area.y + Math.min(area.height - 135, 915),
+        animalScale: 2,
+      }
+    : {
+        barn: [235, area.y + Math.min(139, area.height * 0.45), 1],
+        horses: [
+          [140, area.y + Math.min(290, area.height - 55)],
+          [345, area.y + Math.min(285, area.height - 60)],
+        ],
+        cows: [
+          [605, area.y + Math.min(298, area.height - 50)],
+          [802, area.y + Math.min(292, area.height - 56)],
+        ],
+        cropsY: area.y + 69,
+        animalScale: 1,
+      };
+}
+
+function scaledAt(p, x, y, scale, paint) {
+  p.ctx.save();
+  p.ctx.translate(Math.round(x / 2) * 2, Math.round(y / 2) * 2);
+  p.ctx.scale(scale, scale);
+  paint();
+  p.ctx.restore();
+}
+
+function farmActors(p, area, mobile, time = 0) {
+  const g = farmGeometry(area, mobile);
+  g.horses.forEach(([x, y], i) =>
+    scaledAt(p, x, y, g.animalScale, () =>
+      horse(p, 0, 0, i ? "#b5b09a" : "#8c6543", time, i * 2),
+    ),
+  );
+  g.cows.forEach(([x, y], i) =>
+    scaledAt(p, x, y, g.animalScale, () =>
+      highlandCow(p, 0, 0, time, i * 2 + 1),
+    ),
+  );
+}
+
+function farm(p, area, mobile, includeActors) {
+  const g = farmGeometry(area, mobile);
+  p.path(
+    [
+      [0, area.y + 25],
+      [110, area.y + 4],
+      [270, area.y + 24],
+      [468, area.y + 6],
+      [653, area.y + 20],
+      [825, area.y + 2],
+      [960, area.y + 24],
+      [960, area.y + area.height - 13],
+      [773, area.y + area.height - 3],
+      [592, area.y + area.height - 19],
+      [383, area.y + area.height - 4],
+      [195, area.y + area.height - 17],
+      [0, area.y + area.height - 4],
+    ],
+    "#3e4c32",
+  );
+  p.ellipse(
+    480,
+    area.y + area.height * 0.65,
+    1050,
+    area.height * 0.6,
+    "#596044",
+  );
+  const rand = random(1784);
+  for (let i = 0; i < 230; i++) {
+    const x = rand() * WIDTH,
+      y = area.y + 20 + rand() * (area.height - 40);
+    p.rect(x, y, 4 + rand() * 8, 2, i % 3 ? "#67714a" : "#82734e");
+  }
+  if (mobile) {
+    for (let i = 0; i < 3; i++)
+      cropField(p, 38 + i * 300, g.cropsY, 280, 106, i);
+  } else {
+    for (let i = 0; i < 3; i++)
+      cropField(p, 469 + i * 154, g.cropsY + (i % 2) * 15, 139, 130, i);
+  }
+  const fenceY = mobile
+    ? area.y + 660
+    : area.y + Math.min(238, area.height - 145);
+  for (let x = 20; x < WIDTH; x += 92) {
+    p.rect(x, fenceY - 11, 7, 42, "#8a7047");
+    p.rect(x + 3, fenceY - 9, 3, 38, "#b19660");
+    if (x < 880) {
+      p.rect(x + 7, fenceY + 1, 86, 6, "#ac9060");
+      p.rect(x + 7, fenceY + 17, 86, 5, "#967b50");
+    }
+  }
+  scaledAt(p, ...g.barn, () => barn(p, 0, 0));
+  for (const x of [30, 926]) p.lantern(x, area.y + (mobile ? 835 : 356));
+  if (includeActors) farmActors(p, area, mobile);
+}
+
+function riverY(area, x) {
+  return (
+    area.y +
+    area.height * 0.52 +
+    Math.sin(x * 0.011) * Math.min(13, area.height * 0.12)
+  );
+}
+
+function river(p, area) {
+  const half = Math.min(52, area.height * 0.3);
+  const upper = [],
+    lower = [],
+    innerUpper = [],
+    innerLower = [];
+  for (let x = -20; x <= 980; x += 20) {
+    const y = riverY(area, x);
+    upper.push([x, y - half - 12]);
+    lower.push([x, y + half + 12]);
+    innerUpper.push([x, y - half]);
+    innerLower.push([x, y + half]);
+  }
+  p.path([...upper, ...lower.reverse()], "#51604a");
+  p.path([...innerUpper, ...innerLower.reverse()], "#284a50");
+  for (let x = 0; x < WIDTH; x += 38) {
+    const y = riverY(area, x);
+    p.rect(x, y - half + 3, 22, 2, "#59796e");
+    p.rect(x + 14, y + half - 4, 21, 2, "#45665d");
+    if (x % 3 === 0) {
+      p.ellipse(x + 10, y + half + 4, 27, 13, "#71786a");
+      p.rect(x + 3, y + half + 1, 13, 2, "#a1a38a");
+    }
+  }
+  for (const [x, offset] of [
+    [169, -8],
+    [226, 9],
+    [479, -4],
+    [539, 10],
+    [766, -12],
+    [824, 7],
+  ]) {
+    const y = riverY(area, x) + offset;
+    p.ellipse(x, y + 3, 43, 23, "#1d373b");
+    p.ellipse(x, y, 35, 19, "#747e70");
+    p.rect(x - 10, y - 5, 17, 3, "#a9ad92");
+    p.rect(x - 14, y + 4, 19, 3, "#516655");
+  }
+  for (const x of [64, 336, 651, 906]) {
+    const y = riverY(area, x) + half + 13;
+    for (let i = 0; i < 4; i++) {
+      p.rect(x + i * 5, y - 13 - (i % 2) * 5, 2, 18, "#84946a");
+      p.rect(x + i * 5 - 1, y - 16 - (i % 2) * 5, 4, 7, "#a18a57");
+    }
+    p.ellipse(x - 8, y + 1, 19, 9, "#4c6650");
+  }
 }
 
 function landmarks(layout) {
@@ -494,16 +770,22 @@ function landmarks(layout) {
     ];
     return paint ? [{ paint, x, y, rx: 135, ry: 145 }] : [];
   });
-  if (layout.stable) {
+  if (layout.stable)
     scenes.push({
-      paint: stable,
-      x: layout.stable.x + layout.stable.width / 2,
-      y: layout.stable.y + layout.stable.height / 2 - 12,
-      rx: layout.mobile ? 488 : 244,
-      ry: layout.mobile ? 320 : 160,
-      scale: layout.mobile ? 2 : 1,
+      paint: farm,
+      x: WIDTH / 2,
+      y: layout.stable.y + layout.stable.height / 2,
+      rx: WIDTH / 2 + 40,
+      ry: layout.stable.height / 2 + 20,
     });
-  }
+  if (layout.divider)
+    scenes.push({
+      paint: river,
+      x: WIDTH / 2,
+      y: layout.divider.y + layout.divider.height / 2,
+      rx: WIDTH / 2 + 40,
+      ry: layout.divider.height / 2 + 25,
+    });
   return scenes;
 }
 
@@ -521,6 +803,23 @@ export function paintJourney(painter, layout, includeActors = true) {
       y = start + rand() * Math.max(0, layout.height - start);
     p.rect(x, y, 2 + rand() * 5, 2, rand() > 0.55 ? "#2b4035" : "#293a2e");
     if (i % 11 === 0) p.rect(x + 2, y - 3, 2, 4, "#3b5038");
+  }
+  for (let i = 0; i < Math.ceil((layout.height - start) / 48); i++) {
+    const x = rand() * WIDTH,
+      y = start + rand() * Math.max(0, layout.height - start);
+    const size = 12 + rand() * 37;
+    p.ellipse(
+      x,
+      y,
+      size * 1.8,
+      size * 0.55,
+      i % 4 === 0 ? "#3d3a2e" : "#2c4030",
+    );
+    if (i % 3 === 0) {
+      p.ellipse(x + 9, y + 3, 10, 6, "#596153");
+      p.rect(x + 6, y + 1, 5, 2, "#78816b");
+    }
+    if (i % 2 === 0) p.rect(x - 8, y + 3, 5, 3, "#766844");
   }
   const trees = [];
   for (let y = start + 35; y < layout.height + 90; y += 74) {
@@ -553,13 +852,10 @@ export function paintJourney(painter, layout, includeActors = true) {
     p.rect(side - 21, y + 20, 7, 2, "#859085");
   }
   for (const scene of scenery) {
-    if (scene.scale && scene.scale !== 1) {
-      p.ctx.save();
-      p.ctx.translate(Math.round(scene.x / 2) * 2, Math.round(scene.y / 2) * 2);
-      p.ctx.scale(scene.scale, scene.scale);
-      scene.paint(p, 0, 0, includeActors);
-      p.ctx.restore();
-    } else scene.paint(p, scene.x, scene.y, includeActors);
+    if (scene.paint === farm)
+      farm(p, layout.stable, layout.mobile, includeActors);
+    else if (scene.paint === river) river(p, layout.divider);
+    else scene.paint(p, scene.x, scene.y, includeActors);
     if (includeActors && scene.paint === cave)
       bear(p, scene.x - 39, scene.y + 72);
   }
@@ -655,11 +951,42 @@ export function animateJourney(p, layout) {
         p.rect(x + dx + 2, y + dy - 2, 4, 6, "#b2ded2");
       p.ctx.globalAlpha = 1;
       bear(p, x - 39, y + 72, time);
-    } else if (scene.paint === stable) {
-      p.ctx.translate(Math.round(x / 2) * 2, Math.round(y / 2) * 2);
-      p.ctx.scale(scene.scale, scene.scale);
-      horse(p, -102, 89, "#8c6543", time, 0);
-      horse(p, 104, 98, "#b5b09a", time, 2);
+    } else if (scene.paint === farm) {
+      farmActors(p, layout.stable, layout.mobile, time);
+    } else if (scene.paint === river) {
+      const area = layout.divider;
+      for (let i = 0; i < 30; i++) {
+        const rx = ((p.reduced ? 0 : time * 13) + i * 41) % WIDTH;
+        const ry =
+          riverY(area, rx) +
+          Math.sin(i * 2.7) * Math.min(29, area.height * 0.2);
+        const onRock = [
+          [169, -8],
+          [226, 9],
+          [479, -4],
+          [539, 10],
+          [766, -12],
+          [824, 7],
+        ].some(
+          ([rockX, offset]) =>
+            Math.abs(rx - rockX) < 26 &&
+            Math.abs(ry - riverY(area, rockX) - offset) < 15,
+        );
+        if (!onRock)
+          p.rect(rx, ry, 10 + (i % 4) * 4, 2, i % 3 ? "#527c7c" : "#79a29b");
+      }
+      for (let i = 0; i < 6; i++) {
+        const fx = 83 + i * 151 + Math.sin(time * 0.6 + i) * 9;
+        const fy =
+          riverY(area, fx) -
+          Math.min(49, area.height * 0.3) -
+          6 +
+          Math.cos(time * 0.5 + i) * 5;
+        p.ctx.globalAlpha = p.reduced
+          ? 0.55
+          : 0.4 + (Math.sin(time + i) + 1) * 0.2;
+        p.rect(fx, fy, 2, 2, "#d4d895");
+      }
     }
     p.ctx.restore();
   }

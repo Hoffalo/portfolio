@@ -34,8 +34,17 @@ try {
     const stableBox = document
       .querySelector(".stable-clearing")
       .getBoundingClientRect();
+    const dividerBox = document
+      .querySelector(".river-divider")
+      .getBoundingClientRect();
     painter.setLayout(
       {
+        divider: {
+          x: (dividerBox.left - box.left) / scale,
+          y: (dividerBox.top - box.top) / scale,
+          width: dividerBox.width / scale,
+          height: dividerBox.height / scale,
+        },
         stable: {
           x: (stableBox.left - box.left) / scale,
           y: (stableBox.top - box.top) / scale,
