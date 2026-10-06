@@ -58,20 +58,26 @@ function resizeJourney() {
   const railwayBox = document
     .querySelector(".railway-clearing")
     .getBoundingClientRect();
-  const clearings = [...document.querySelectorAll(".scene-clearing")].map(
-    (element) => {
-      const rect = element.getBoundingClientRect();
-      return {
-        id: element.dataset.scene,
-        x: 0,
-        y: (rect.top - box.top) / worldScale,
-        width: 960,
-        height: Number(element.style.getPropertyValue("--scene-height")),
-      };
-    },
-  );
+  const invitationBox = document
+    .querySelector(".reading-invitation")
+    .getBoundingClientRect();
+  const moonBox = document
+    .querySelector(".moon-clearing")
+    .getBoundingClientRect();
   const layout = {
-    clearings,
+    clearings: [],
+    invitation: {
+      x: 0,
+      y: (invitationBox.top - box.top) / worldScale,
+      width: 960,
+      height: 280,
+    },
+    moonArea: {
+      x: 0,
+      y: (moonBox.top - box.top) / worldScale,
+      width: 960,
+      height: 130,
+    },
     railway: {
       x: (railwayBox.left - box.left) / worldScale,
       y: (railwayBox.top - box.top) / worldScale,
@@ -96,15 +102,6 @@ function resizeJourney() {
     skyHeight:
       document.querySelector(".sky-header").getBoundingClientRect().height /
       worldScale,
-    moonY:
-      (document.querySelector(".header").getBoundingClientRect().top -
-        box.top +
-        document.querySelector(".header").getBoundingClientRect().height *
-          (innerWidth <= 740 ? (innerWidth > 500 ? 0.28 : 0.42) : 0.45)) /
-      worldScale,
-    compactHeader: innerWidth <= 740,
-    mobile: innerWidth <= 700,
-    tablet: innerWidth > 700 && innerWidth <= 1100,
   };
   const signature = JSON.stringify([box.width, layout], (key, value) =>
     typeof value === "number" ? Math.round(value * 100) / 100 : value,

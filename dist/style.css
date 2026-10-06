@@ -1857,3 +1857,135 @@ dialog {
     width: calc(100% - 32px);
   }
 }
+/* A quiet reading grove: four scrolls, clear ink, and a fixed lunar scene. */
+.moon-clearing {
+  width: 100%;
+  aspect-ratio: 960 / 130;
+  pointer-events: none;
+}
+.header {
+  min-height: 150px;
+}
+.portfolio-reading {
+  width: min(1280px, calc(100% - 72px));
+  margin: 60px auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 52px 44px;
+  align-items: stretch;
+}
+.portfolio-reading .reading-section,
+.portfolio-reading .reading-section:nth-of-type(even) {
+  width: auto;
+  margin: 0;
+  padding: 26px 24px 30px;
+}
+.reading-section,
+dialog {
+  background-color: #31281f;
+  background-image:
+    linear-gradient(#31281fec, #31281fec), url("./art/parchment.svg");
+}
+.reading-section p,
+dialog p {
+  color: #f1e9d5;
+  font-size: 24px;
+  line-height: 1.5;
+}
+.reading-section h2,
+.reading-section h3,
+.reading-section h4,
+.panel-content h2,
+.panel-content h3 {
+  color: #fff0c9;
+}
+.reading-section small,
+.reading-section .tags,
+.reading-section .about-details,
+.reading-section .volunteer-role {
+  color: #ddd3ba;
+}
+.reading-section .project-card {
+  background: #2d251db3;
+  padding: 18px 0;
+}
+.reading-section .project-grid,
+.reading-section .volunteer-list,
+.reading-section .tech-list {
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+.panel-top,
+.panel-footer {
+  background: #31281f;
+}
+.reading-invitation {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 960 / 280;
+  padding: 0;
+  margin-top: 40px;
+  justify-content: flex-start;
+  align-items: center;
+}
+.reading-invitation a {
+  margin-left: 48%;
+  width: 43%;
+  padding: 22px 20px;
+}
+.reading-invitation .billboard-detail {
+  font-size: 22px;
+}
+@media (max-width: 850px) {
+  .portfolio-reading {
+    width: calc(100% - 48px);
+    grid-template-columns: 1fr;
+    gap: 44px;
+    margin-top: 50px;
+  }
+  .portfolio-reading .reading-section,
+  .portfolio-reading .reading-section:nth-of-type(even) {
+    padding: 24px 16px 28px;
+  }
+}
+@media (max-width: 700px) {
+  .header {
+    min-height: 180px;
+  }
+  .reading-invitation {
+    padding: 0;
+    margin-top: 34px;
+  }
+  .reading-invitation a {
+    padding: 10px 8px;
+    margin-left: 46%;
+    width: 48%;
+  }
+  .reading-invitation strong {
+    font-size: 26px;
+  }
+  .reading-invitation .billboard-detail {
+    font-size: 18px;
+  }
+  .reading-invitation a > span:last-child {
+    margin-top: 5px;
+    font-size: 20px;
+  }
+}
+.portfolio-reading .reading-section {
+  min-width: 0;
+}
+@media (max-width: 850px) {
+  .portfolio-reading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .portfolio-reading {
+    width: calc(100% - 32px);
+  }
+  .section-heading::after {
+    width: 60px;
+    flex-shrink: 1;
+  }
+}

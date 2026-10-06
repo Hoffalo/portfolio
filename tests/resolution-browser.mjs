@@ -56,7 +56,29 @@ try {
       }
       window.testSurfaces = canvases;
       window.testPositions = canvases.map((c) => c.style.top);
+      const readingFits = [
+        ...document.querySelectorAll(".reading-section"),
+      ].every((el) => {
+        const r = el.getBoundingClientRect();
+        return r.left >= shell.left - 0.1 && r.right <= shell.right + 0.1;
+      });
+      const textFits = [
+        ...document.querySelectorAll(
+          ".reading-section p,.reading-section h2,.reading-section h3,.reading-section h4,.reading-section small,.reading-section .tags span",
+        ),
+      ].every((el) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        return [...range.getClientRects()].every(
+          (r) => r.left >= shell.left - 0.1 && r.right <= shell.right + 0.1,
+        );
+      });
       return {
+        readingFits,
+        textFits,
+        columns: getComputedStyle(
+          document.querySelector(".portfolio-reading"),
+        ).gridTemplateColumns.split(" ").length,
         left: shell.left,
         width: shell.width,
         overflow: document.documentElement.scrollWidth > innerWidth,
@@ -68,6 +90,11 @@ try {
     assert.equal(metrics.width, Math.min(1440, width));
     assert.equal(metrics.left, (width - metrics.width) / 2);
     assert.equal(metrics.overflow, false);
+    assert.ok(
+      metrics.readingFits && metrics.textFits,
+      `Reading text must not clip at ${width}px`,
+    );
+    assert.equal(metrics.columns, width > 850 ? 2 : 1);
     assert.equal(
       metrics.transparent,
       0,

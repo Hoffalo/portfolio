@@ -1,3 +1,5 @@
+import { paintGround, paintFern } from "./ground.js";
+export { paintGround, paintFern } from "./ground.js";
 import { paintJourney, animateJourney } from "./journey.js";
 export const WIDTH = 960,
   HEIGHT = 540;
@@ -365,18 +367,7 @@ export class World {
     return canWalk(x, y);
   }
   moonPosition() {
-    return {
-      x:
-        this.layout.compactHeader || this.layout.mobile
-          ? 800
-          : this.layout.tablet
-            ? 500
-            : 610,
-      y: this.layout.moonY ?? 55,
-      diameter: this.layout.mobile
-        ? 160
-        : Math.min(118, 180 / (this.layout.scale || 1)),
-    };
+    return { x: 480, y: (this.layout.moonArea?.y || 0) + 65, diameter: 118 };
   }
   drawSky() {
     this.rect(0, 0, WIDTH, (this.layout.skyHeight || 0) + 190, "#17242b");
@@ -531,55 +522,7 @@ export class World {
       "#2b4240",
     );
     const r = seeded(832);
-    // Broad irregular soil, moss and gravel islands keep the ground varied.
-    const earth = seeded(9031);
-    const patches = [
-      "#293b30",
-      "#2b3d31",
-      "#303c30",
-      "#343b2e",
-      "#26372d",
-      "#383c2f",
-    ];
-    for (let i = 0; i < 82; i++) {
-      const x = earth() * WIDTH,
-        y = 195 + earth() * 330,
-        w = 20 + earth() * 70,
-        h = 8 + earth() * 27;
-      this.path(
-        [
-          [x - w * 0.5, y],
-          [x - w * 0.3, y - h * 0.45],
-          [x + w * 0.2, y - h * 0.5],
-          [x + w * 0.5, y - h * 0.15],
-          [x + w * 0.4, y + h * 0.3],
-          [x - w * 0.1, y + h * 0.5],
-        ],
-        patches[i % patches.length],
-      );
-      for (let j = 0; j < 7; j++) {
-        const px = x + (earth() - 0.5) * w * 0.7,
-          py = y + (earth() - 0.5) * h * 0.7;
-        this.rect(
-          px,
-          py,
-          2 + earth() * 5,
-          2,
-          i % 3 === 0 ? "#505344" : i % 3 === 1 ? "#3c5138" : "#414631",
-        );
-      }
-    }
-    for (let i = 0; i < 155; i++) {
-      const x = earth() * WIDTH,
-        y = 190 + earth() * 330;
-      if (i % 3 === 0) {
-        this.rect(x, y, 4, 2, "#78684a");
-        this.rect(x + 2, y - 2, 2, 2, "#586146");
-      } else {
-        this.rect(x, y, 4, 2, "#455246");
-        this.rect(x + 1, y - 2, 2, 2, "#5b6556");
-      }
-    }
+    paintGround(this, { x: 0, y: 170, width: WIDTH, height: 370 }, 9031);
     this.grass.forEach((g) => {
       if (g.y < 137) return;
       this.rect(g.x, g.y, 2 + g.v * 3, 2, g.v > 0.55 ? "#304438" : "#1c2c29");
@@ -588,6 +531,19 @@ export class World {
         this.rect(g.x + 4, g.y - 2, 2, 4, "#354b37");
       }
     });
+    for (const [x, y, size] of [
+      [93, 245, 0.9],
+      [133, 328, 1],
+      [61, 430, 1.2],
+      [872, 279, 0.85],
+      [897, 372, 1.1],
+      [848, 484, 1],
+      [149, 496, 0.8],
+      [558, 208, 0.8],
+      [774, 213, 0.8],
+      [298, 206, 0.7],
+    ])
+      paintFern(this, x, y, size);
     // Mossy creek banks, with a clear walkable bridge further downstream.
     const creek = [
       [439, 121],
