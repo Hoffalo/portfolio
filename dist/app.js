@@ -26,6 +26,10 @@ function updateViewport() {
     bottom: Math.min(world.layout.height, top + innerHeight / worldScale + 20),
   };
   world.visible = world.viewport.bottom > world.viewport.top;
+  world.gameVisible =
+    world.viewport.bottom > world.layout.skyHeight + 274 &&
+    world.viewport.top < world.layout.skyHeight + 500;
+  if (!world.gameVisible) world.keys.clear();
 }
 function resizeJourney() {
   const box = journey.getBoundingClientRect();
@@ -52,6 +56,15 @@ function resizeJourney() {
     world.setLayout({
       height: Math.ceil(box.height / worldScale / 2) * 2,
       sections,
+      skyHeight:
+        document.querySelector(".sky-header").getBoundingClientRect().height /
+        worldScale,
+      moonY:
+        (document.querySelector(".header").getBoundingClientRect().top -
+          box.top +
+          document.querySelector(".header").getBoundingClientRect().height *
+            (innerWidth <= 700 ? 0.42 : 0.55)) /
+        worldScale,
       mobile: innerWidth <= 700,
     });
   }
@@ -64,7 +77,6 @@ addEventListener("scroll", updateViewport, { passive: true });
 addEventListener("resize", resizeJourney);
 function stopExploring() {
   world.keys.clear();
-  journey.classList.remove("is-exploring");
   if (document.activeElement === canvas) canvas.blur();
 }
 addEventListener("wheel", stopExploring, { passive: true });
@@ -72,20 +84,11 @@ canvas.addEventListener("pointercancel", stopExploring);
 document
   .querySelectorAll(".reading-section,.reading-invitation,.social-links")
   .forEach((element) => element.addEventListener("pointerdown", stopExploring));
-world.onMove = (player) => {
-  journey.classList.toggle("is-exploring", player.y > 540);
-  const y = worldTop + player.y * worldScale;
-  if (y > scrollY + innerHeight * 0.78)
-    scrollTo({ top: y - innerHeight * 0.7, behavior: "instant" });
-  else if (y < scrollY + 120)
-    scrollTo({ top: Math.max(0, y - innerHeight * 0.3), behavior: "instant" });
-};
 function openArea(id) {
   const area = areas[id];
   if (!area) return;
   returnFocus = document.activeElement;
   world.active = false;
-  journey.classList.remove("is-exploring");
   world.keys.clear();
   document.querySelector("#panel-kicker").textContent =
     `${area.number} / ${area.subtitle}`;
@@ -140,12 +143,11 @@ const movement = {
   ArrowRight: "right",
 };
 window.addEventListener("keydown", (e) => {
-  if (panel.open || !world.visible || e.ctrlKey || e.metaKey || e.altKey)
+  if (panel.open || !world.gameVisible || e.ctrlKey || e.metaKey || e.altKey)
     return;
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   const focused = document.activeElement;
   if (focused !== canvas && focused !== document.body) return;
-  if (focused === document.body && world.viewport.top > 540) return;
   if (movement[key]) {
     e.preventDefault();
     world.keys.add(movement[key]);
@@ -165,9 +167,11 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && audioContext) audioContext.suspend();
   else if (soundEnabled && audioContext) audioContext.resume();
 });
-canvas.addEventListener("pointerdown", () =>
-  canvas.focus({ preventScroll: true }),
-);
+canvas.addEventListener("pointerdown", (event) => {
+  const y =
+    (event.clientY + scrollY - worldTop) / worldScale - world.layout.skyHeight;
+  if (y >= 0 && y <= 540) canvas.focus({ preventScroll: true });
+});
 document.querySelectorAll("[data-move]").forEach((b) => {
   b.addEventListener("pointerdown", (e) => {
     e.preventDefault();
@@ -182,7 +186,16 @@ document.querySelectorAll("[data-move]").forEach((b) => {
 });
 // Touch destination tap: clicking a nearby entrance opens it, a distant one remains explorable through navigation.
 canvas.addEventListener("click", (e) => {
-  if (e.pointerType === "touch" && world.near) openArea(world.near);
+  const y =
+    (e.clientY + scrollY - worldTop) / worldScale - world.layout.skyHeight;
+  if (
+    e.pointerType === "touch" &&
+    world.gameVisible &&
+    y >= 0 &&
+    y <= 540 &&
+    world.near
+  )
+    openArea(world.near);
 });
 const motion = document.querySelector("#motion");
 function updateMotion() {

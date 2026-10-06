@@ -301,6 +301,7 @@ try {
   walking.on("pageerror", (error) => errors.push(error.message));
   await walking.goto(process.env.TEST_URL || "http://localhost:5173");
   await walking.locator("#world").focus();
+  await walking.evaluate(() => scrollTo(0, 0));
   await walking.keyboard.down("s");
   await walking.waitForTimeout(1800);
   await walking.keyboard.up("s");
@@ -308,13 +309,29 @@ try {
     await walking
       .locator("#journey-world")
       .evaluate((el) => el.classList.contains("is-exploring")),
-    true,
+    false,
   );
-  assert.ok(await walking.evaluate(() => scrollY > 150));
+  assert.equal(await walking.evaluate(() => scrollY), 0);
+  assert.equal(
+    await walking
+      .locator(".game-bottom")
+      .evaluate((el) => getComputedStyle(el).position),
+    "static",
+  );
+  await walking.locator("#about").scrollIntoViewIfNeeded();
+  await walking.locator("#world").dispatchEvent("click", {
+    pointerType: "touch",
+    clientX: 40,
+    clientY: 400,
+  });
+  assert.equal(
+    await walking.locator("#panel").evaluate((el) => el.open),
+    false,
+  );
   await walking.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, full-height exploration and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, bounded cabin movement and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();

@@ -1,46 +1,10 @@
 const WIDTH = 960;
-const START = 540;
 
 function random(seed) {
   return () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-}
-
-function trailKnots(layout) {
-  const knots = [{ y: START, x: 494 }];
-  for (const [index, section] of layout.sections.entries()) {
-    const side = layout.mobile
-      ? index % 2 === 0
-        ? 26
-        : 934
-      : section.x < 200
-        ? 690
-        : 266;
-    knots.push({ y: Math.max(START + 2, section.y - 24), x: side });
-    knots.push({ y: section.y + section.height + 24, x: side });
-  }
-  knots.push({ y: layout.height, x: 494 });
-  return knots.sort((a, b) => a.y - b.y);
-}
-
-export function pathAt(y, layout) {
-  const knots = trailKnots(layout);
-  if (y <= START) return 494;
-  for (let i = 1; i < knots.length; i++) {
-    const next = knots[i],
-      previous = knots[i - 1];
-    if (y <= next.y) {
-      const t = Math.max(
-        0,
-        Math.min(1, (y - previous.y) / Math.max(1, next.y - previous.y)),
-      );
-      const smooth = t * t * (3 - 2 * t);
-      return previous.x + (next.x - previous.x) * smooth;
-    }
-  }
-  return 494;
 }
 
 function mushroom(p, x, y) {
@@ -225,33 +189,196 @@ function sleepers(p, x, y) {
   mushroom(p, x + 80, y - 25);
 }
 
+function fireplace(p, x, y) {
+  // A sheltered stone hearth, wool rug, chairs and a sleeping cat.
+  p.ellipse(x, y + 9, 242, 198, "#334335");
+  p.ellipse(x, y + 21, 206, 152, "#4a4533");
+  p.ellipse(x, y - 18, 172, 134, "#655039");
+  p.rect(x - 52, y - 44, 104, 57, "#2e332f");
+  p.rect(x - 15, y - 124, 30, 67, "#586057");
+  for (let row = 0; row < 7; row++) {
+    p.rect(x - 13, y - 121 + row * 9, 26, 7, row % 2 ? "#717469" : "#666b60");
+    p.rect(x + (row % 2 ? 1 : -4), y - 121 + row * 9, 2, 7, "#454b43");
+  }
+  p.rect(x - 20, y - 125, 40, 7, "#89907c");
+  p.rect(x - 56, y - 68, 112, 12, "#4a5148");
+  p.rect(x - 54, y - 72, 108, 7, "#838575");
+  p.rect(x - 44, y - 56, 88, 66, "#6d7163");
+  p.rect(x - 26, y - 46, 52, 52, "#222724");
+  for (const side of [-1, 1]) {
+    for (let row = 0; row < 5; row++) {
+      p.rect(
+        x + side * 35 - 8,
+        y - 53 + row * 12,
+        16,
+        10,
+        row % 2 ? "#89907c" : "#78816d",
+      );
+      p.rect(x + side * 35 - 8, y - 53 + row * 12, 16, 2, "#a0a38b");
+    }
+  }
+  p.rect(x - 30, y - 58, 60, 12, "#93957f");
+  p.rect(x - 23, y - 40, 46, 44, "#53382b");
+  p.rect(x - 19, y - 36, 38, 36, "#784932");
+  p.rect(x - 24, y, 48, 7, "#342b23");
+  p.rect(x - 20, y - 4, 40, 4, "#805631");
+  p.path(
+    [
+      [x - 17, y - 4],
+      [x - 19, y - 16],
+      [x - 12, y - 12],
+      [x - 8, y - 32],
+      [x - 1, y - 23],
+      [x + 5, y - 39],
+      [x + 11, y - 21],
+      [x + 15, y - 25],
+      [x + 19, y - 4],
+    ],
+    "#d7893f",
+  );
+  p.path(
+    [
+      [x - 11, y - 4],
+      [x - 10, y - 18],
+      [x - 4, y - 13],
+      [x + 2, y - 29],
+      [x + 8, y - 14],
+      [x + 12, y - 4],
+    ],
+    "#f0ba66",
+  );
+  p.rect(x - 3, y - 14, 6, 13, "#f8dba0");
+  p.rect(x - 61, y + 9, 122, 12, "#6b7060");
+  p.rect(x - 60, y + 9, 120, 3, "#9b9b7d");
+  // Brass candleholders sit on the mantle.
+  for (const dx of [-41, 38]) {
+    p.rect(x + dx, y - 82, 4, 10, "#dfc790");
+    p.rect(x + dx, y - 86, 4, 5, "#efd395");
+    p.rect(x + dx - 2, y - 74, 8, 3, "#ab8a50");
+  }
+  // Layered woven rug keeps this distinctly a fireside nook.
+  p.rect(x - 51, y + 32, 102, 69, "#4d3d35");
+  p.rect(x - 47, y + 36, 94, 61, "#985f4b");
+  p.rect(x - 43, y + 40, 86, 53, "#744738");
+  for (const dy of [45, 85]) p.rect(x - 40, y + dy, 80, 3, "#ba9566");
+  for (let dx = -46; dx <= 46; dx += 8) {
+    p.rect(x + dx, y + 28, 3, 7, "#b2966b");
+    p.rect(x + dx, y + 98, 3, 7, "#b2966b");
+  }
+  p.path(
+    [
+      [x, y + 51],
+      [x + 13, y + 66],
+      [x, y + 81],
+      [x - 13, y + 66],
+    ],
+    "#b79060",
+  );
+  p.path(
+    [
+      [x, y + 57],
+      [x + 7, y + 66],
+      [x, y + 75],
+      [x - 7, y + 66],
+    ],
+    "#814e3b",
+  );
+  for (const side of [-1, 1]) {
+    const cx = x + side * 77;
+    p.rect(cx - 18, y + 26, 36, 48, "#46392b");
+    p.rect(cx - 14, y + 27, 28, 31, "#a4774d");
+    p.rect(cx - 11, y + 31, 22, 23, "#c49361");
+    p.rect(cx - 19, y + 56, 38, 20, "#80563a");
+    p.rect(cx - 13, y + 58, 26, 12, "#a7714e");
+    p.rect(cx - 22, y + 45, 7, 22, "#bf925b");
+    p.rect(cx + 15, y + 45, 7, 22, "#bf925b");
+    for (const dx of [-15, 12]) p.rect(cx + dx, y + 76, 4, 10, "#4e3c2d");
+  }
+  // A wool throw over the left chair.
+  p.rect(x - 88, y + 31, 12, 31, "#667b72");
+  for (const dy of [37, 48, 58]) p.rect(x - 88, y + dy, 12, 2, "#9ca68e");
+  // Cocoa on a little low table beside the right chair.
+  p.ellipse(x + 97, y + 7, 34, 20, "#a98150");
+  p.rect(x + 94, y + 14, 6, 14, "#614832");
+  p.rect(x + 91, y - 1, 10, 9, "#d6c49f");
+  p.rect(x + 93, y - 2, 6, 3, "#6b4935");
+  p.rect(x + 101, y + 1, 3, 5, "#d6c49f");
+  for (const [dx, dy] of [
+    [-83, -22],
+    [-99, -11],
+    [-81, -5],
+  ]) {
+    p.rect(x + dx - 10, y + dy - 4, 25, 9, "#795738");
+    p.ellipse(x + dx + 13, y + dy, 9, 9, "#bc9561");
+    p.rect(x + dx + 12, y + dy - 2, 3, 4, "#805838");
+  }
+  p.ellipse(x + 23, y + 78, 30, 16, "#b7966b");
+  p.ellipse(x + 34, y + 73, 14, 12, "#c6a67b");
+  p.path(
+    [
+      [x + 28, y + 69],
+      [x + 29, y + 63],
+      [x + 34, y + 67],
+      [x + 38, y + 64],
+      [x + 40, y + 70],
+    ],
+    "#c6a67b",
+  );
+  p.rect(x + 31, y + 73, 6, 2, "#5d4c3a");
+  p.ellipse(x + 11, y + 80, 15, 8, "#d0ad7e");
+}
+
+function landmarks(layout) {
+  return layout.sections.flatMap((section) => {
+    const x = layout.mobile ? 690 : section.x < 200 ? 840 : 114;
+    const y = layout.mobile
+      ? section.y - 140
+      : section.y + Math.min(section.height / 2, 200);
+    if (section.id === "about")
+      return [
+        {
+          paint: fireplace,
+          x: layout.mobile ? 400 : x,
+          y: layout.mobile ? section.y - 220 : section.y + 140,
+          rx: 145,
+          ry: 150,
+        },
+        {
+          paint: pond,
+          x: layout.mobile ? 720 : x,
+          y: layout.mobile ? section.y - 100 : section.y + section.height - 100,
+          rx: 125,
+          ry: 110,
+        },
+      ];
+    const paint = { projects: pod, career: cave, gamedev: sleepers }[
+      section.id
+    ];
+    return paint ? [{ paint, x, y, rx: 135, ry: 145 }] : [];
+  });
+}
+
 export function paintJourney(painter, layout) {
   const p = painter;
+  const start = (layout.skyHeight || 0) + 540;
+  const scenery = landmarks(layout);
   p.ctx.save();
   p.ctx.beginPath();
-  p.ctx.rect(0, START, WIDTH, Math.max(0, layout.height - START));
+  p.ctx.rect(0, start, WIDTH, Math.max(0, layout.height - start));
   p.ctx.clip();
-  p.rect(0, START, WIDTH, Math.max(0, layout.height - START), "#22332e");
+  p.rect(0, start, WIDTH, Math.max(0, layout.height - start), "#22332e");
   const rand = random(3917);
   for (let i = 0; i < Math.ceil(layout.height * 1.8); i++) {
     const x = rand() * WIDTH,
-      y = START + rand() * Math.max(0, layout.height - START);
+      y = start + rand() * Math.max(0, layout.height - start);
     p.rect(x, y, 2 + rand() * 5, 2, rand() > 0.55 ? "#2b4035" : "#293a2e");
     if (i % 11 === 0) p.rect(x + 2, y - 3, 2, 4, "#3b5038");
   }
-  for (let y = START; y < layout.height; y += 2) {
-    const center = pathAt(y, layout);
-    p.rect(center - 43, y, 86, 2, "#514a37");
-    p.rect(center - 34, y, 68, 2, "#6e5d42");
-    p.rect(center - 25, y, 50, 2, "#776347");
-    if (y % 18 === 0) p.rect(center - 20 + (y % 38), y, 8, 2, "#8b7550");
-  }
   const trees = [];
-  for (let y = START + 35; y < layout.height + 90; y += 74) {
+  for (let y = start + 35; y < layout.height + 90; y += 74) {
     for (let x = 25; x < WIDTH; x += 69) {
       const tx = x + (rand() - 0.5) * 38,
         ty = y + (rand() - 0.5) * 34;
-      const besideTrail = Math.abs(tx - pathAt(ty, layout)) < 100;
       const besidePanel = layout.sections.some(
         (s) =>
           tx > s.x - 34 &&
@@ -259,35 +386,24 @@ export function paintJourney(painter, layout) {
           ty > s.y - 70 &&
           ty < s.y + s.height + 24,
       );
-      const scenicOpening = layout.sections.some((s) => {
-        const sx = layout.mobile ? 690 : s.x < 200 ? 848 : 114;
-        const sy = layout.mobile
-          ? s.y - 140
-          : s.y + Math.min(s.height / 2, 200);
-        return Math.abs(tx - sx) < 135 && Math.abs(ty - sy) < 145;
-      });
-      if (!besideTrail && !besidePanel && !scenicOpening)
+      const scenicOpening = scenery.some(
+        (s) => Math.abs(tx - s.x) < s.rx && Math.abs(ty - s.y) < s.ry,
+      );
+      if (!besidePanel && !scenicOpening)
         trees.push({ x: tx, y: ty, s: 0.75 + rand() * 0.45, tone: rand() });
     }
   }
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
-  for (let y = START + 150; y < layout.height - 80; y += 330) {
-    const x = pathAt(y, layout);
-    p.lantern(x - 57, y);
-    mushroom(p, x + 62, y + 22);
-    mushroom(p, x + 73, y + 29);
-    p.ellipse(x - 74, y + 35, 18, 10, "#617065");
-    p.rect(x - 80, y + 31, 7, 2, "#859085");
-  }
   for (const section of layout.sections) {
-    const x = layout.mobile ? 690 : section.x < 200 ? 848 : 114;
-    const y = layout.mobile
-      ? section.y - 140
-      : section.y + Math.min(section.height / 2, 200);
-    if (section.id === "about") pond(p, x, y);
-    else if (section.id === "projects") pod(p, x, y);
-    else if (section.id === "career") cave(p, x, y);
-    else if (section.id === "gamedev") sleepers(p, x, y);
+    // Small natural clusters, with no line of lanterns suggesting a route.
+    const side = layout.mobile ? 52 : section.x < 200 ? 688 : 274;
+    const y = layout.mobile ? section.y - 74 : section.y + section.height - 38;
+    p.lantern(side, y);
+    mushroom(p, side + 22, y + 13);
+    mushroom(p, side + 33, y + 23);
+    p.ellipse(side - 15, y + 24, 18, 10, "#617065");
+    p.rect(side - 21, y + 20, 7, 2, "#859085");
   }
+  for (const scene of scenery) scene.paint(p, scene.x, scene.y);
   p.ctx.restore();
 }
