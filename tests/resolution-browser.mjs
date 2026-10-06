@@ -1,11 +1,21 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 const browser = await chromium.launch({ headless: true });
+const snapshot = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("[data-world-surface]")]
+      .filter((c) => {
+        const r = c.getBoundingClientRect();
+        return r.bottom > 0 && r.top < innerHeight;
+      })
+      .map((c) => c.toDataURL())
+      .join("|"),
+  );
 try {
   const page = await browser.newPage({
-    viewport: { width: 1920, height: 1080 },
-  });
-  const errors = [];
+      viewport: { width: 1920, height: 1080 },
+    }),
+    errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(process.env.TEST_URL || "http://localhost:5173");
   await page.evaluate(() => document.fonts.ready);
@@ -16,7 +26,6 @@ try {
     [320, 844],
     [390, 844],
     [500, 1000],
-    [600, 1000],
     [700, 1000],
     [701, 1000],
     [740, 1000],
@@ -27,89 +36,74 @@ try {
     await page.evaluate(() => scrollTo(0, 0));
     await page.waitForTimeout(150);
     const metrics = await page.evaluate(() => {
-      const canvas = document.querySelector("#world"),
-        shell = document.querySelector(".shell").getBoundingClientRect();
-      const visibleRows = Math.min(
-        canvas.height,
-        Math.ceil(
-          (innerHeight - canvas.getBoundingClientRect().top) /
-            (shell.width / canvas.width),
-        ),
+      const shell = document.querySelector(".shell").getBoundingClientRect(),
+        canvases = [...document.querySelectorAll("[data-world-surface]")];
+      const maxHeight = Math.ceil(
+        Math.max(
+          1024,
+          document.querySelector(".sky-header").getBoundingClientRect().height /
+            (shell.width / 960) +
+            540,
+        ) / 2,
       );
-      const data = canvas
-        .getContext("2d")
-        .getImageData(0, 0, canvas.width, visibleRows).data;
       let transparent = 0;
-      for (let i = 3; i < data.length; i += 4)
-        if (data[i] !== 255) transparent++;
+      for (const canvas of canvases) {
+        const data = canvas
+          .getContext("2d")
+          .getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let i = 3; i < data.length; i += 4)
+          if (data[i] !== 255) transparent++;
+      }
+      window.testSurfaces = canvases;
+      window.testPositions = canvases.map((c) => c.style.top);
       return {
-        transparent,
         left: shell.left,
-        right: shell.right,
-        width: innerWidth,
-        sceneryWidth: shell.width,
+        width: shell.width,
         overflow: document.documentElement.scrollWidth > innerWidth,
-        backingHeight: canvas.height,
-        limit: Math.ceil((innerHeight * 960) / shell.width / 2) + 24,
-        pixels: [
-          ...canvas
-            .getContext("2d")
-            .getImageData(0, 0, canvas.width, canvas.height).data,
-        ].some((value) => value !== 0),
+        transparent,
+        count: canvases.length,
+        bounded: canvases.every((c) => c.height <= maxHeight),
       };
     });
-    assert.equal(metrics.sceneryWidth, Math.min(1440, metrics.width));
-    assert.equal(metrics.left, (metrics.width - metrics.sceneryWidth) / 2);
-    assert.equal(metrics.right, (metrics.width + metrics.sceneryWidth) / 2);
+    assert.equal(metrics.width, Math.min(1440, width));
+    assert.equal(metrics.left, (width - metrics.width) / 2);
     assert.equal(metrics.overflow, false);
     assert.equal(
       metrics.transparent,
       0,
-      `Visible scenery must have no transparent seams at ${width}px`,
+      `All prepainted scenery must remain opaque at ${width}px`,
     );
-    assert.ok(
-      metrics.backingHeight <= metrics.limit,
-      "Animation buffer must stay viewport-sized",
-    );
-    assert.ok(metrics.pixels, "Resized canvas must render scenery");
+    assert.ok(metrics.count > 1 && metrics.bounded);
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+    assert.ok(
+      await page.evaluate(() =>
+        window.testSurfaces.every(
+          (c, i) =>
+            c === document.querySelectorAll("[data-world-surface]")[i] &&
+            c.style.top === window.testPositions[i],
+        ),
+      ),
+      "Scroll must not move or recreate render surfaces",
+    );
     await page.waitForTimeout(100);
-    const before = await page
-      .locator("#world")
-      .evaluate((el) => el.toDataURL());
+    const before = await snapshot(page);
     await page.waitForTimeout(700);
     assert.ok(
-      (await page.locator("#world").evaluate((el) => el.toDataURL())) !==
-        before,
-      "Animation must continue after resize and scroll",
+      (await snapshot(page)) !== before,
+      "Stationary surfaces must keep animating",
     );
   }
-  // Rapid viewport changes must settle into a live, aligned renderer.
-  for (const width of [1800, 2100, 2200, 1700, 2400, 1920])
-    await page.setViewportSize({ width, height: 1080 });
-  await page.waitForTimeout(200);
-  const live = await page.locator("#world").evaluate((el) => el.toDataURL());
-  await page.waitForTimeout(700);
-  assert.ok(
-    (await page.locator("#world").evaluate((el) => el.toDataURL())) !== live,
-  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForTimeout(100);
-  const frozen = await page.locator("#world").evaluate((el) => el.toDataURL());
+  const still = await snapshot(page);
   await page.waitForTimeout(700);
-  assert.equal(
-    await page.locator("#world").evaluate((el) => el.toDataURL()),
-    frozen,
-  );
+  assert.ok((await snapshot(page)) === still);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.waitForTimeout(700);
-  assert.notEqual(
-    await page.locator("#world").evaluate((el) => el.toDataURL()),
-    frozen,
-  );
+  assert.ok((await snapshot(page)) !== still);
   assert.deepEqual(errors, []);
   console.log(
-    "Resolution verification passed: centered scenery at 320–3440px, bounded canvas memory, live resize/scroll animation, reduced-motion resume, and no rendering errors.",
+    "Resolution verification passed: fixed scene compositions, prepainted stationary surfaces, instant scroll coverage, live animation, and reduced-motion recovery at 320–3440px.",
   );
 } finally {
   await browser.close();

@@ -655,28 +655,53 @@ function calf(p, x, y, time) {
   p.rect(x + 21, y + 10 + bob, 6, 2, "#8d724c");
 }
 
-function farmGeometry(area, mobile) {
-  return mobile
-    ? {
-        barn: [480, area.y + 260, 2],
-        cows: [
-          [245, 560],
-          [670, 595],
-          [245, 850],
-          [670, 900],
-        ].map(([x, y]) => [x, area.y + y]),
-        animalScale: 2,
+function farmGeometry(area) {
+  return {
+    barn: [235, area.y + 139, 1],
+    cows: [
+      [580, 130],
+      [820, 195],
+      [580, 315],
+      [805, 325],
+    ].map(([x, y]) => [x, area.y + y]),
+    animalScale: 1,
+  };
+}
+
+function farmFence(p, area, front) {
+  const y = area.y + (front ? area.height - 20 : 28);
+  for (let x = 20; x <= 944; x += 84) {
+    p.rect(x, y - 25, 7, 31, "#8a7047");
+    p.rect(x + 2, y - 23, 3, 28, "#bda06c");
+    if (x < 940) {
+      p.rect(x + 7, y - 18, 78, 6, "#ac9060");
+      p.rect(x + 7, y - 5, 78, 5, "#967b50");
+    }
+  }
+  if (front) {
+    // A hinged gate gives the enclosed pasture a natural entrance.
+    p.rect(363, y - 18, 77, 6, "#c1a16b");
+    p.rect(363, y - 5, 77, 5, "#c1a16b");
+    p.path(
+      [
+        [365, y - 17],
+        [369, y - 18],
+        [439, y - 2],
+        [436, y + 1],
+      ],
+      "#ab8954",
+    );
+    p.rect(428, y - 11, 8, 3, "#d7c490");
+  } else {
+    for (const x of [20, 944]) {
+      p.rect(x + 2, area.y + 35, 3, area.height - 57, "#9c8051");
+      p.rect(x - 3, area.y + 35, 3, area.height - 57, "#735d3d");
+      for (let yy = area.y + 80; yy < area.y + area.height - 30; yy += 64) {
+        p.rect(x - 2, yy - 18, 9, 32, "#96784c");
+        p.rect(x, yy - 16, 3, 29, "#c1a16b");
       }
-    : {
-        barn: [235, area.y + 139, 1],
-        cows: [
-          [580, 130],
-          [820, 195],
-          [580, 315],
-          [805, 325],
-        ].map(([x, y]) => [x, area.y + y]),
-        animalScale: 1,
-      };
+    }
+  }
 }
 
 function scaledAt(p, x, y, scale, paint) {
@@ -687,8 +712,8 @@ function scaledAt(p, x, y, scale, paint) {
   p.ctx.restore();
 }
 
-function farmActors(p, area, mobile, time = 0) {
-  const g = farmGeometry(area, mobile);
+function farmActors(p, area, time = 0) {
+  const g = farmGeometry(area);
   scaledAt(p, ...g.barn, () => {
     stallHorse(p, -58, 8, true, time);
     stallHorse(p, 56, 8, false, time);
@@ -704,10 +729,11 @@ function farmActors(p, area, mobile, time = 0) {
       () => poses[i](p, 0, 0, time, 1),
     ),
   );
+  farmFence(p, area, true);
 }
 
-function farm(p, area, mobile, includeActors) {
-  const g = farmGeometry(area, mobile);
+function farm(p, area, includeActors) {
+  const g = farmGeometry(area);
   p.path(
     [
       [0, area.y + 25],
@@ -739,17 +765,7 @@ function farm(p, area, mobile, includeActors) {
       y = area.y + 20 + rand() * (area.height - 40);
     p.rect(x, y, 4 + rand() * 8, 2, i % 3 ? "#67714a" : "#82734e");
   }
-  // A roomy grazing paddock replaces cultivated fields entirely.
-  const fenceY = area.y + (mobile ? 444 : 47);
-  const fenceStart = mobile ? 20 : 425;
-  for (let x = fenceStart; x < 932; x += 84) {
-    p.rect(x, fenceY - 11, 7, 40, "#8a7047");
-    p.rect(x + 3, fenceY - 9, 3, 37, "#b19660");
-    if (x < 856) {
-      p.rect(x + 7, fenceY + 1, 78, 6, "#ac9060");
-      p.rect(x + 7, fenceY + 16, 78, 5, "#967b50");
-    }
-  }
+  farmFence(p, area, false);
   scaledAt(p, ...g.barn, () => {
     barn(p, 0, 0);
     stallFront(p);
@@ -765,8 +781,9 @@ function farm(p, area, mobile, includeActors) {
     p.rect(-30, 73, 35, 7, "#6f8c7b");
     p.rect(-26, 80, 5, 12, "#96ad92");
   });
-  for (const x of [30, 926]) p.lantern(x, area.y + (mobile ? 890 : 370));
-  if (includeActors) farmActors(p, area, mobile);
+  for (const x of [30, 926]) p.lantern(x, area.y + 370);
+  if (includeActors) farmActors(p, area);
+  farmFence(p, area, true);
 }
 
 function riverY(area, x) {
@@ -825,38 +842,130 @@ function river(p, area) {
   }
 }
 
+export function railwayGeometry(area) {
+  const points = [
+    [0, 198],
+    [180, 190],
+    [380, 164],
+    [600, 145],
+    [730, 143],
+    [806, 147],
+    [828, 137],
+    [866, 123],
+  ].map(([x, y]) => [x, area.y + y]);
+  return {
+    points,
+    tunnel: {
+      x: 866,
+      y: area.y + 110,
+      mouthLeft: 823,
+      mouthRight: 910,
+      mouthTop: area.y + 64,
+      mouthBottom: area.y + 140,
+    },
+  };
+}
+
 function railway(p, area) {
-  const y = area.y + area.height * 0.61;
-  const tunnelScale = area.height > 260 ? 2 : 1;
+  const { points, tunnel } = railwayGeometry(area);
+  // The entrance is cut into an irregular outcrop, rather than a lone arch.
   p.path(
     [
-      [0, y - 28],
-      [190, y - 34],
-      [400, y - 27],
-      [620, y - 33],
-      [960, y - 24],
-      [960, y + 29],
-      [690, y + 35],
-      [410, y + 27],
-      [184, y + 34],
-      [0, y + 27],
+      [745, area.y + 188],
+      [756, area.y + 116],
+      [788, area.y + 51],
+      [826, area.y + 29],
+      [855, area.y + 10],
+      [900, area.y + 24],
+      [929, area.y + 13],
+      [960, area.y + 45],
+      [960, area.y + 204],
+      [916, area.y + 193],
+      [866, area.y + 205],
+      [806, area.y + 190],
     ],
-    "#505a4b",
+    "#354b3b",
   );
-  for (let x = 0; x < 960; x += 22) {
-    p.rect(x, y - 23, 8, 46, "#69513a");
-    p.rect(x + 2, y - 20, 3, 40, "#947149");
-    p.rect(x - 6, y - 31 + (x % 7), 7, 4, "#858775");
-    p.rect(x + 9, y + 25 - (x % 5), 9, 4, "#727e67");
+  p.path(
+    [
+      [765, area.y + 176],
+      [776, area.y + 113],
+      [805, area.y + 55],
+      [856, area.y + 24],
+      [897, area.y + 39],
+      [939, area.y + 28],
+      [960, area.y + 63],
+      [960, area.y + 187],
+      [909, area.y + 181],
+      [855, area.y + 193],
+    ],
+    "#556452",
+  );
+  p.path(
+    [
+      [789, area.y + 103],
+      [808, area.y + 65],
+      [861, area.y + 33],
+      [918, area.y + 55],
+      [940, area.y + 44],
+      [960, area.y + 78],
+      [960, area.y + 107],
+      [914, area.y + 94],
+      [862, area.y + 113],
+    ],
+    "#677461",
+  );
+  for (const [x, y, w] of [
+    [783, 76, 23],
+    [814, 47, 20],
+    [874, 29, 28],
+    [928, 69, 23],
+    [946, 111, 16],
+    [765, 156, 24],
+    [923, 173, 26],
+  ]) {
+    p.ellipse(x, area.y + y, w, 10, "#87907b");
+    p.rect(x - w / 3, area.y + y - 3, w / 2, 2, "#a0a38c");
   }
-  for (const dy of [-13, 13]) {
-    p.rect(0, y + dy, 960, 5, "#354743");
-    p.rect(0, y + dy, 960, 2, "#9aa799");
-    for (let x = 0; x < 960; x += 22)
-      p.rect(x - 1, y + dy - 2, 12, 2, "#697a70");
+  for (const [x, y] of [
+    [767, 124],
+    [820, 34],
+    [944, 164],
+    [896, 188],
+  ]) {
+    p.ellipse(x, area.y + y + 2, 25, 10, "#3d593d");
+    for (let i = 0; i < 4; i++) {
+      p.path(
+        [
+          [x, area.y + y],
+          [x - 12 + i * 7, area.y + y - 15 - (i % 2) * 5],
+          [x - 8 + i * 7, area.y + y - 12],
+          [x + 2, area.y + y],
+        ],
+        "#70864c",
+      );
+    }
   }
-  const tx = tunnelScale === 2 ? 798 : 882;
-  scaledAt(p, tx, y, tunnelScale, () => {
+  const edge = (offset) =>
+    points.map(([x, y], i) => [x, y + offset * (1 - i * 0.09)]);
+  p.path([...edge(-29), ...edge(29).reverse()], "#505a4b");
+  // Timber sleepers follow the winding centerline, narrowing near the tunnel.
+  for (let i = 0; i < points.length - 1; i++) {
+    const [ax, ay] = points[i],
+      [bx, by] = points[i + 1];
+    for (let x = Math.ceil(ax / 22) * 22; x < bx; x += 22) {
+      const y = ay + ((by - ay) * (x - ax)) / (bx - ax);
+      const half = 23 * (1 - i * 0.09);
+      p.rect(x, y - half, 7, half * 2, "#69513a");
+      p.rect(x + 2, y - half + 2, 2, half * 2 - 4, "#947149");
+      p.rect(x - 7, y + half + 5, 7, 4, "#858775");
+    }
+  }
+  for (const offset of [-13, 13]) {
+    p.path([...edge(offset - 2), ...edge(offset + 3).reverse()], "#354743");
+    p.path([...edge(offset - 1), ...edge(offset + 1).reverse()], "#a5aea0");
+  }
+  scaledAt(p, tunnel.x, tunnel.y, 1, () => {
     p.path(
       [
         [-77, 30],
@@ -914,49 +1023,57 @@ function railway(p, area) {
       p.rect(dx - 5, dy, 16, 8, "#a0a68b");
       p.rect(dx - 5, dy + 6, 16, 2, "#566855");
     }
-    for (const dy of [-13, 13]) p.rect(-43, dy, 87, 2, "#849b90");
+    // Only these receding rail tips occupy the arch floor; none cross masonry.
+    p.path(
+      [
+        [-43, 29],
+        [-42, 25],
+        [-2, 7],
+        [-2, 9],
+      ],
+      "#9ba99a",
+    );
+    p.path(
+      [
+        [-43, 17],
+        [-42, 15],
+        [-2, 4],
+        [-2, 6],
+      ],
+      "#8ba397",
+    );
+    for (const [dx, dy] of [
+      [-32, 22],
+      [-19, 15],
+      [-9, 10],
+    ])
+      p.rect(dx, dy - 3, 3, 8, "#77674b");
     for (const dx of [-67, 60]) p.ellipse(dx, 24, 32, 12, "#526c48");
   });
-  const sx = tunnelScale === 2 ? 580 : 768;
-  p.rect(sx, y - 47, 5, 52, "#8b7954");
-  p.rect(sx - 5, y - 48, 17, 22, "#34473d");
-  p.rect(sx - 2, y - 43, 10, 10, "#8caf76");
-  p.rect(sx - 1, y - 42, 6, 6, "#c5d59b");
+  const signalY = area.y + 120;
+  p.rect(734, signalY - 47, 5, 52, "#8b7954");
+  p.rect(729, signalY - 48, 17, 22, "#34473d");
+  p.rect(732, signalY - 43, 10, 10, "#8caf76");
+  p.rect(733, signalY - 42, 6, 6, "#c5d59b");
   for (const x of [50, 334]) {
-    mushroom(p, x, y + 41);
-    p.rect(x + 22, y + 33, 2, 13, "#839168");
+    const mushroomY = area.y + (x === 50 ? 234 : 218);
+    mushroom(p, x, mushroomY);
+    p.rect(x + 22, mushroomY - 8, 2, 13, "#839168");
   }
 }
 
 function landmarks(layout) {
-  const scenes = layout.sections.flatMap((section) => {
-    const x = layout.mobile ? 690 : section.x < 200 ? 840 : 114;
-    const y = layout.mobile
-      ? section.y - 140
-      : section.y + Math.min(section.height / 2, 200);
-    if (section.id === "about")
+  const scenes = (layout.clearings || []).flatMap((area) => {
+    const y = area.y + area.height / 2;
+    if (area.id === "about")
       return [
-        {
-          paint: campfire,
-          x: layout.mobile ? 400 : x,
-          y: layout.mobile ? section.y - 220 : section.y + 140,
-          rx: 145,
-          ry: 150,
-        },
-        {
-          paint: pond,
-          x: layout.mobile ? 720 : x,
-          y: layout.mobile
-            ? section.y - 100
-            : Math.max(section.y + section.height - 100, section.y + 420),
-          rx: 125,
-          ry: 110,
-        },
+        { paint: campfire, x: 260, y, rx: 145, ry: 150 },
+        { paint: pond, x: 700, y, rx: 125, ry: 110 },
       ];
-    const paint = { projects: pod, career: cave, gamedev: sleepers }[
-      section.id
-    ];
-    return paint ? [{ paint, x, y, rx: 135, ry: 145 }] : [];
+    const paint = { projects: pod, career: cave, gamedev: sleepers }[area.id];
+    return paint
+      ? [{ paint, x: 480, y, rx: 135, ry: area.id === "gamedev" ? 90 : 145 }]
+      : [];
   });
   if (layout.stable)
     scenes.push({
@@ -1022,34 +1139,38 @@ export function paintJourney(painter, layout, includeActors = true) {
     for (let x = 25; x < WIDTH; x += 69) {
       const tx = x + (rand() - 0.5) * 38,
         ty = y + (rand() - 0.5) * 34;
-      const besidePanel = layout.sections.some(
-        (s) =>
-          tx > s.x - 34 &&
-          tx < s.x + s.width + 34 &&
-          ty > s.y - 70 &&
-          ty < s.y + s.height + 24,
+      const tree = { x: tx, y: ty, s: 0.75 + rand() * 0.45, tone: rand() };
+      const footprint = treeFootprint(tree);
+      const besidePanel = (layout.sections || []).some((section) =>
+        intersects(footprint, {
+          left: section.x - 12,
+          right: section.x + section.width + 12,
+          top: section.y - 12,
+          bottom: section.y + section.height + 12,
+        }),
       );
-      const scenicOpening = scenery.some(
-        (s) => Math.abs(tx - s.x) < s.rx && Math.abs(ty - s.y) < s.ry,
+      const scenicOpening = scenery.some((scene) =>
+        intersects(footprint, {
+          left: scene.x - scene.rx,
+          right: scene.x + scene.rx,
+          top: scene.y - scene.ry,
+          bottom: scene.y + scene.ry,
+        }),
       );
-      if (!besidePanel && !scenicOpening)
-        trees.push({ x: tx, y: ty, s: 0.75 + rand() * 0.45, tone: rand() });
+      if (!besidePanel && !scenicOpening) trees.push(tree);
     }
   }
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
-  for (const section of layout.sections) {
-    // Small natural clusters, with no line of lanterns suggesting a route.
-    const side = layout.mobile ? 52 : section.x < 200 ? 688 : 274;
-    const y = layout.mobile ? section.y - 74 : section.y + section.height - 38;
-    p.lantern(side, y);
-    mushroom(p, side + 22, y + 13);
-    mushroom(p, side + 33, y + 23);
-    p.ellipse(side - 15, y + 24, 18, 10, "#617065");
-    p.rect(side - 21, y + 20, 7, 2, "#859085");
+  for (const area of layout.clearings || []) {
+    const y = area.y + area.height - 40;
+    for (const side of [72, 886]) {
+      p.lantern(side, y);
+      mushroom(p, side + 22, y + 13);
+      p.ellipse(side - 15, y + 24, 18, 10, "#617065");
+    }
   }
   for (const scene of scenery) {
-    if (scene.paint === farm)
-      farm(p, layout.stable, layout.mobile, includeActors);
+    if (scene.paint === farm) farm(p, layout.stable, includeActors);
     else if (scene.paint === river) river(p, layout.divider);
     else if (scene.paint === railway) railway(p, layout.railway);
     else scene.paint(p, scene.x, scene.y, includeActors);
@@ -1149,11 +1270,11 @@ export function animateJourney(p, layout) {
       p.ctx.globalAlpha = 1;
       bear(p, x - 39, y + 72, time);
     } else if (scene.paint === farm) {
-      farmActors(p, layout.stable, layout.mobile, time);
+      farmActors(p, layout.stable, time);
     } else if (scene.paint === railway) {
       const area = layout.railway,
-        trackY = area.y + area.height * 0.61;
-      const signalX = area.height > 260 ? 580 : 768;
+        trackY = area.y + 120;
+      const signalX = 734;
       p.ctx.globalAlpha = p.reduced
         ? 0.3
         : 0.2 + (1 + Math.sin(time * 0.6)) * 0.1;
@@ -1205,4 +1326,19 @@ export function journeyGeometry(layout) {
     rx,
     ry,
   }));
+}
+
+export function treeFootprint(tree) {
+  return {
+    left: tree.x - (46 * tree.s + 8),
+    right: tree.x + (46 * tree.s + 8),
+    top: tree.y - Math.max(80 * tree.s + 6, 68 * tree.s + 22),
+    bottom: tree.y + 12,
+  };
+}
+
+export function intersects(a, b) {
+  return (
+    a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+  );
 }

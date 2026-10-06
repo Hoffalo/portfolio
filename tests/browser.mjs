@@ -22,7 +22,8 @@ try {
   assert.equal(await page.locator("h1").textContent(), "Issam Arida");
   assert.equal(await page.title(), "Issam Arida's Portfolio");
   assert.equal(await page.locator(".reading-section .inline-links").count(), 0);
-  assert.equal(await page.locator("#projects .project-card").count(), 5);
+  assert.equal(await page.locator("#projects .project-card").count(), 4);
+  assert.doesNotMatch(await page.locator("#projects").innerText(), /LLTE/);
   assert.equal(
     await page.locator('#projects a[href$="structural_atlas"]').count(),
     1,
@@ -262,7 +263,7 @@ try {
   assert.ok(await plain.locator(".reading-invitation a strong").count());
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");
-  assert.equal(await plain.locator("#projects .project-card").count(), 5);
+  assert.equal(await plain.locator("#projects .project-card").count(), 4);
   assert.equal(
     await plain.locator("#about .volunteer-list article").count(),
     2,
