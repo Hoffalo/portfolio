@@ -2007,3 +2007,200 @@ dialog p {
     margin-top: 70px;
   }
 }
+
+/* The opening is one compact, fixed-scale landscape; the sky shares its space. */
+.shell {
+  width: min(1120px, 100%);
+  max-width: 1120px;
+}
+#journey-world > .sky-header {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 170px;
+  padding: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.sky-header .moon-clearing {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.sky-header .controls-slot {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+}
+.controls-slot .game-bottom {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  max-width: none;
+  justify-content: flex-start;
+}
+.keyboard-hint {
+  justify-content: flex-start;
+  gap: 12px;
+}
+.keyboard-hint kbd {
+  font-size: 16px;
+  padding: 0 3px;
+}
+.sky-header .header {
+  position: absolute;
+  top: 42px;
+  left: 24px;
+  width: calc(100% - 48px);
+  min-height: 100px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+.sky-header .identity {
+  padding: 6px 8px;
+  gap: 12px;
+}
+.identity h1 {
+  font-size: 34px;
+}
+.sky-header .email-link {
+  align-self: center;
+  margin: 0;
+  pointer-events: auto;
+}
+.game-frame .social-links {
+  position: absolute;
+  top: 58%;
+  left: 2%;
+  width: 96%;
+  padding: 0;
+  margin: 0;
+  gap: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.game-frame .social-links a {
+  pointer-events: auto;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 25px;
+}
+.river-divider {
+  aspect-ratio: 960 / 80;
+  margin: 0;
+}
+.reading-invitation {
+  aspect-ratio: 960 / 200;
+  margin-top: 0;
+  min-height: 160px;
+}
+.reading-invitation a {
+  padding: 14px 12px;
+}
+@media (max-width: 740px) {
+  #journey-world > .sky-header {
+    position: relative;
+    height: 190px;
+  }
+  .sky-header .header {
+    top: 48px;
+    left: 16px;
+    width: calc(100% - 32px);
+    min-height: 0;
+    gap: 12px;
+  }
+  .sky-header .controls-slot {
+    top: 10px;
+    left: 16px;
+    right: 16px;
+  }
+  .controls-slot .game-bottom {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .keyboard-hint {
+    width: auto;
+    gap: 8px;
+    font-size: 14px;
+  }
+  .keyboard-hint kbd {
+    font-size: 14px;
+    margin: 0 1px;
+    padding: 0 2px;
+  }
+  .touch-pad {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    grid-template-columns: repeat(3, 28px);
+    gap: 2px;
+  }
+  .touch-pad button {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+  .sky-header .identity {
+    gap: 10px;
+  }
+  .identity h1 {
+    font-size: 28px;
+  }
+  .sky-header .email-link {
+    align-self: flex-start;
+    margin: 0 0 0 8px;
+    width: auto;
+    font-size: 17px;
+  }
+  .game-frame .social-links {
+    top: 8%;
+  }
+  .game-frame .social-links a {
+    padding: 6px;
+    font-size: 20px;
+    gap: 4px;
+  }
+  .game-frame .social-emoji {
+    font-size: 16px;
+  }
+  .game-frame .social-links a:after {
+    height: 18px;
+    bottom: -21px;
+    width: 6px;
+    left: calc(50% - 3px);
+  }
+  .reading-invitation {
+    min-height: 170px;
+  }
+}
+/* Fit the complete opening in the viewport without changing world coordinates. */
+@media (min-width: 741px) {
+  .shell {
+    width: min(1120px, 100%, 105svh);
+  }
+  #journey-world > .sky-header {
+    position: relative;
+    height: auto;
+    aspect-ratio: 960 / 90;
+  }
+}
+.game-frame .social-links a {
+  flex: 0 0 auto;
+}
+@media (max-width: 740px) {
+  .sky-header .moon-clearing {
+    top: 105px;
+  }
+}
+@media (max-width: 360px) {
+  .identity h1 {
+    font-size: 24px;
+  }
+  .touch-pad {
+    right: -8px;
+  }
+  .sky-header .email-link {
+    font-size: 16px;
+  }
+}

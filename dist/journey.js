@@ -541,10 +541,21 @@ function scaledAt(p, x, y, scale, paint) {
 }
 
 export function chickenState(time, reduced = false, index = 0) {
-  const phase = reduced ? index : time * 0.85 + index * 2.6;
+  const paths = [
+    [205, 302, 15, 6],
+    [272, 318, 15, 5],
+    [48, 304, 12, 7],
+    [510, 210, 12, 6],
+    [463, 260, 18, 12],
+    [720, 285, 18, 7],
+  ];
+  const [x, y, rx, ry] = paths[index % paths.length];
+  const phase = reduced
+    ? index * 1.7
+    : time * (0.95 + index * 0.09) + index * 2.6;
   return {
-    x: (index ? 110 : 225) + Math.sin(phase) * (index ? 32 : 42),
-    y: (index ? 371 : 348) + Math.sin(phase * 1.3) * 9,
+    x: x + Math.sin(phase) * rx,
+    y: y + Math.sin(phase * 1.3) * ry,
     face: Math.cos(phase) < 0 ? -1 : 1,
   };
 }
@@ -553,12 +564,102 @@ function chicken(p, area, time, reduced, index) {
     x = state.x,
     y = area.y + state.y;
   const step = reduced ? 0 : (Math.floor(time * 8 + index) % 2) * 2;
-  p.ellipse(x, y, 15, 11, "#d1cdb0");
-  p.ellipse(x + state.face * 7, y - 5, 8, 8, "#e5dcc0");
+  const body = [
+    "#d1cdb0",
+    "#ae8e62",
+    "#e0d8bc",
+    "#8d7759",
+    "#c2ab80",
+    "#d4bd8a",
+  ][index % 6];
+  p.ellipse(x, y, 15, 11, body);
+  p.ellipse(x + state.face * 7, y - 5, 8, 8, index % 2 ? "#c9ad80" : "#e5dcc0");
   p.rect(x + state.face * 5, y - 12, 4, 4, "#bd7955");
   p.rect(x + state.face * 11, y - 4, 4, 2, "#c8a35b");
   p.rect(x - 3, y + 4, 2, 5 + step, "#c8a35b");
   p.rect(x + 3, y + 4, 2, 7 - step, "#c8a35b");
+}
+
+export function pigState(time, reduced = false, index = 0) {
+  const phase = reduced ? index * 2.1 : time * 0.55 + index * 2.1;
+  return {
+    x: (index ? 255 : 140) + Math.sin(phase) * 7,
+    y: (index ? 406 : 397) + Math.cos(phase) * 3,
+    roll: reduced ? index : Math.floor(time * 0.8 + index * 2) % 4,
+    face: index ? -1 : 1,
+  };
+}
+function pig(p, area, time, reduced, index) {
+  const state = pigState(time, reduced, index),
+    x = state.x,
+    y = area.y + state.y;
+  const upside = state.roll === 1 || state.roll === 2;
+  p.ellipse(x, y + 11, 50, 13, "#65513c");
+  p.ellipse(x, y, 43, upside ? 29 : 25, index ? "#c5947f" : "#d5aa90");
+  p.ellipse(x - 5, y - 4, 25, upside ? 22 : 15, index ? "#ddad91" : "#e7bca1");
+  for (const dx of [-13, 10])
+    p.rect(x + dx, y + (upside ? -20 : 9), 6, 9, "#ad7e6b");
+  const hx = x + state.face * 22,
+    hy = y + (upside ? -2 : 3);
+  p.ellipse(hx, hy, 23, 21, "#d9a38c");
+  p.path(
+    [
+      [hx - 5, hy - 8],
+      [hx - 10, hy - 17],
+      [hx + 1, hy - 11],
+    ],
+    "#e3b298",
+  );
+  p.ellipse(hx + state.face * 10, hy + 4, 13, 10, "#e8b7a0");
+  p.rect(hx + state.face * 12, hy + 2, 2, 3, "#966f60");
+  p.rect(hx + state.face * 6, hy - 2, 3, 2, "#73594e");
+  p.path(
+    [
+      [x - state.face * 23, y],
+      [x - state.face * 30, y - 6],
+      [x - state.face * 34, y - 2],
+      [x - state.face * 29, y + 1],
+    ],
+    "#bd917b",
+  );
+  for (const [dx, dy] of [
+    [-7, 5],
+    [7, 2],
+    [16, -4],
+  ])
+    p.rect(x + dx, y + dy, 7, 3, "#937456");
+  if (!reduced && state.roll === 2) {
+    p.rect(x - 27, y + 16, 4, 3, "#a18a67");
+    p.rect(x + 30, y + 12, 5, 3, "#a18a67");
+  }
+}
+function pigPen(p, area, frontOnly = false) {
+  if (!frontOnly) {
+    p.ellipse(193, area.y + 396, 252, 77, "#736047");
+    p.ellipse(191, area.y + 399, 220, 60, "#857052");
+    for (let i = 0; i < 16; i++)
+      p.rect(83 + i * 13, area.y + 376 + ((i * 11) % 44), 10, 2, "#9c8764");
+    for (let x = 70; x <= 330; x += 52) {
+      p.rect(x, area.y + 340, 6, 31, "#8f7650");
+      if (x < 330) {
+        p.rect(x + 6, area.y + 348, 46, 5, "#b29a6b");
+        p.rect(x + 6, area.y + 362, 46, 4, "#967d53");
+      }
+    }
+    for (const x of [70, 330]) {
+      p.rect(x + 1, area.y + 367, 3, 65, "#a78d5d");
+      p.rect(x - 2, area.y + 387, 8, 31, "#9d8155");
+    }
+    p.ellipse(296, area.y + 380, 30, 13, "#777c67");
+    p.ellipse(296, area.y + 378, 25, 8, "#567370");
+  }
+  for (let x = 70; x <= 330; x += 52) {
+    p.rect(x, area.y + 412, 6, 29, "#967c52");
+    if (x < 330) {
+      p.rect(x + 6, area.y + 419, 46, 5, "#bea16f");
+      p.rect(x + 6, area.y + 432, 46, 4, "#9c8257");
+    }
+  }
 }
 function farmActors(p, area, time = 0) {
   const g = farmGeometry(area);
@@ -584,7 +685,9 @@ function farmActors(p, area, time = 0) {
       () => poses[i](p, 0, 0, time, 1),
     ),
   );
-  for (let i = 0; i < 2; i++) chicken(p, area, time, p.reduced, i);
+  for (let i = 0; i < 6; i++) chicken(p, area, time, p.reduced, i);
+  for (let i = 0; i < 2; i++) pig(p, area, time, p.reduced, i);
+  pigPen(p, area, true);
   farmFence(p, area, true);
 }
 
@@ -664,6 +767,7 @@ function farm(p, area, includeActors) {
     p.rect(x, area.y + 276 + (x % 3) * 3, 3, 17, "#e0bf71");
   p.ellipse(124, area.y + 317, 90, 25, "#7c7656");
   p.ellipse(124, area.y + 312, 78, 15, "#527776");
+  pigPen(p, area);
   if (includeActors) farmActors(p, area);
   farmFence(p, area, true);
 }
@@ -1045,16 +1149,16 @@ function landmarks(layout) {
         {
           paint: campfire,
           x: 150,
-          y: layout.invitation.y + 150,
-          rx: 145,
-          ry: 150,
+          y: layout.invitation.y + layout.invitation.height / 2,
+          rx: 130,
+          ry: 110,
         },
         {
           paint: relics,
           x: 800,
-          y: layout.invitation.y + 150,
+          y: layout.invitation.y + layout.invitation.height / 2,
           rx: 105,
-          ry: 145,
+          ry: 105,
         },
       ]
     : [];
@@ -1127,6 +1231,16 @@ export function paintJourney(painter, layout, includeActors = true) {
     }
   }
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
+  if (layout.invitation) {
+    const middle = layout.invitation.y + layout.invitation.height / 2;
+    for (const [x, y, tone] of [
+      [0, 76, 0.15],
+      [282, -63, 0.2],
+      [666, -64, 0.17],
+      [950, 72, 0.25],
+    ])
+      p.tree({ x, y: middle + y, s: 0.86, tone });
+  }
   for (const scene of scenery) {
     if (scene.paint === farm) farm(p, layout.stable, includeActors);
     else if (scene.paint === river) river(p, layout.divider);

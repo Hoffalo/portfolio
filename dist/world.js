@@ -449,10 +449,85 @@ export class World {
     return canWalk(x, y);
   }
   moonPosition() {
-    return { x: 480, y: (this.layout.moonArea?.y || 0) + 45, diameter: 118 };
+    return { x: 480, y: (this.layout.moonArea?.y || 0) + 70, diameter: 118 };
   }
   drawSky() {
     this.rect(0, 0, WIDTH, (this.layout.skyHeight || 0) + 190, "#17242b");
+    // Fixed, distant ridges sit behind the moon and the nearer snowy range.
+    // Muted pigment gives depth while every silhouette stays on the pixel grid.
+    const distantBase = this.layout.skyHeight + 122;
+    this.ctx.save();
+    try {
+      this.ctx.globalAlpha = 0.68;
+      for (const [center, peakHeight, span] of [
+        [-70, 206, 360],
+        [176, 226, 370],
+        [430, 204, 350],
+        [706, 236, 380],
+        [966, 210, 370],
+      ]) {
+        const top = distantBase - peakHeight;
+        this.path(
+          [
+            [center - span * 0.5, distantBase],
+            [center - span * 0.31, top + peakHeight * 0.55],
+            [center - span * 0.08, top + peakHeight * 0.19],
+            [center, top],
+            [center + span * 0.24, top + peakHeight * 0.46],
+            [center + span * 0.5, distantBase],
+          ],
+          "#2b4048",
+        );
+        this.path(
+          [
+            [center, top],
+            [center + span * 0.24, top + peakHeight * 0.46],
+            [center + span * 0.5, distantBase],
+            [center + span * 0.07, distantBase],
+          ],
+          "#253741",
+        );
+        this.path(
+          [
+            [center - span * 0.13, top + peakHeight * 0.27],
+            [center, top],
+            [center + span * 0.15, top + peakHeight * 0.3],
+            [center + span * 0.04, top + peakHeight * 0.25],
+            [center - span * 0.02, top + peakHeight * 0.32],
+            [center - span * 0.06, top + peakHeight * 0.2],
+          ],
+          "#557079",
+        );
+        this.path(
+          [
+            [center, top],
+            [center + span * 0.15, top + peakHeight * 0.3],
+            [center + span * 0.04, top + peakHeight * 0.25],
+          ],
+          "#405963",
+        );
+      }
+      this.ctx.globalAlpha = 0.42;
+      this.path(
+        [
+          [-20, distantBase - 30],
+          [88, distantBase - 85],
+          [186, distantBase - 49],
+          [290, distantBase - 94],
+          [394, distantBase - 46],
+          [554, distantBase - 86],
+          [690, distantBase - 35],
+          [794, distantBase - 80],
+          [940, distantBase - 37],
+          [980, distantBase - 72],
+          [980, distantBase],
+          [-20, distantBase],
+        ],
+        "#30494d",
+      );
+    } finally {
+      this.ctx.restore();
+    }
     const { x, y, diameter: d } = this.moonPosition();
     this.ellipse(x, y, d + 22, d + 22, "#253c40");
     this.ellipse(x, y, d + 10, d + 10, "#486360");

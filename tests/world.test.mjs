@@ -227,7 +227,7 @@ test("moon remains centered in its fixed scene at every resolution", () => {
       mobile: scale < 1,
       moonArea: { y: 200, height: 90 },
     };
-    assert.deepEqual(world.moonPosition(), { x: 480, y: 245, diameter: 118 });
+    assert.deepEqual(world.moonPosition(), { x: 480, y: 270, diameter: 118 });
   }
 });
 
