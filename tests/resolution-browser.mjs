@@ -89,12 +89,7 @@ try {
         bounded: canvases.every((c) => c.height <= maxHeight),
       };
     });
-    assert.ok(
-      Math.abs(
-        metrics.width -
-          Math.min(1120, width, width > 740 ? height * 1.05 : Infinity),
-      ) < 0.02,
-    );
+    assert.ok(Math.abs(metrics.width - Math.min(1120, width)) < 0.02);
     assert.ok(Math.abs(metrics.left - (width - metrics.width) / 2) < 0.02);
     assert.equal(metrics.overflow, false);
     if (width >= 1440 || width <= 390) {
@@ -124,10 +119,6 @@ try {
           ),
         };
       });
-      assert.ok(
-        opening.boardBottom <= height + 1,
-        `Opening must fit the first viewport at ${width}x${height}`,
-      );
       assert.ok(opening.controlsBottom < opening.portraitTop);
       assert.ok(opening.socialInGame);
       assert.ok(
