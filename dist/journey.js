@@ -208,9 +208,9 @@ function stallHorse(p, x, y, feeding, time = 0) {
     tone,
   );
   p.ellipse(x + 25, headY, 22, 15, tone);
-  p.rect(x + 30, headY + 2, 8, 5, "#d0bfa0");
-  p.rect(x + 19, headY - 16, 4, 11, tone);
-  p.rect(x + 26, headY - 15, 4, 10, tone);
+  p.rect(x + 30, headY + 1, 10, 6, "#d0bfa0");
+  p.rect(x + 19, headY - 10, 4, 6, tone);
+  p.rect(x + 26, headY - 9, 4, 5, tone);
   p.rect(x + 28, headY - 3, 3, 2, "#3b372d");
   p.path(
     [
@@ -485,12 +485,12 @@ export function farmGeometry(area) {
   return {
     barn: [235, area.y + 139, 1],
     cows: [
-      [540, 125],
-      [825, 235],
-      [520, 285],
-      [650, 210],
-      [465, 397],
-      [790, 105],
+      [570, 135],
+      [820, 245],
+      [560, 275],
+      [685, 200],
+      [700, 304],
+      [815, 110],
     ].map(([x, y]) => [x, area.y + y]),
     animalScale: 1,
   };
@@ -585,9 +585,9 @@ export function chickenState(time, reduced = false, index = 0) {
     [205, 302, 15, 6],
     [320, 318, 15, 5],
     [62, 302, 10, 7],
-    [510, 210, 12, 6],
-    [463, 340, 10, 7],
-    [695, 305, 16, 7],
+    [450, 290, 10, 6],
+    [440, 360, 10, 7],
+    [435, 430, 8, 5],
     [82, 446, 12, 5],
     [180, 458, 15, 5],
     [280, 450, 15, 5],
@@ -726,7 +726,7 @@ function pigPen(p, area, frontOnly = false) {
 }
 function henShelter(p, area) {
   const y = area.y;
-  p.ellipse(175, y + 426, 290, 124, "#8c774a");
+  p.ellipse(224, y + 402, 408, 172, "#8c774a");
   for (let i = 0; i < 30; i++)
     p.rect(
       55 + ((i * 37) % 255),
@@ -820,6 +820,67 @@ function farm(p, area, includeActors) {
       y = area.y + 20 + rand() * (area.height - 40);
     p.rect(x, y, 4 + rand() * 8, 2, i % 3 ? "#67714a" : "#82734e");
   }
+  // One pasture and one service yard give each family a shared place.
+  p.ellipse(694, area.y + 204, 516, 283, "#536449");
+  p.ellipse(560, area.y + 279, 150, 78, "#62714b");
+  for (let i = 0; i < 18; i++)
+    p.rect(
+      507 + ((i * 23) % 107),
+      area.y + 264 + ((i * 13) % 37),
+      8,
+      2,
+      "#929563",
+    );
+  // Local worn footways end at the stable, coop and mudpen gates.
+  const routes = [
+    [
+      [385, 493],
+      [418, 493],
+      [421, 429],
+      [449, 358],
+      [456, 292],
+      [426, 247],
+      [361, 229],
+      [350, 241],
+      [410, 266],
+      [426, 299],
+      [423, 352],
+      [395, 424],
+    ],
+    [
+      [390, 447],
+      [405, 461],
+      [322, 467],
+      [239, 448],
+      [191, 428],
+      [198, 415],
+      [247, 434],
+      [324, 450],
+    ],
+    [
+      [408, 438],
+      [407, 453],
+      [498, 452],
+      [566, 427],
+      [591, 412],
+      [583, 400],
+      [557, 414],
+      [492, 436],
+    ],
+  ];
+  for (const route of routes)
+    p.path(
+      route.map(([x, y]) => [x, area.y + y]),
+      "#6b6246",
+    );
+  p.ellipse(685, area.y + 138, 76, 24, "#797a5e");
+  p.ellipse(685, area.y + 133, 64, 15, "#547878");
+  p.rect(650, area.y + 145, 5, 11, "#746345");
+  p.rect(716, area.y + 145, 5, 11, "#746345");
+  p.ellipse(888, area.y + 301, 95, 29, "#746344");
+  p.rect(852, area.y + 284, 72, 16, "#b49b59");
+  for (let x = 856; x < 924; x += 9)
+    p.rect(x, area.y + 280 + (x % 3) * 2, 3, 17, "#d3b96f");
   farmFence(p, area, false);
   scaledAt(p, ...g.barn, () => {
     barn(p, 0, 0);
@@ -1345,6 +1406,33 @@ export function paintJourney(painter, layout, includeActors = true) {
       if (!scenicOpening) trees.push(tree);
     }
   }
+  const readingTrees = [];
+  for (const tree of trees) {
+    const reading = (layout.sections || []).some(
+      (section) =>
+        tree.y > section.y - 30 && tree.y < section.y + section.height + 45,
+    );
+    if (!reading) continue;
+    const extra = {
+      x: tree.x + 27,
+      y: tree.y + 29,
+      s: 0.68 + rand() * 0.25,
+      tone: rand(),
+    };
+    const footprint = treeFootprint(extra);
+    if (
+      !scenery.some((scene) =>
+        intersects(footprint, {
+          left: scene.x - scene.rx,
+          right: scene.x + scene.rx,
+          top: scene.y - scene.ry,
+          bottom: scene.y + scene.ry,
+        }),
+      )
+    )
+      readingTrees.push(extra);
+  }
+  trees.push(...readingTrees);
   for (const tree of trees.sort((a, b) => a.y - b.y)) p.tree(tree);
   if (layout.invitation) {
     const middle = layout.invitation.y + layout.invitation.height / 2;
@@ -1355,6 +1443,43 @@ export function paintJourney(painter, layout, includeActors = true) {
       [950, 72, 0.25],
     ])
       p.tree({ x, y: middle + y, s: 0.86, tone });
+  }
+  if (layout.invitation) {
+    const invitation = layout.invitation,
+      middle = invitation.y + invitation.height / 2;
+    const notice = {
+      left: 270,
+      right: 690,
+      top: invitation.y + 10,
+      bottom: invitation.y + invitation.height - 10,
+    };
+    const candidates = [
+      [-14, 205],
+      [963, 160],
+      [88, -155],
+      [318, -145],
+      [640, -145],
+      [926, -150],
+      [105, 207],
+      [854, 207],
+    ];
+    for (const [x, offset] of candidates) {
+      const tree = { x, y: middle + offset, s: 0.79, tone: 0.19 };
+      const footprint = treeFootprint(tree);
+      if (
+        intersects(footprint, notice) ||
+        scenery.some((scene) =>
+          intersects(footprint, {
+            left: scene.x - scene.rx,
+            right: scene.x + scene.rx,
+            top: scene.y - scene.ry,
+            bottom: scene.y + scene.ry,
+          }),
+        )
+      )
+        continue;
+      p.tree(tree);
+    }
   }
   for (const scene of scenery) {
     if (scene.paint === farm) farm(p, layout.stable, includeActors);

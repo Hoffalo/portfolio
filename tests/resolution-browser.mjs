@@ -98,6 +98,20 @@ try {
         return {
           boardBottom: rect(".reading-invitation").bottom,
           controlsBottom: rect(".keyboard-hint").bottom,
+          controlsCenter:
+            (rect(".keyboard-hint").left + rect(".keyboard-hint").right) / 2,
+          boardInset: [
+            ...document.querySelectorAll(".reading-invitation a > *"),
+          ].every((e) => {
+            const a = rect(".reading-invitation a"),
+              b = e.getBoundingClientRect();
+            return (
+              b.left >= a.left + 10 &&
+              b.right <= a.right - 10 &&
+              b.top >= a.top + 20 &&
+              b.bottom <= a.bottom - 20
+            );
+          }),
           portraitTop: rect(".identity img").top,
           socialInGame: !!document.querySelector(".game-frame .social-links"),
           touchClear: [...document.querySelectorAll(".touch-pad button")].every(
@@ -120,6 +134,11 @@ try {
         };
       });
       assert.ok(opening.controlsBottom < opening.portraitTop);
+      assert.ok(Math.abs(opening.controlsCenter - width / 2) < 1);
+      assert.ok(
+        opening.boardInset,
+        "Reading sign content must stay inset within its wood face",
+      );
       assert.ok(opening.socialInGame);
       assert.ok(
         opening.touchClear,
