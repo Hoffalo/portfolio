@@ -24,14 +24,11 @@ html {
 }
 body {
   margin: 0;
-  position: relative;
-  isolation: isolate;
-  background: #26291f url("./art/dirt-ore.png") repeat;
-  background-size: 192px 192px;
-  image-rendering: pixelated;
+  background: #22332e;
   color: var(--text);
   font: 16px/1.7 var(--sans);
 }
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
@@ -56,19 +53,38 @@ a:hover {
 }
 .shell {
   position: relative;
-  z-index: 1;
-  width: min(1280px, 100%);
+  width: min(1440px, 100%);
   margin: auto;
-  padding: 0 40px;
-  background: linear-gradient(
-    90deg,
-    #0d151800,
-    #0d1518f5 6%,
-    #0d1518f5 94%,
-    #0d151800
-  );
+  padding: 0;
+  background: none;
+}
+#journey-world {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-bottom: 150px;
+}
+.world-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+#world {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  touch-action: pan-y;
+}
+#journey-world > :not(.world-layer) {
+  position: relative;
+  z-index: 1;
 }
 .header {
+  width: min(1200px, calc(100% - 48px));
+  margin: auto;
   min-height: 144px;
   display: flex;
   justify-content: space-between;
@@ -102,24 +118,30 @@ h1 {
   padding: 8px 0;
 }
 .game-frame {
-  background: #142020;
-  border: 1px solid #3b4a43;
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: 0 14px 50px #0003;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  pointer-events: none;
 }
 .world-wrap {
   position: relative;
-  overflow: hidden;
+  aspect-ratio: 16/9;
+  pointer-events: none;
 }
 canvas {
   display: block;
   width: 100%;
   aspect-ratio: 16/9;
   image-rendering: pixelated;
-  touch-action: none;
+  touch-action: pan-y;
 }
 canvas:focus-visible {
+  outline: none;
+}
+#journey-world:has(#world:focus-visible) .world-wrap {
+  outline: 2px solid var(--gold);
   outline-offset: -3px;
 }
 .building-access {
@@ -156,6 +178,7 @@ canvas:focus-visible {
   padding: 7px 14px;
   color: var(--gold);
   white-space: nowrap;
+  pointer-events: auto;
   font: 400 22px/1.2 var(--pixel);
   font-synthesis: none;
   box-shadow: 0 3px 12px #0004;
@@ -182,6 +205,12 @@ kbd {
   padding: 18px 22px;
   border-top: 1px solid #34463d;
   min-height: 72px;
+  width: min(1050px, calc(100% - 48px));
+  margin: auto;
+  pointer-events: auto;
+  background: #192c23f5;
+  border: 2px solid #746443;
+  box-shadow: 3px 3px #15251d;
 }
 .keyboard-hint {
   display: flex;
@@ -241,35 +270,77 @@ kbd {
 .reading-invitation {
   display: flex;
   justify-content: center;
-  padding: 12px 0 54px;
+  padding: 50px 20px 70px;
 }
 .reading-invitation a {
-  color: var(--muted);
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.6;
+  position: relative;
+  padding: 22px 32px 18px;
   text-align: center;
+  color: #f1dfb1;
+  background: repeating-linear-gradient(
+    0deg,
+    #6d5135 0 22px,
+    #543f2c 22px 24px
+  );
+  border: 6px solid #a18759;
+  box-shadow:
+    0 0 0 3px #453926,
+    6px 6px #14251cb3;
+  font: 24px/1.2 var(--pixel);
 }
-.reading-invitation a:hover {
-  color: var(--gold);
+.reading-invitation a:before,
+.reading-invitation a:after {
+  content: "";
+  position: absolute;
+  bottom: -48px;
+  height: 42px;
+  width: 12px;
+  background: #695035;
+  border-inline: 2px solid #a08352;
 }
-.reading-invitation span {
+.reading-invitation a:before {
+  left: 28px;
+}
+.reading-invitation a:after {
+  right: 28px;
+}
+.reading-invitation strong {
   display: block;
-  color: var(--gold);
-  font-size: 22px;
-  margin-top: 9px;
+  font-size: 32px;
+  font-weight: 400;
+}
+.reading-invitation .billboard-detail {
+  display: block;
+  font: 16px/1.5 var(--sans);
+  margin-top: 8px;
+}
+.reading-invitation a > span:last-child {
+  display: block;
+  margin-top: 10px;
+  font-size: 24px;
 }
 .portfolio-reading {
-  max-width: 980px;
-  margin: 0 auto;
-  padding-inline: 28px;
-  background: #0d1518e8;
-  padding-bottom: 60px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  pointer-events: none;
 }
 .reading-section {
-  border-top: 1px solid var(--line);
-  padding: 58px 0 65px;
-  scroll-margin-top: 24px;
+  pointer-events: auto;
+  width: 58%;
+  margin: 200px 0 0 9%;
+  padding: 38px 42px 42px;
+  border: 2px solid #9c865d;
+  outline: 4px solid #354231;
+  background: #172921f5;
+  box-shadow: 6px 7px #13251ad6;
+  scroll-margin-top: 32px;
+}
+.reading-section:nth-child(even) {
+  margin-left: auto;
+  margin-right: 9%;
 }
 .section-heading {
   display: flex;
@@ -696,23 +767,6 @@ dialog::backdrop {
   }
 }
 
-/* Static pixel scenery repeats for the full document height; it never intercepts input. */
-body::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: url("./art/forest-left.png"), url("./art/forest-right.png");
-  background-repeat: repeat-y, repeat-y;
-  background-position:
-    left top,
-    right top;
-  background-size:
-    192px 960px,
-    192px 960px;
-  image-rendering: pixelated;
-}
 .email-link {
   display: inline-flex;
   align-items: center;
@@ -736,36 +790,83 @@ body::before {
 .panel-footer {
   justify-content: flex-end;
 }
-@media (max-width: 1000px) {
-  body::before {
-    background-size:
-      128px 640px,
-      128px 640px;
-    opacity: 0.75;
-  }
+
+.controls-slot {
+  min-height: 76px;
+}
+#journey-world.is-exploring .game-bottom {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, calc(100% - 32px));
+  z-index: 8;
+}
+.social-links {
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 22px auto 0;
+  padding: 10px 22px;
+  background: #263a29f5;
+  border: 1px solid #6c7350;
+  box-shadow: 3px 3px #17291c;
+}
+.project-card {
+  background: #1c3028;
+  border-color: #475940;
 }
 @media (max-width: 700px) {
-  body::before {
-    background-size:
-      80px 400px,
-      80px 400px;
-    opacity: 0.65;
-  }
   .shell {
-    background: linear-gradient(
-      90deg,
-      #0d151825,
-      #0d1518f5 20px,
-      #0d1518f5 calc(100% - 20px),
-      #0d151825
-    );
-    padding-inline: 20px;
+    padding: 0;
+    background: none;
+  }
+  .header {
+    min-height: 146px;
+    width: calc(100% - 40px);
+  }
+  .world-wrap {
+    aspect-ratio: 16/9;
+  }
+  .controls-slot {
+    min-height: 208px;
+  }
+  .game-bottom {
+    width: calc(100% - 32px);
+  }
+  .reading-invitation {
+    padding: 40px 22px 55px;
+  }
+  .reading-invitation a {
+    padding: 17px 15px 12px;
+    font-size: 24px;
+  }
+  .reading-invitation .billboard-detail {
+    font-size: 16px;
   }
   .portfolio-reading {
-    padding-inline: 0;
-    background: #0d1518f5;
+    padding: 0;
+    background: none;
+  }
+  .reading-section,
+  .reading-section:nth-child(even) {
+    width: calc(100% - 32px);
+    margin: 190px 16px 0;
+    padding: 28px 22px 32px;
   }
   .social-links {
     gap: 17px;
   }
+}
+
+#journey-world {
+  background-image: url("./art/journey.png");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  image-rendering: pixelated;
+}
+.reading-section,
+.game-bottom,
+.social-links,
+.reading-invitation {
+  image-rendering: auto;
 }

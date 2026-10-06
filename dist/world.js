@@ -1,3 +1,4 @@
+import { paintJourney, pathAt } from "./journey.js";
 export const WIDTH = 960,
   HEIGHT = 540;
 export const destinations = [
@@ -65,16 +66,20 @@ export function nearbyArea(x, y) {
   );
 }
 export const WALK_SPEED = 160;
-export function movePlayer(player, dx, dy, dt) {
+export function movePlayer(player, dx, dy, dt, walkable = canWalk) {
   const length = Math.hypot(dx, dy);
   if (!length) return false;
-  const amount = WALK_SPEED * Math.min(dt, 0.04),
-    x = player.x + (dx / length) * amount,
-    y = player.y + (dy / length) * amount;
+  const amount = WALK_SPEED * Math.min(dt, 0.04);
   const previousX = player.x,
     previousY = player.y;
-  if (canWalk(x, player.y)) player.x = x;
-  if (canWalk(player.x, y)) player.y = y;
+  // Small collision steps preserve passage through tight bends at lower frame rates.
+  const steps = Math.max(1, Math.ceil(amount / 2));
+  for (let step = 0; step < steps; step++) {
+    const x = player.x + ((dx / length) * amount) / steps,
+      y = player.y + ((dy / length) * amount) / steps;
+    if (walkable(x, player.y)) player.x = x;
+    if (walkable(player.x, y)) player.y = y;
+  }
   player.facing = dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down";
   return player.x !== previousX || player.y !== previousY;
 }
@@ -138,6 +143,8 @@ export class World {
     this.near = null;
     this.active = true;
     this.visible = true;
+    this.layout = { height: HEIGHT, sections: [], mobile: false };
+    this.viewport = { top: 0, bottom: HEIGHT };
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.time = 0;
     this.last = 0;
@@ -206,6 +213,42 @@ export class World {
     this.ctx = main;
     this.frame = this.frame.bind(this);
     requestAnimationFrame(this.frame);
+  }
+  setLayout(layout) {
+    this.layout = layout;
+    this.canvas.width = WIDTH / 2;
+    this.canvas.height = Math.ceil(layout.height / 2);
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.scale(0.5, 0.5);
+    this.scene.width = WIDTH / 2;
+    this.scene.height = this.canvas.height;
+    const main = this.ctx,
+      reduced = this.reduced,
+      time = this.time;
+    this.ctx = this.scene.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.scale(0.5, 0.5);
+    this.reduced = true;
+    this.time = 0;
+    this.drawTerrain();
+    paintJourney(this, layout);
+    this.ctx = main;
+    this.reduced = reduced;
+    this.time = time;
+    this.ctx.drawImage(this.scene, 0, 0, WIDTH, layout.height);
+    this.player.y = Math.min(this.player.y, layout.height - 30);
+    if (
+      this.player.y > HEIGHT &&
+      !this.isWalkable(this.player.x, this.player.y)
+    )
+      this.player.x = pathAt(this.player.y, layout);
+  }
+  isWalkable(x, y) {
+    if (y < 499) return canWalk(x, y);
+    if (y < HEIGHT) return x > 438 && x < 544;
+    if (x < 12 || x > 948 || y > this.layout.height - 24) return false;
+    return Math.abs(x - pathAt(y, this.layout)) < 38;
   }
   // All art is drawn on a 480×270 framebuffer, with a two-unit pixel grid.
   rect(x, y, w, h, color) {
@@ -882,81 +925,107 @@ export class World {
   }
   draw() {
     const c = this.ctx;
-    c.clearRect(0, 0, 960, 540);
-    c.drawImage(this.scene, 0, 0, 960, 540);
-    this.skyClouds();
-    this.moonlight();
-    for (let i = 0; i < 7; i++) {
-      const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
-      this.rect(
-        458 + Math.sin(i * 2) * 10 + phase * 2,
-        148 + i * 19,
-        12,
-        2,
-        "#51736b",
+    const top = Math.max(0, Math.floor(this.viewport.top / 2) * 2),
+      bottom = Math.min(
+        this.layout.height,
+        Math.ceil(this.viewport.bottom / 2) * 2,
       );
-    }
-    const foxes = [
-      foxState(this.time, 0, this.reduced),
-      foxState(this.time, 1, this.reduced),
-    ];
-    const sorted = [
-      ...destinations.map((d) => ({
-        y: d.y + d.h,
-        draw: () => this.building(d),
-      })),
-      ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
-      ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
-      { y: this.player.y, draw: () => this.character() },
-    ].sort((a, b) => a.y - b.y);
-    sorted.forEach((o) => o.draw());
-    destinations.forEach((d) => this.smoke(d));
-    [
-      [363, 289],
-      [596, 314],
-      [334, 420],
-      [633, 452],
-      [458, 460],
-    ].forEach(([x, y]) => this.lantern(x, y));
-    this.rect(531, 318, 4, 30, "#796343");
-    this.rect(516, 318, 37, 10, "#b69b66");
-    this.rect(519, 320, 29, 2, "#78613e");
-    this.fire();
-    // A sleeping cat beside the cabin: only its tail stirs.
-    this.rect(626, 426, 17, 8, "#9f9472");
-    this.rect(623, 424, 7, 8, "#9f9472");
-    this.rect(623, 421, 3, 4, "#b4a17b");
-    this.rect(627, 429, 2, 2, "#4c4e37");
-    this.rect(636, 431, 9, 2, "#756f50");
-    this.rect(
-      643,
-      424 + (this.reduced ? 0 : Math.round(Math.sin(this.time * 0.7)) * 2),
-      7,
-      3,
-      "#aaa07b",
+    const height = Math.max(0, bottom - top);
+    if (!height) return;
+    c.save();
+    c.beginPath();
+    c.rect(0, top, WIDTH, height);
+    c.clip();
+    c.clearRect(0, top, WIDTH, height);
+    c.drawImage(
+      this.scene,
+      0,
+      top / 2,
+      WIDTH / 2,
+      height / 2,
+      0,
+      top,
+      WIDTH,
+      height,
     );
-    this.flies.forEach((f) => {
-      const t = this.reduced ? f.phase : this.time;
-      const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
-        y = f.y + Math.cos(t * 0.7 + f.phase) * 6;
-      c.globalAlpha = 0.4 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
-      this.rect(x, y, 2, 2, "#cfcb85");
-      c.globalAlpha = 1;
-    });
+    if (top < 620) {
+      this.skyClouds();
+      this.moonlight();
+      for (let i = 0; i < 7; i++) {
+        const phase = this.reduced ? 0 : Math.floor(this.time * 3 + i) % 4;
+        this.rect(
+          458 + Math.sin(i * 2) * 10 + phase * 2,
+          148 + i * 19,
+          12,
+          2,
+          "#51736b",
+        );
+      }
+      const foxes = [
+        foxState(this.time, 0, this.reduced),
+        foxState(this.time, 1, this.reduced),
+      ];
+      const sorted = [
+        ...destinations.map((d) => ({
+          y: d.y + d.h,
+          draw: () => this.building(d),
+        })),
+        ...this.trees.map((t) => ({ y: t.y, draw: () => this.tree(t) })),
+        ...foxes.map((fox) => ({ y: fox.y, draw: () => this.fox(fox) })),
+        { y: this.player.y, draw: () => this.character() },
+      ].sort((a, b) => a.y - b.y);
+      sorted.forEach((o) => o.draw());
+      destinations.forEach((d) => this.smoke(d));
+      [
+        [363, 289],
+        [596, 314],
+        [334, 420],
+        [633, 452],
+        [458, 460],
+      ].forEach(([x, y]) => this.lantern(x, y));
+      this.rect(531, 318, 4, 30, "#796343");
+      this.rect(516, 318, 37, 10, "#b69b66");
+      this.rect(519, 320, 29, 2, "#78613e");
+      this.fire();
+      // A sleeping cat beside the cabin: only its tail stirs.
+      this.rect(626, 426, 17, 8, "#9f9472");
+      this.rect(623, 424, 7, 8, "#9f9472");
+      this.rect(623, 421, 3, 4, "#b4a17b");
+      this.rect(627, 429, 2, 2, "#4c4e37");
+      this.rect(636, 431, 9, 2, "#756f50");
+      this.rect(
+        643,
+        424 + (this.reduced ? 0 : Math.round(Math.sin(this.time * 0.7)) * 2),
+        7,
+        3,
+        "#aaa07b",
+      );
+      this.flies.forEach((f) => {
+        const t = this.reduced ? f.phase : this.time;
+        const x = f.x + Math.sin(t * 0.5 + f.phase) * 9,
+          y = f.y + Math.cos(t * 0.7 + f.phase) * 6;
+        c.globalAlpha = 0.4 + (0.5 + 0.5 * Math.sin(t + f.phase)) * 0.6;
+        this.rect(x, y, 2, 2, "#cfcb85");
+        c.globalAlpha = 1;
+      });
+      if (this.near) {
+        const d = destinations.find((d) => d.id === this.near);
+        this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
+        this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
+      }
+    } else {
+      this.character();
+    }
     if (!this.reduced) {
       c.globalAlpha = 0.35;
       this.rain.forEach((r) => {
-        const y = ((r.y + this.time * r.s) % 570) - 15,
+        const y = top + ((r.y + this.time * r.s) % (height + 16)) - 8,
           x = r.x;
         this.rect(x, y, 2, 8, "#bdc9c4");
       });
       c.globalAlpha = 1;
     }
-    if (this.near) {
-      const d = destinations.find((d) => d.id === this.near);
-      this.rect(d.doorX - 4, d.y + d.h - 52, 8, 4, "#f1d58b");
-      this.rect(d.doorX - 2, d.y + d.h - 48, 4, 3, "#f1d58b");
-    }
+    c.restore();
   }
   frame(now) {
     const dt = this.last ? Math.min((now - this.last) / 1000, 0.04) : 0;
@@ -966,7 +1035,10 @@ export class World {
         const dx =
             Number(this.keys.has("right")) - Number(this.keys.has("left")),
           dy = Number(this.keys.has("down")) - Number(this.keys.has("up"));
-        this.walking = movePlayer(this.player, dx, dy, dt);
+        this.walking = movePlayer(this.player, dx, dy, dt, (x, y) =>
+          this.isWalkable(x, y),
+        );
+        if (this.walking) this.onMove?.(this.player);
         if (this.walking) this.walkTime += dt;
         else this.walkTime = 0;
         const near = nearbyArea(this.player.x, this.player.y);

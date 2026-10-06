@@ -18,7 +18,8 @@
     <link rel="stylesheet" href="./style.css" />
     <noscript
       ><style>
-        .game-frame {
+        .game-frame,
+        .world-layer {
           display: none;
         }
       </style></noscript
@@ -63,16 +64,18 @@
           ><span class="sr-only">Email:</span> issamaarida@gmail.com</a
         >
       </header>
-      <main>
+      <main id="journey-world">
+        <div class="world-layer">
+          <canvas
+            id="world"
+            width="480"
+            height="270"
+            tabindex="0"
+            aria-label="Scrollable woodland game. Move with WASD or arrow keys. Press E near a building. Follow the path down, or scroll to read every portfolio section."
+          ></canvas>
+        </div>
         <section class="game-frame" aria-label="Playable portfolio village">
           <div class="world-wrap">
-            <canvas
-              id="world"
-              width="480"
-              height="270"
-              tabindex="0"
-              aria-label="Woodland game. Walk with WASD or arrow keys, then press E or Enter at a building. You can also click a building, or Tab to one and press Enter."
-            ></canvas>
             <div class="building-access" aria-label="Village buildings">
               <button
                 data-area="projects"
@@ -108,33 +111,35 @@
             </button>
             <span id="world-status" class="sr-only" role="status"></span>
           </div>
-          <div class="game-bottom">
-            <div class="keyboard-hint">
-              <span
-                ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>↑</kbd
-                ><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> walk</span
-              ><span><kbd>E</kbd> enter</span>
-            </div>
-            <div class="touch-pad" aria-label="Touch movement controls">
-              <button data-move="up" aria-label="Move up">▲</button
-              ><button data-move="left" aria-label="Move left">◀</button
-              ><button data-move="down" aria-label="Move down">▼</button
-              ><button data-move="right" aria-label="Move right">▶</button>
-            </div>
-            <div class="game-options">
-              <button
-                id="sound"
-                aria-pressed="false"
-                aria-label="Enable ambient sound"
-              >
-                ♫ <span>sound off</span></button
-              ><button
-                id="motion"
-                aria-pressed="false"
-                aria-label="Reduce ambient motion"
-              >
-                ≈ <span>wind on</span>
-              </button>
+          <div class="controls-slot">
+            <div class="game-bottom">
+              <div class="keyboard-hint">
+                <span
+                  ><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> /
+                  <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> walk</span
+                ><span><kbd>E</kbd> enter</span>
+              </div>
+              <div class="touch-pad" aria-label="Touch movement controls">
+                <button data-move="up" aria-label="Move up">▲</button
+                ><button data-move="left" aria-label="Move left">◀</button
+                ><button data-move="down" aria-label="Move down">▼</button
+                ><button data-move="right" aria-label="Move right">▶</button>
+              </div>
+              <div class="game-options">
+                <button
+                  id="sound"
+                  aria-pressed="false"
+                  aria-label="Enable ambient sound"
+                >
+                  ♫ <span>sound off</span></button
+                ><button
+                  id="motion"
+                  aria-pressed="false"
+                  aria-label="Reduce ambient motion"
+                >
+                  ≈ <span>wind on</span>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -155,10 +160,10 @@
         </nav>
         <div class="reading-invitation">
           <a href="#about"
-            >Prefer reading? Scroll down to explore my portfolio.<span
-              aria-hidden="true"
-              >↓</span
-            ></a
+            ><strong>Prefer reading?</strong
+            ><span class="billboard-detail"
+              >Scroll down to explore my portfolio.</span
+            ><span aria-hidden="true">↓</span></a
           >
         </div>
         <div class="portfolio-reading">
