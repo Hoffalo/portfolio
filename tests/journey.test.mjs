@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import {
   animateJourney,
   journeyGeometry,
-  railwayGeometry,
-  trainState,
+  driftGeometry,
+  driftState,
+  farmGeometry,
+  chickenState,
   treeFootprint,
   intersects,
 } from "../dist/journey.js";
@@ -19,7 +21,7 @@ const layout = {
     { id: "career", x: 86, y: 3400, width: 557, height: 900 },
   ],
   divider: { x: 0, y: 650, width: 960, height: 200 },
-  railway: { x: 0, y: 4700, width: 960, height: 300 },
+  drift: { x: 0, y: 4700, width: 960, height: 360 },
   stable: { x: 0, y: 5700, width: 960, height: 900 },
 };
 function render(time, reduced, viewport) {
@@ -74,26 +76,37 @@ test("fixed scene compositions are identical at every resolution", () => {
   const scenes = journeyGeometry(layout);
   assert.deepEqual(
     scenes.map((s) => s.kind),
-    ["campfire", "farm", "river", "railway"],
+    ["campfire", "relics", "farm", "river", "drift"],
   );
   assert.ok(
     !scenes.some((s) => ["pond", "pod", "cave", "sleepers"].includes(s.kind)),
   );
 });
-test("straight rails align inside both tunnel mouths", () => {
-  const { points, leftTunnel, rightTunnel } = railwayGeometry(layout.railway);
-  assert.equal(points[0][1], points.at(-1)[1]);
-  for (const tunnel of [leftTunnel, rightTunnel])
-    assert.ok(
-      points[0][1] > tunnel.mouthTop && points[0][1] < tunnel.mouthBottom,
-    );
+test("pickup loops continuously inside the dirt clearing and parks under reduced motion", () => {
+  const { bounds } = driftGeometry(layout.drift);
+  for (let t = 0; t < 9; t += 0.1) {
+    const state = driftState(t);
+    const repeat = driftState(t + 9);
+    assert.ok(Math.abs(state.x - repeat.x) < 1e-8);
+    assert.ok(Math.abs(state.y - repeat.y) < 1e-8);
+    assert.ok(state.moving);
+    assert.ok(state.x - 70 > bounds.left && state.x + 70 < bounds.right);
+    assert.ok(layout.drift.y + state.y - 70 > bounds.top);
+    assert.ok(layout.drift.y + state.y + 70 < bounds.bottom);
+  }
+  assert.deepEqual(driftState(0, true), driftState(30, true));
 });
-test("the train makes a complete pass, loops and parks under reduced motion", () => {
-  assert.ok(trainState(10).moving);
-  assert.ok(trainState(45).frontX > trainState(10).frontX);
-  assert.deepEqual(trainState(25), trainState(89));
-  assert.equal(trainState(55).moving, false);
-  assert.deepEqual(trainState(0, true), trainState(30, true));
+test("six cows and running chickens remain inside the farm", () => {
+  assert.equal(farmGeometry(layout.stable).cows.length, 6);
+  for (let i = 0; i < 2; i++) {
+    assert.notDeepEqual(chickenState(0, false, i), chickenState(2, false, i));
+    assert.deepEqual(chickenState(0, true, i), chickenState(20, true, i));
+    for (let t = 0; t < 30; t += 0.2) {
+      const state = chickenState(t, false, i);
+      assert.ok(state.x > 30 && state.x < 300);
+      assert.ok(state.y > 320 && state.y < 390);
+    }
+  }
 });
 test("tree exclusion tests canopies instead of just trunk centers", () => {
   const box = treeFootprint({ x: 300, y: 100, s: 1 });

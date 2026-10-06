@@ -298,7 +298,7 @@ function barn(p, x, y) {
   p.ellipse(x + 19, y + 127, 40, 15, "#3b5860");
 }
 
-function highlandCow(p, x, y, time = 0, phase = 0) {
+function highlandCow(p, x, y, time = 0, phase = 0, pale = 0) {
   const bob = time ? Math.round(Math.sin(time * 0.65 + phase)) * 2 : 0;
   const tail = time ? Math.round(Math.sin(time * 0.9 + phase)) * 4 : 0;
   p.ellipse(x, y + 35, 105, 19, "#24342a");
@@ -315,8 +315,8 @@ function highlandCow(p, x, y, time = 0, phase = 0) {
     ],
     "#b98042",
   );
-  p.ellipse(x - 4, y, 91, 57, "#a86b35");
-  p.ellipse(x - 13, y - 11, 65, 32, "#c28a47");
+  p.ellipse(x - 4, y, 91, 57, pale ? "#c3b591" : "#a86b35");
+  p.ellipse(x - 13, y - 11, 65, 32, pale ? "#ddd0aa" : "#c28a47");
   for (let i = 0; i < 12; i++) {
     const dx = -43 + i * 7;
     p.rect(
@@ -326,7 +326,13 @@ function highlandCow(p, x, y, time = 0, phase = 0) {
       12 + (i % 4) * 3,
       i % 3 ? "#ad743a" : "#ca924a",
     );
-    p.rect(x + dx + 2, y - 13 + (i % 3) * 7, 3, 13, "#d19c53");
+    p.rect(
+      x + dx + 2,
+      y - 13 + (i % 3) * 7,
+      3,
+      13,
+      pale ? "#e9dab5" : "#d19c53",
+    );
   }
   const hx = x + 30,
     hy = y - 8 + bob;
@@ -345,8 +351,8 @@ function highlandCow(p, x, y, time = 0, phase = 0) {
     p.ellipse(hx + side * 22, hy, 17, 10, "#a66938");
     p.rect(hx + side * 20 - 4, hy - 2, 8, 4, "#c38a4b");
   }
-  p.ellipse(hx, hy + 4, 41, 44, "#b8793e");
-  p.ellipse(hx, hy - 10, 45, 22, "#d09a50");
+  p.ellipse(hx, hy + 4, 41, 44, pale ? "#c8b896" : "#b8793e");
+  p.ellipse(hx, hy - 10, 45, 22, pale ? "#e2d1a8" : "#d09a50");
   for (let i = 0; i < 7; i++)
     p.rect(
       hx - 21 + i * 6,
@@ -475,7 +481,7 @@ function calf(p, x, y, time) {
   p.rect(x + 21, y + 10 + bob, 6, 2, "#8d724c");
 }
 
-function farmGeometry(area) {
+export function farmGeometry(area) {
   return {
     barn: [235, area.y + 139, 1],
     cows: [
@@ -483,6 +489,8 @@ function farmGeometry(area) {
       [820, 195],
       [580, 315],
       [805, 325],
+      [445, 378],
+      [820, 392],
     ].map(([x, y]) => [x, area.y + y]),
     animalScale: 1,
   };
@@ -532,6 +540,26 @@ function scaledAt(p, x, y, scale, paint) {
   p.ctx.restore();
 }
 
+export function chickenState(time, reduced = false, index = 0) {
+  const phase = reduced ? index : time * 0.85 + index * 2.6;
+  return {
+    x: (index ? 110 : 225) + Math.sin(phase) * (index ? 32 : 42),
+    y: (index ? 371 : 348) + Math.sin(phase * 1.3) * 9,
+    face: Math.cos(phase) < 0 ? -1 : 1,
+  };
+}
+function chicken(p, area, time, reduced, index) {
+  const state = chickenState(time, reduced, index),
+    x = state.x,
+    y = area.y + state.y;
+  const step = reduced ? 0 : (Math.floor(time * 8 + index) % 2) * 2;
+  p.ellipse(x, y, 15, 11, "#d1cdb0");
+  p.ellipse(x + state.face * 7, y - 5, 8, 8, "#e5dcc0");
+  p.rect(x + state.face * 5, y - 12, 4, 4, "#bd7955");
+  p.rect(x + state.face * 11, y - 4, 4, 2, "#c8a35b");
+  p.rect(x - 3, y + 4, 2, 5 + step, "#c8a35b");
+  p.rect(x + 3, y + 4, 2, 7 - step, "#c8a35b");
+}
 function farmActors(p, area, time = 0) {
   const g = farmGeometry(area);
   scaledAt(p, ...g.barn, () => {
@@ -539,7 +567,14 @@ function farmActors(p, area, time = 0) {
     stallHorse(p, 56, 8, false, time);
     stallFront(p);
   });
-  const poses = [highlandCow, grazingCow, sleepingCow, calf];
+  const poses = [
+    highlandCow,
+    grazingCow,
+    sleepingCow,
+    calf,
+    (p, x, y, t) => calf(p, x, y, t * 0.4),
+    (p, x, y, t) => highlandCow(p, x, y, t, 3, 1),
+  ];
   g.cows.forEach(([x, y], i) =>
     scaledAt(
       p,
@@ -549,6 +584,7 @@ function farmActors(p, area, time = 0) {
       () => poses[i](p, 0, 0, time, 1),
     ),
   );
+  for (let i = 0; i < 2; i++) chicken(p, area, time, p.reduced, i);
   farmFence(p, area, true);
 }
 
@@ -628,16 +664,6 @@ function farm(p, area, includeActors) {
     p.rect(x, area.y + 276 + (x % 3) * 3, 3, 17, "#e0bf71");
   p.ellipse(124, area.y + 317, 90, 25, "#7c7656");
   p.ellipse(124, area.y + 312, 78, 15, "#527776");
-  for (const [x, y] of [
-    [151, 346],
-    [272, 342],
-  ]) {
-    p.ellipse(x, area.y + y, 15, 11, "#d1cdb0");
-    p.ellipse(x + 7, area.y + y - 5, 8, 8, "#e5dcc0");
-    p.rect(x + 5, area.y + y - 12, 4, 4, "#bd7955");
-    p.rect(x + 11, area.y + y - 4, 4, 2, "#c8a35b");
-    p.rect(x - 3, area.y + y + 4, 2, 5, "#c8a35b");
-  }
   if (includeActors) farmActors(p, area);
   farmFence(p, area, true);
 }
@@ -698,274 +724,319 @@ function river(p, area) {
   }
 }
 
-export function railwayGeometry(area) {
-  const tunnel = (x) => ({
-    x,
-    y: area.y + 134,
-    mouthLeft: x - 43,
-    mouthRight: x + 44,
-    mouthTop: area.y + 88,
-    mouthBottom: area.y + 164,
-  });
+export function driftState(time, reduced = false) {
+  if (reduced)
+    return { x: 480, y: 266, yaw: -0.16, steer: 0, angle: 0, moving: false };
+  const angle = ((((time % 9) + 9) % 9) / 9) * Math.PI * 2;
   return {
-    points: [
-      [0, area.y + 150],
-      [960, area.y + 150],
-    ],
-    leftTunnel: tunnel(80),
-    rightTunnel: tunnel(880),
-    openAir: { left: 157, right: 803, top: area.y + 20, bottom: area.y + 210 },
+    x: 480 + Math.cos(angle) * 160,
+    y: 205 + Math.sin(angle) * 62,
+    yaw: angle + Math.PI / 2 + 0.42,
+    steer: -0.5,
+    angle,
+    moving: true,
   };
 }
 
-export function trainState(time, reduced = false) {
-  if (reduced) return { frontX: 620, moving: false, phase: 0 };
-  const phase = ((time % 64) + 64) % 64;
-  const moving = phase >= 6 && phase < 50;
-  const frontX =
-    phase < 6 ? -40 : phase >= 50 ? 1240 : -40 + ((phase - 6) / 44) * 1280;
-  return { frontX: Math.round(frontX / 2) * 2, moving, phase };
+export function driftGeometry(area) {
+  return {
+    center: { x: 480, y: area.y + 205 },
+    radius: { x: 160, y: 62 },
+    bounds: { left: 190, right: 770, top: area.y + 62, bottom: area.y + 340 },
+  };
 }
 
-function tunnelRing(p, tunnel, foregroundOnly = false) {
-  scaledAt(p, tunnel.x, tunnel.y, 1, () => {
-    const outer = [
-      [-77, 30],
-      [-71, -23],
-      [-48, -62],
-      [-10, -75],
-      [43, -59],
-      [70, -22],
-      [78, 30],
+function pickup(p, state, area) {
+  const { x, yaw, steer } = state,
+    y = area.y + state.y;
+  const point = (long, side, z = 0) => [
+    x + Math.cos(yaw) * long - Math.sin(yaw) * side,
+    y + Math.sin(yaw) * long + Math.cos(yaw) * side - z,
+  ];
+  const box = (long, side, length, width, z, height, color) => {
+    const corners = [
+      [long - length / 2, side - width / 2],
+      [long + length / 2, side - width / 2],
+      [long + length / 2, side + width / 2],
+      [long - length / 2, side + width / 2],
     ];
-    const inner = [
-      [-43, 30],
-      [-43, -17],
-      [-24, -40],
-      [0, -46],
-      [27, -37],
-      [44, -15],
-      [44, 30],
-    ];
-    if (!foregroundOnly) {
-      p.path(inner, "#142425");
+    const base = corners.map(([a, b]) => point(a, b, z)),
+      top = corners.map(([a, b]) => point(a, b, z + height));
+    const faces = corners
+      .map((_, i) => ({ i, depth: (base[i][1] + base[(i + 1) % 4][1]) / 2 }))
+      .sort((a, b) => a.depth - b.depth);
+    for (const { i } of faces)
+      p.path(
+        [base[i], base[(i + 1) % 4], top[(i + 1) % 4], top[i]],
+        i % 2 ? color[1] : color[2],
+      );
+    p.path(top, color[0]);
+  };
+  p.ellipse(x, y + 5, 97, 36, "#302e27");
+  // Projected boxes are rasterized on the native pixel grid; no rotated canvas.
+  for (const long of [-29, 28])
+    for (const side of [-23, 23]) {
+      const wheel = point(long, side, 5),
+        wheelYaw = yaw + (long > 0 ? steer : 0);
+      const wx = Math.cos(wheelYaw) * 6,
+        wy = Math.sin(wheelYaw) * 6;
       p.path(
         [
-          [-33, 30],
-          [-30, -13],
-          [-14, -29],
-          [8, -30],
-          [29, -13],
-          [31, 30],
+          [wheel[0] - wx - 3, wheel[1] - wy - 7],
+          [wheel[0] + wx + 3, wheel[1] + wy - 7],
+          [wheel[0] + wx + 3, wheel[1] + wy + 7],
+          [wheel[0] - wx - 3, wheel[1] - wy + 7],
         ],
-        "#1c2e2d",
+        "#202b29",
       );
+      p.rect(wheel[0] - 2, wheel[1] - 2, 5, 5, "#949c8c");
     }
-    // Joined outer/inner contours form a pixel stone ring with an open mouth.
-    p.path(
-      [...outer, outer[0], inner[0], ...inner.slice(1).reverse(), inner[0]],
-      "#78816b",
-    );
-    for (const [dx, dy] of [
-      [-57, -20],
-      [-34, -48],
-      [5, -58],
-      [39, -35],
-      [54, 3],
-    ]) {
-      p.rect(dx - 5, dy, 16, 8, "#a0a68b");
-      p.rect(dx - 5, dy + 6, 16, 2, "#566855");
-    }
-    for (const dx of [-67, 60]) p.ellipse(dx, 24, 32, 12, "#526c48");
-  });
-}
-
-function tunnelHill(p, area, left) {
-  const map = (x, y) => [left ? 960 - x : x, area.y + y];
+  box(0, 0, 91, 39, 10, 15, ["#3d514b", "#233834", "#2a403a"]);
+  box(27, 0, 32, 37, 25, 6, ["#53665b", "#30443d", "#3b5147"]);
+  box(-1, 0, 31, 37, 25, 22, ["#587068", "#344e48", "#3e5850"]);
+  // Cab glass, door seams and a visibly open rear pickup bed.
   p.path(
     [
-      [803, 193],
-      [803, 99],
-      [830, 40],
-      [868, 11],
-      [912, 27],
-      [943, 10],
-      [960, 36],
-      [960, 205],
-      [911, 193],
-      [857, 207],
-    ].map(([x, y]) => map(x, y)),
-    "#354b3b",
+      point(15, -16, 31),
+      point(15, 16, 31),
+      point(15, 14, 43),
+      point(15, -14, 43),
+    ],
+    "#99b2af",
   );
-  p.path(
-    [
-      [814, 178],
-      [816, 99],
-      [842, 47],
-      [875, 28],
-      [916, 43],
-      [950, 28],
-      [960, 58],
-      [960, 187],
-      [902, 183],
-    ].map(([x, y]) => map(x, y)),
-    "#556452",
-  );
-  for (const [x, y] of [
-    [842, 46],
-    [917, 57],
-    [948, 112],
-    [929, 184],
-  ]) {
-    const [xx, yy] = map(x, y);
-    p.ellipse(xx, yy, 22, 10, "#87907b");
-    p.rect(xx - 7, yy - 3, 12, 2, "#a0a38c");
-  }
-  for (const [x, y] of [
-    [815, 181],
-    [953, 157],
-  ]) {
-    const [xx, yy] = map(x, y);
-    p.ellipse(xx, yy + 2, 25, 10, "#3d593d");
-    for (let i = 0; i < 4; i++)
-      p.path(
-        [
-          [xx, yy],
-          [xx - 12 + i * 7, yy - 15 - (i % 2) * 5],
-          [xx - 8 + i * 7, yy - 12],
-          [xx + 2, yy],
-        ],
-        "#70864c",
-      );
-  }
-}
-
-function train(p, area, time, reduced) {
-  const state = trainState(time, reduced),
-    x = state.frontX,
-    y = area.y + 150;
-  const { leftTunnel, rightTunnel, openAir } = railwayGeometry(area);
-  p.ctx.save();
-  p.ctx.beginPath();
-  p.ctx.rect(
-    openAir.left,
-    openAir.top,
-    openAir.right - openAir.left,
-    openAir.bottom - openAir.top,
-  );
-  for (const tunnel of [leftTunnel, rightTunnel])
-    p.ctx.rect(
-      tunnel.mouthLeft,
-      tunnel.mouthTop,
-      tunnel.mouthRight - tunnel.mouthLeft,
-      tunnel.mouthBottom - tunnel.mouthTop,
-    );
-  p.ctx.clip();
-  for (let i = 0; i < 2; i++) {
-    const cx = x - 270 + i * 98;
-    p.rect(cx, y - 38, 87, 39, i ? "#744d3c" : "#496653");
+  for (const side of [-19, 19]) {
     p.path(
       [
-        [cx - 3, y - 38],
-        [cx + 4, y - 43],
-        [cx + 81, y - 43],
-        [cx + 90, y - 38],
+        point(-12, side, 31),
+        point(9, side, 31),
+        point(9, side, 42),
+        point(-12, side, 42),
       ],
-      "#354940",
+      "#91a7a0",
     );
-    p.rect(cx + 2, y - 1, 83, 6, "#b09057");
-    for (let j = 0; j < 4; j++) {
-      p.rect(cx + 7 + j * 20, y - 31, 15, 18, "#263b35");
-      p.rect(cx + 9 + j * 20, y - 29, 11, 14, "#e1c78d");
-      p.rect(cx + 12 + j * 20, y - 29, 2, 14, "#9e8658");
-    }
-    for (const dx of [19, 68]) trainWheel(p, cx + dx, y + 7, time, reduced);
-    p.rect(cx + 87, y - 4, 12, 4, "#88764d");
+    p.path(
+      [
+        point(-14, side, 13),
+        point(-12, side, 13),
+        point(-12, side, 26),
+        point(-14, side, 26),
+      ],
+      "#1e3330",
+    );
+    const handle = point(-4, side, 28);
+    p.rect(handle[0] - 2, handle[1], 6, 2, "#bac0a5");
   }
-  p.rect(x - 72, y - 28, 67, 29, "#476552");
-  p.rect(x - 70, y - 49, 25, 30, "#76513e");
-  p.rect(x - 75, y - 53, 34, 5, "#3c4d40");
-  p.rect(x - 65, y - 45, 15, 18, "#e4c990");
-  p.rect(x - 57, y - 45, 2, 18, "#9d8457");
-  p.ellipse(x - 29, y - 24, 45, 22, "#63816c");
-  p.rect(x - 27, y - 56, 11, 34, "#3c4d40");
-  p.rect(x - 31, y - 60, 19, 6, "#a3a078");
-  p.rect(x - 40, y - 39, 13, 15, "#b99e65");
-  p.rect(x - 72, y - 1, 74, 6, "#b89b63");
+  box(-32, 0, 32, 38, 25, 4, ["#4b6056", "#30483f", "#3c5146"]);
   p.path(
     [
-      [x - 4, y - 1],
-      [x + 8, y + 7],
-      [x - 5, y + 7],
+      point(-45, -15, 29),
+      point(-19, -15, 29),
+      point(-19, 15, 29),
+      point(-45, 15, 29),
     ],
-    "#8b7951",
+    "#1c302d",
   );
-  p.rect(x - 4, y - 26, 6, 9, "#efdba0");
-  for (const dx of [-56, -23]) trainWheel(p, x + dx, y + 7, time, reduced);
-  p.rect(x - 55, y + 6, 34, 3, "#c8b684");
-  p.ctx.globalAlpha = 0.45;
-  for (let i = 0; i < 5; i++) {
-    const rise = reduced ? i * 10 : (time * 15 + i * 16) % 75;
-    p.ellipse(
-      x - 22 - rise * 0.55,
-      y - 65 - rise * 0.45,
-      12 + rise * 0.35,
-      8 + rise * 0.14,
-      "#a1b1a0",
+  for (const long of [-42, -35, -28, -21])
+    p.path(
+      [
+        point(long, -13, 30),
+        point(long + 1, -13, 30),
+        point(long + 1, 13, 30),
+        point(long, 13, 30),
+      ],
+      "#355046",
+    );
+  p.path(
+    [
+      point(46, -16, 16),
+      point(46, 16, 16),
+      point(46, 16, 27),
+      point(46, -16, 27),
+    ],
+    "#a0aba0",
+  );
+  for (const side of [-10, -4, 3, 10])
+    p.path(
+      [
+        point(47, side, 18),
+        point(47, side + 2, 18),
+        point(47, side + 2, 25),
+        point(47, side, 25),
+      ],
+      "#30423d",
+    );
+  const badge = point(48, 0, 22);
+  p.ellipse(badge[0], badge[1], 8, 4, "#46738b");
+  for (const side of [-17, 17]) {
+    const light = point(47, side, 23);
+    p.rect(light[0] - 2, light[1] - 2, 5, 5, "#eee5b4");
+  }
+  for (const side of [-17, 17]) {
+    const light = point(-47, side, 22);
+    p.rect(light[0] - 2, light[1] - 2, 4, 5, "#b77859");
+  }
+}
+
+function animateDrift(p, area, time, reduced) {
+  const state = driftState(time, reduced);
+  if (!reduced)
+    for (let i = 1; i < 12; i++) {
+      const past = driftState(time - i * 0.065, false);
+      p.ctx.globalAlpha = Math.max(0.08, 0.36 - i * 0.023);
+      p.ellipse(
+        past.x + Math.sin(i * 2) * 8,
+        area.y + past.y + 10,
+        10 + i * 2,
+        6 + i,
+        "#a18a60",
+      );
+    }
+  p.ctx.globalAlpha = 1;
+  pickup(p, state, area);
+}
+
+function drift(p, area, includeActors) {
+  p.ellipse(480, area.y + 205, 575, 266, "#3e4a32");
+  p.ellipse(480, area.y + 205, 537, 237, "#786546");
+  p.ellipse(480, area.y + 205, 498, 211, "#8a7553");
+  for (const radius of [150, 160, 172]) {
+    const outer = [],
+      inner = [];
+    for (let i = 0; i <= 48; i++) {
+      const angle = (i / 48) * Math.PI * 2;
+      outer.push([
+        480 + Math.cos(angle) * (radius + 2),
+        area.y + 205 + Math.sin(angle) * (62 + (radius - 160) * 0.28 + 1),
+      ]);
+      inner.push([
+        480 + Math.cos(angle) * (radius - 2),
+        area.y + 205 + Math.sin(angle) * (62 + (radius - 160) * 0.28 - 1),
+      ]);
+    }
+    p.path([...outer, ...inner.reverse()], "#5b513c");
+  }
+  for (const [x, y] of [
+    [205, 205],
+    [751, 225],
+    [718, 125],
+  ]) {
+    p.ellipse(x, area.y + y + 8, 66, 23, "#4b4938");
+    for (let i = 0; i < 7; i++) {
+      const dx = ((i * 19) % 51) - 25,
+        dy = (i * 11) % 20;
+      p.ellipse(x + dx, area.y + y - dy, 18 + (i % 3) * 4, 12, "#78806a");
+      p.rect(x + dx - 5, area.y + y - dy - 3, 9, 2, "#a1a38a");
+    }
+  }
+  for (let i = 0; i < 45; i++)
+    p.rect(
+      273 + ((i * 83) % 414),
+      area.y + 110 + ((i * 37) % 192),
+      3,
+      2,
+      "#9f8a63",
+    );
+  if (includeActors) animateDrift(p, area, 0, true);
+}
+
+function relics(p, x, y) {
+  p.ellipse(x, y + 60, 194, 50, "#364b35");
+  // Original geometric forest-beast sculptures, weathered into their clearing.
+  p.path(
+    [
+      [x - 35, y + 52],
+      [x - 32, y - 29],
+      [x - 42, y - 58],
+      [x - 30, y - 92],
+      [x - 14, y - 74],
+      [x + 14, y - 74],
+      [x + 31, y - 94],
+      [x + 43, y - 57],
+      [x + 30, y - 31],
+      [x + 35, y + 52],
+    ],
+    "#6e7a68",
+  );
+  p.path(
+    [
+      [x - 24, y + 45],
+      [x - 22, y - 26],
+      [x - 30, y - 52],
+      [x - 23, y - 70],
+      [x - 9, y - 56],
+      [x + 12, y - 56],
+      [x + 23, y - 72],
+      [x + 31, y - 50],
+      [x + 21, y - 27],
+      [x + 24, y + 45],
+    ],
+    "#929a7f",
+  );
+  for (const side of [-1, 1]) {
+    p.rect(x + side * 17 - 6, y - 44, 12, 8, "#3f5747");
+    p.rect(x + side * 17 - 4, y - 41, 8, 3, "#b0b396");
+    p.path(
+      [
+        [x + side * 6, y - 5],
+        [x + side * 20, y + 6],
+        [x + side * 7, y + 13],
+      ],
+      "#516554",
     );
   }
-  p.ctx.restore();
-  // Repaint masonry around the mouth after the train; its hole remains open.
-  tunnelRing(p, leftTunnel, true);
-  tunnelRing(p, rightTunnel, true);
-}
-
-function trainWheel(p, x, y, time, reduced) {
-  p.ellipse(x, y, 15, 15, "#263a32");
-  p.ellipse(x, y, 9, 9, "#a4a385");
-  const angle = reduced ? 0 : time * 2;
-  p.rect(
-    x + Math.cos(angle) * 3 - 1,
-    y + Math.sin(angle) * 3 - 1,
-    3,
-    3,
-    "#e0cf9e",
+  p.path(
+    [
+      [x, y - 35],
+      [x - 9, y - 19],
+      [x + 9, y - 19],
+    ],
+    "#4c6350",
   );
-}
-
-function railway(p, area, includeActors) {
-  const y = area.y + 150,
-    { leftTunnel, rightTunnel } = railwayGeometry(area);
-  p.rect(0, y - 28, 960, 56, "#505a4b");
-  for (let x = 0; x < 960; x += 22) {
-    p.rect(x, y - 23, 8, 46, "#69513a");
-    p.rect(x + 2, y - 20, 3, 40, "#947149");
-    p.rect(x - 6, y + 28, 7, 4, "#858775");
+  for (const dy of [19, 34]) p.rect(x - 19, y + dy, 38, 3, "#586e56");
+  p.path(
+    [
+      [x - 24, y - 10],
+      [x - 14, y + 1],
+      [x - 17, y + 12],
+      [x - 10, y + 21],
+    ],
+    "#657661",
+  );
+  p.ellipse(x - 66, y + 41, 46, 26, "#85917a");
+  p.path(
+    [
+      [x - 84, y + 33],
+      [x - 82, y + 20],
+      [x - 72, y + 29],
+      [x - 65, y + 19],
+      [x - 59, y + 34],
+    ],
+    "#85917a",
+  );
+  p.rect(x - 78, y + 35, 5, 2, "#4a6050");
+  p.ellipse(x + 63, y + 32, 31, 67, "#8b957c");
+  for (const side of [-1, 1])
+    p.path(
+      [
+        [x + 63 + side * 8, y + 6],
+        [x + 63 + side * 15, y - 17],
+        [x + 63 + side * 24, y - 19],
+        [x + 63 + side * 17, y - 10],
+        [x + 63 + side * 17, y - 25],
+      ],
+      "#a4ad90",
+    );
+  p.rect(x + 54, y + 21, 5, 3, "#526a50");
+  p.rect(x + 68, y + 21, 5, 3, "#526a50");
+  for (const [dx, dy] of [
+    [-27, -59],
+    [17, 42],
+    [61, 56],
+    [-74, 51],
+  ]) {
+    p.ellipse(x + dx, y + dy, 20, 9, "#526e42");
+    paintFern(p, x + dx + 9, y + dy + 5, 0.7);
   }
-  for (const dy of [-13, 13]) {
-    p.rect(0, y + dy, 960, 5, "#354743");
-    p.rect(0, y + dy, 960, 2, "#9aa799");
-  }
-  // Outcrops cover the straight bed; only the tunnel floors reveal its rails.
-  tunnelHill(p, area, true);
-  tunnelHill(p, area, false);
-  for (const tunnel of [leftTunnel, rightTunnel]) {
-    tunnelRing(p, tunnel);
-    for (const dy of [-13, 13])
-      p.rect(
-        tunnel.mouthLeft,
-        y + dy,
-        tunnel.mouthRight - tunnel.mouthLeft,
-        2,
-        "#80968a",
-      );
-    tunnelRing(p, tunnel, true);
-  }
-  p.rect(734, area.y + 73, 5, 52, "#8b7954");
-  p.rect(729, area.y + 72, 17, 22, "#34473d");
-  p.rect(732, area.y + 77, 10, 10, "#8caf76");
-  for (const x of [230, 610]) mushroom(p, x, area.y + 218);
-  if (includeActors) train(p, area, 0, true);
 }
 
 function landmarks(layout) {
@@ -973,10 +1044,17 @@ function landmarks(layout) {
     ? [
         {
           paint: campfire,
-          x: 220,
+          x: 150,
           y: layout.invitation.y + 150,
           rx: 145,
           ry: 150,
+        },
+        {
+          paint: relics,
+          x: 800,
+          y: layout.invitation.y + 150,
+          rx: 105,
+          ry: 145,
         },
       ]
     : [];
@@ -996,13 +1074,13 @@ function landmarks(layout) {
       rx: WIDTH / 2 + 40,
       ry: layout.divider.height / 2 + 25,
     });
-  if (layout.railway)
+  if (layout.drift)
     scenes.push({
-      paint: railway,
-      x: WIDTH / 2,
-      y: layout.railway.y + layout.railway.height / 2,
-      rx: WIDTH / 2 + 40,
-      ry: layout.railway.height / 2 + 18,
+      paint: drift,
+      x: 480,
+      y: layout.drift.y + 180,
+      rx: 310,
+      ry: 180,
     });
   return scenes;
 }
@@ -1052,7 +1130,7 @@ export function paintJourney(painter, layout, includeActors = true) {
   for (const scene of scenery) {
     if (scene.paint === farm) farm(p, layout.stable, includeActors);
     else if (scene.paint === river) river(p, layout.divider);
-    else if (scene.paint === railway) railway(p, layout.railway, includeActors);
+    else if (scene.paint === drift) drift(p, layout.drift, includeActors);
     else scene.paint(p, scene.x, scene.y, includeActors);
   }
   p.ctx.restore();
@@ -1104,8 +1182,8 @@ export function animateJourney(p, layout) {
       }
     } else if (scene.paint === farm) {
       farmActors(p, layout.stable, time);
-    } else if (scene.paint === railway) {
-      train(p, layout.railway, time, p.reduced);
+    } else if (scene.paint === drift) {
+      animateDrift(p, layout.drift, time, p.reduced);
     } else if (scene.paint === river) {
       const area = layout.divider;
       for (let i = 0; i < 30; i++) {

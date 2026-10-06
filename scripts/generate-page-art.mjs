@@ -37,8 +37,8 @@ try {
     const dividerBox = document
       .querySelector(".river-divider")
       .getBoundingClientRect();
-    const railwayBox = document
-      .querySelector(".railway-clearing")
+    const driftBox = document
+      .querySelector(".drift-clearing")
       .getBoundingClientRect();
     const invitationBox = document
       .querySelector(".reading-invitation")
@@ -59,14 +59,14 @@ try {
           x: 0,
           y: (moonBox.top - box.top) / scale,
           width: 960,
-          height: 130,
+          height: 90,
         },
         scale,
-        railway: {
-          x: (railwayBox.left - box.left) / scale,
-          y: (railwayBox.top - box.top) / scale,
-          width: railwayBox.width / scale,
-          height: railwayBox.height / scale,
+        drift: {
+          x: (driftBox.left - box.left) / scale,
+          y: (driftBox.top - box.top) / scale,
+          width: driftBox.width / scale,
+          height: driftBox.height / scale,
         },
         divider: {
           x: (dividerBox.left - box.left) / scale,

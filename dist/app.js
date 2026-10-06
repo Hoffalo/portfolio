@@ -55,8 +55,8 @@ function resizeJourney() {
   const dividerBox = document
     .querySelector(".river-divider")
     .getBoundingClientRect();
-  const railwayBox = document
-    .querySelector(".railway-clearing")
+  const driftBox = document
+    .querySelector(".drift-clearing")
     .getBoundingClientRect();
   const invitationBox = document
     .querySelector(".reading-invitation")
@@ -76,13 +76,13 @@ function resizeJourney() {
       x: 0,
       y: (moonBox.top - box.top) / worldScale,
       width: 960,
-      height: 130,
+      height: 90,
     },
-    railway: {
-      x: (railwayBox.left - box.left) / worldScale,
-      y: (railwayBox.top - box.top) / worldScale,
-      width: railwayBox.width / worldScale,
-      height: railwayBox.height / worldScale,
+    drift: {
+      x: (driftBox.left - box.left) / worldScale,
+      y: (driftBox.top - box.top) / worldScale,
+      width: driftBox.width / worldScale,
+      height: driftBox.height / worldScale,
     },
     scale: worldScale,
     divider: {

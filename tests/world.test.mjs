@@ -4,6 +4,8 @@ import {
   World,
   villageTrees,
   treeClearsRiver,
+  cabinPaths,
+  treeClearsCabinPaths,
   foxState,
   rabbitState,
   WALK_SPEED,
@@ -223,8 +225,22 @@ test("moon remains centered in its fixed scene at every resolution", () => {
     world.layout = {
       scale,
       mobile: scale < 1,
-      moonArea: { y: 200, height: 130 },
+      moonArea: { y: 200, height: 90 },
     };
-    assert.deepEqual(world.moonPosition(), { x: 480, y: 265, diameter: 118 });
+    assert.deepEqual(world.moonPosition(), { x: 480, y: 245, diameter: 118 });
+  }
+});
+
+test("curved cabin paths keep complete tree canopies clear", () => {
+  assert.ok(villageTrees().every(treeClearsCabinPaths));
+  const paths = cabinPaths();
+  assert.equal(paths.length, 4);
+  for (const path of paths) {
+    assert.equal(path.length, 33);
+    const [a, b, c] = [path[0], path[16], path[32]];
+    assert.ok(
+      Math.abs((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) >
+        1,
+    );
   }
 });
