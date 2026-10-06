@@ -259,7 +259,8 @@ try {
   const plain = await browser.newPage({ javaScriptEnabled: false });
   await plain.goto(process.env.TEST_URL || "http://localhost:5173");
   assert.equal(await plain.locator(".reading-section").count(), 4);
-  assert.equal(await plain.locator(".game-frame").isVisible(), false);
+  assert.equal(await plain.locator(".building-access").isVisible(), false);
+  assert.equal(await plain.locator(".social-links").isVisible(), true);
   assert.ok(await plain.locator(".reading-invitation a strong").count());
   await plain.locator(".reading-invitation a").click();
   assert.equal(new URL(plain.url()).hash, "#about");

@@ -7,6 +7,7 @@ import {
   driftState,
   farmGeometry,
   chickenState,
+  pigState,
   treeFootprint,
   intersects,
 } from "../dist/journey.js";
@@ -96,15 +97,36 @@ test("pickup loops continuously inside the dirt clearing and parks under reduced
   }
   assert.deepEqual(driftState(0, true), driftState(30, true));
 });
-test("six cows and running chickens remain inside the farm", () => {
+test("six running chickens keep separate routes within the fenced pasture", () => {
   assert.equal(farmGeometry(layout.stable).cows.length, 6);
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 6; i++) {
     assert.notDeepEqual(chickenState(0, false, i), chickenState(2, false, i));
     assert.deepEqual(chickenState(0, true, i), chickenState(20, true, i));
+  }
+  for (let t = 0; t < 30; t += 0.2) {
+    const chickens = Array.from({ length: 6 }, (_, i) =>
+      chickenState(t, false, i),
+    );
+    chickens.forEach((state, i) => {
+      assert.ok(state.x > 30 && state.x < 940);
+      assert.ok(state.y > 190 && state.y < 340);
+      chickens
+        .slice(i + 1)
+        .forEach((other) =>
+          assert.ok(Math.hypot(state.x - other.x, state.y - other.y) > 30),
+        );
+    });
+  }
+});
+test("wallowing pigs stay inside their mud pen and freeze under reduced motion", () => {
+  for (let i = 0; i < 2; i++) {
+    assert.deepEqual(pigState(0, true, i), pigState(30, true, i));
+    assert.notDeepEqual(pigState(0, false, i), pigState(2, false, i));
     for (let t = 0; t < 30; t += 0.2) {
-      const state = chickenState(t, false, i);
-      assert.ok(state.x > 30 && state.x < 300);
-      assert.ok(state.y > 320 && state.y < 390);
+      const state = pigState(t, false, i);
+      assert.ok(state.x - 45 > 70 && state.x + 45 < 330);
+      assert.ok(state.y - 30 > 350 && state.y + 20 < 435);
+      assert.ok(state.roll >= 0 && state.roll < 4);
     }
   }
 });

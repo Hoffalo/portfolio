@@ -31,6 +31,8 @@ try {
     [740, 1000],
     [741, 1000],
     [1440, 1000],
+    [1440, 768],
+    [1440, 900],
   ]) {
     await page.setViewportSize({ width, height });
     await page.evaluate(() => scrollTo(0, 0));
@@ -87,9 +89,53 @@ try {
         bounded: canvases.every((c) => c.height <= maxHeight),
       };
     });
-    assert.equal(metrics.width, Math.min(1440, width));
-    assert.equal(metrics.left, (width - metrics.width) / 2);
+    assert.ok(
+      Math.abs(
+        metrics.width -
+          Math.min(1120, width, width > 740 ? height * 1.05 : Infinity),
+      ) < 0.02,
+    );
+    assert.ok(Math.abs(metrics.left - (width - metrics.width) / 2) < 0.02);
     assert.equal(metrics.overflow, false);
+    if (width >= 1440 || width <= 390) {
+      const opening = await page.evaluate(() => {
+        const rect = (s) => document.querySelector(s).getBoundingClientRect();
+        return {
+          boardBottom: rect(".reading-invitation").bottom,
+          controlsBottom: rect(".keyboard-hint").bottom,
+          portraitTop: rect(".identity img").top,
+          socialInGame: !!document.querySelector(".game-frame .social-links"),
+          touchClear: [...document.querySelectorAll(".touch-pad button")].every(
+            (button) => {
+              if (
+                getComputedStyle(button).display === "none" ||
+                !button.getClientRects().length
+              )
+                return true;
+              const a = button.getBoundingClientRect(),
+                b = rect(".identity h1");
+              return (
+                a.right <= b.left ||
+                a.left >= b.right ||
+                a.bottom <= b.top ||
+                a.top >= b.bottom
+              );
+            },
+          ),
+        };
+      });
+      assert.ok(
+        opening.boardBottom <= height + 1,
+        `Opening must fit the first viewport at ${width}x${height}`,
+      );
+      assert.ok(opening.controlsBottom < opening.portraitTop);
+      assert.ok(opening.socialInGame);
+      assert.ok(
+        opening.touchClear,
+        "Touch controls must not cover the owner's name",
+      );
+    }
+
     assert.ok(
       metrics.readingFits && metrics.textFits,
       `Reading text must not clip at ${width}px`,

@@ -53,7 +53,7 @@ try {
           x: 0,
           y: (invitationBox.top - box.top) / scale,
           width: 960,
-          height: 280,
+          height: invitationBox.height / scale,
         },
         moonArea: {
           x: 0,
@@ -83,7 +83,8 @@ try {
         height: Math.ceil(box.height / scale / 2) * 2,
         sections,
         skyHeight:
-          document.querySelector(".sky-header").getBoundingClientRect().height /
+          (document.querySelector(".game-frame").getBoundingClientRect().top -
+            box.top) /
           scale,
       },
       true,

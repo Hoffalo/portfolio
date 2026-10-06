@@ -70,7 +70,7 @@ function resizeJourney() {
       x: 0,
       y: (invitationBox.top - box.top) / worldScale,
       width: 960,
-      height: 280,
+      height: invitationBox.height / worldScale,
     },
     moonArea: {
       x: 0,
@@ -100,7 +100,8 @@ function resizeJourney() {
     height: Math.ceil(box.height / worldScale / 2) * 2,
     sections,
     skyHeight:
-      document.querySelector(".sky-header").getBoundingClientRect().height /
+      (document.querySelector(".game-frame").getBoundingClientRect().top -
+        box.top) /
       worldScale,
   };
   const signature = JSON.stringify([box.width, layout], (key, value) =>
