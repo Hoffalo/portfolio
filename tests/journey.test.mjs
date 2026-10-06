@@ -10,6 +10,7 @@ const layout = {
     { id: "projects", x: 317, y: 2200, width: 557, height: 900 },
     { id: "career", x: 86, y: 3400, width: 557, height: 900 },
   ],
+  divider: { x: 0, y: 650, width: 960, height: 200 },
   stable: { x: 0, y: 5700, width: 960, height: 900 },
 };
 function render(time, reduced, viewport) {
@@ -27,6 +28,7 @@ function render(time, reduced, viewport) {
 }
 test("each visible scene changes with the animation clock", () => {
   for (const viewport of [
+    { top: 600, bottom: 850 },
     { top: 900, bottom: 2000 },
     { top: 2200, bottom: 2900 },
     { top: 3400, bottom: 4100 },
@@ -36,7 +38,7 @@ test("each visible scene changes with the animation clock", () => {
     assert.notDeepEqual(render(0, false, viewport), render(2, false, viewport));
   }
 });
-test("reduced motion freezes campfire, pond, house, bear and horses", () => {
+test("reduced motion freezes lower scenery, farm animals and river", () => {
   assert.deepEqual(render(0, true), render(20, true));
 });
 test("offscreen scenery has no animated draw calls", () => {

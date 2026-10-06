@@ -1454,3 +1454,126 @@ dialog {
     border-image-width: 20px 6px;
   }
 }
+
+/* Aged ribbon parchment, with stepped curls and worn paper grain. */
+.reading-section,
+dialog {
+  border-width: 30px 18px;
+  border-image: url("./art/scroll-frame.svg") 32 / 30px 18px / 0 stretch;
+  background-color: #5c533e;
+  background-image: url("./art/parchment.svg");
+  background-size: 128px 128px;
+  background-clip: padding-box;
+}
+.reading-section p,
+dialog p {
+  color: #eee4ca;
+}
+.reading-section h2,
+.panel-content h2 {
+  color: #fff0c8;
+}
+.reading-section .tags,
+.reading-section small,
+.about-details,
+.volunteer-role {
+  color: #ded5b7;
+}
+.section-number {
+  color: #d4c6a1;
+}
+.project-card {
+  background: #504b3980;
+}
+.panel-top,
+.panel-footer {
+  background: #5c533e;
+}
+.panel-top,
+.panel-footer,
+.project-card a,
+.text-link {
+  color: #f5deaa;
+}
+.river-divider {
+  width: 100%;
+  height: 140px;
+  pointer-events: none;
+}
+.stable-clearing {
+  height: 600px;
+  margin-top: 150px;
+}
+@media (max-width: 700px) {
+  .reading-section,
+  dialog {
+    border-width: 24px 12px;
+    border-image-width: 24px 12px;
+  }
+  .river-divider {
+    height: 96px;
+  }
+  .stable-clearing {
+    height: 440px;
+    margin-top: 120px;
+  }
+}
+.reading-section {
+  position: relative;
+}
+.reading-section::before,
+.reading-section::after {
+  content: "";
+  position: absolute;
+  left: -26px;
+  right: -26px;
+  height: 22px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    #62583e 0 6px,
+    #796b4a 6px 10px,
+    #8b7a54 10px 12px,
+    #736445 12px 18px,
+    #564d38 18px 22px
+  );
+  clip-path: polygon(
+    0 4px,
+    12px 4px,
+    12px 0,
+    calc(100% - 12px) 0,
+    calc(100% - 12px) 4px,
+    100% 4px,
+    100% 18px,
+    calc(100% - 12px) 18px,
+    calc(100% - 12px) 22px,
+    12px 22px,
+    12px 18px,
+    0 18px,
+    6px 12px
+  );
+}
+.reading-section::before {
+  top: -22px;
+}
+.reading-section::after {
+  bottom: -22px;
+}
+.panel-content .tags,
+.panel-content small,
+.panel-content .about-details,
+.panel-content .volunteer-role {
+  color: #ded5b7;
+}
+@media (max-width: 700px) {
+  .reading-section::before,
+  .reading-section::after {
+    left: -18px;
+    right: -18px;
+  }
+}
+@media (max-width: 700px) {
+  .stable-clearing {
+    height: max(440px, 112.5vw);
+  }
+}
