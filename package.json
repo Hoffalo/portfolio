@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/serve.mjs",
-    "check": "node --check dist/app.js && node --check dist/world.js && node --check dist/content.js",
+    "check": "node --check dist/app.js && node --check dist/world.js && node --check dist/content.js && node --check scripts/generate-page-art.mjs",
     "test": "node --test tests/*.test.mjs",
-    "test:browser": "node tests/browser.mjs"
+    "test:browser": "node tests/browser.mjs",
+    "generate:art": "node scripts/generate-page-art.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
