@@ -2312,3 +2312,73 @@ dialog p {
     padding-bottom: 28px;
   }
 }
+/* A slightly lower horizon, centered controls, and inset notice lettering. */
+#journey-world > .sky-header {
+  aspect-ratio: 960 / 200;
+  min-height: 190px;
+}
+.sky-header .moon-clearing {
+  top: 20px;
+}
+.sky-header .controls-slot {
+  left: 24px;
+  right: 24px;
+  width: calc(100% - 48px);
+  display: flex;
+  justify-content: center;
+}
+.controls-slot .game-bottom {
+  justify-content: center;
+}
+.keyboard-hint {
+  justify-content: center;
+}
+.reading-invitation a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  padding: 34px 30px 40px;
+}
+.reading-invitation strong {
+  max-width: 22ch;
+  font-size: 28px;
+  line-height: 1.15;
+}
+.reading-invitation .billboard-detail {
+  margin-top: 12px;
+}
+.reading-invitation a > span:last-child {
+  margin-top: 14px;
+}
+@media (max-width: 740px) {
+  #journey-world > .sky-header {
+    height: 270px;
+    min-height: 270px;
+    aspect-ratio: auto;
+  }
+  .sky-header .moon-clearing {
+    top: 140px;
+  }
+  .sky-header .controls-slot {
+    left: 16px;
+    right: 16px;
+    width: calc(100% - 32px);
+  }
+  .controls-slot .game-bottom {
+    width: 100%;
+  }
+  .reading-invitation a {
+    min-height: 210px;
+    padding: 32px 16px 38px;
+  }
+  .reading-invitation strong {
+    font-size: 22px;
+  }
+}
+@media (max-width: 740px) {
+  .sky-header .moon-clearing {
+    top: 160px;
+  }
+}

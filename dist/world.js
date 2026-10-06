@@ -283,6 +283,20 @@ export function villageTrees() {
     { x: 918, y: 538, s: 1.02, tone: 0.58 },
   ])
     place(tree);
+  for (const [x, y, size] of [
+    [586, 244, 0.35],
+    [460, 227, 0.26],
+    [530, 227, 0.26],
+    [436, 242, 0.32],
+    [405, 486, 0.32],
+    [580, 485, 0.35],
+    [608, 492, 0.34],
+    [179, 280, 0.36],
+    [820, 285, 0.36],
+    [137, 322, 0.4],
+    [841, 335, 0.4],
+  ])
+    place({ x, y, s: size, tone: rand() });
   // Small groves at the edge and saplings in generous gaps feel less regimented.
   for (const [x, y, size] of [
     [154, 290, 0.6],
@@ -473,7 +487,7 @@ export class World {
     const distantBase = this.layout.skyHeight + 122;
     this.ctx.save();
     try {
-      this.ctx.globalAlpha = 0.68;
+      this.ctx.globalAlpha = 0.78;
       for (const [center, height, span] of [
         [-70, 206, 360],
         [176, 226, 370],
@@ -546,7 +560,7 @@ export class World {
     }
     // A central crest covers the moon’s lower quarter; side ridges stay below it.
     const base = this.layout.skyHeight + 176;
-    const moonFloor = y + d / 2 + 18;
+    const moonFloor = y + d * 0.3;
     for (const [mx, height, w] of [
       [-30, 200, 310],
       [178, 240, 350],
