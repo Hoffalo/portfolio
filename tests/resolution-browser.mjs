@@ -92,7 +92,7 @@ try {
     assert.ok(Math.abs(metrics.width - Math.min(1120, width)) < 0.02);
     assert.ok(Math.abs(metrics.left - (width - metrics.width) / 2) < 0.02);
     assert.equal(metrics.overflow, false);
-    if (width >= 1440 || width <= 390) {
+    {
       const opening = await page.evaluate(() => {
         const rect = (s) => document.querySelector(s).getBoundingClientRect();
         return {
@@ -100,6 +100,35 @@ try {
           controlsBottom: rect(".keyboard-hint").bottom,
           controlsCenter:
             (rect(".keyboard-hint").left + rect(".keyboard-hint").right) / 2,
+          boardCentered: (() => {
+            const a = rect(".reading-invitation a"),
+              h = rect(".reading-invitation strong"),
+              d = rect(".billboard-detail");
+            return (
+              Math.abs((h.top + d.bottom) / 2 - (a.top + a.bottom) / 2) < 1 &&
+              Math.abs((h.left + h.right) / 2 - (a.left + a.right) / 2) < 1
+            );
+          })(),
+          roofLabels: [
+            ...document.querySelectorAll(".building-access button"),
+          ].every((button) => {
+            const b = button.getBoundingClientRect(),
+              l = button.querySelector(".house-label").getBoundingClientRect();
+            const signs = [...document.querySelectorAll(".social-links a")].map(
+              (e) => e.getBoundingClientRect(),
+            );
+            return (
+              l.top < b.top + b.height * 0.4 &&
+              l.bottom < b.bottom &&
+              signs.every(
+                (s) =>
+                  l.right <= s.left ||
+                  l.left >= s.right ||
+                  l.bottom <= s.top ||
+                  l.top >= s.bottom,
+              )
+            );
+          }),
           boardInset: [
             ...document.querySelectorAll(".reading-invitation a > *"),
           ].every((e) => {
@@ -140,6 +169,14 @@ try {
         "Reading sign content must stay inset within its wood face",
       );
       assert.ok(opening.socialInGame);
+      assert.ok(
+        opening.boardCentered,
+        "Reading lettering must center on both axes",
+      );
+      assert.ok(
+        opening.roofLabels,
+        "Cabin plaques must stay on the roof, clear of entrances",
+      );
       assert.ok(
         opening.touchClear,
         "Touch controls must not cover the owner's name",
