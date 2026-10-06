@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   World,
   foxState,
+  rabbitState,
   WALK_SPEED,
   walkFrame,
   canWalk,
@@ -112,4 +113,29 @@ test("capped-frame movement cannot skip a narrow obstacle", () => {
   const player = { x: 482, y: 355 };
   movePlayer(player, 1, 0, 0.04, (x) => x < 486 || x > 488);
   assert.ok(player.x < 486);
+});
+
+test("statue fountain blocks entry without trapping the player", () => {
+  assert.equal(canWalk(482, 324), false);
+  assert.equal(canWalk(482, 355), true);
+  for (const point of [
+    [446, 324],
+    [518, 324],
+    [482, 290],
+    [482, 356],
+  ])
+    assert.ok(canWalk(...point));
+  const player = { x: 482, y: 355 };
+  for (let i = 0; i < 30; i++) movePlayer(player, 0, -1, 0.04);
+  assert.ok(player.y >= 349);
+});
+test("rabbits lead foxes on reachable routes and freeze for reduced motion", () => {
+  for (let i = 0; i < 2; i++) {
+    for (let t = 0; t < 40; t += 0.1) {
+      const rabbit = rabbitState(t, i);
+      assert.ok(canWalk(rabbit.x, rabbit.y));
+      assert.notDeepEqual(rabbit, foxState(t, i));
+    }
+    assert.deepEqual(rabbitState(0, i, true), rabbitState(10, i, true));
+  }
 });

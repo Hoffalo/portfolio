@@ -189,143 +189,167 @@ function sleepers(p, x, y) {
   mushroom(p, x + 80, y - 25);
 }
 
-function fireplace(p, x, y) {
-  // A sheltered stone hearth, wool rug, chairs and a sleeping cat.
-  p.ellipse(x, y + 9, 242, 198, "#334335");
-  p.ellipse(x, y + 21, 206, 152, "#4a4533");
-  p.ellipse(x, y - 18, 172, 134, "#655039");
-  p.rect(x - 52, y - 44, 104, 57, "#2e332f");
-  p.rect(x - 15, y - 124, 30, 67, "#586057");
-  for (let row = 0; row < 7; row++) {
-    p.rect(x - 13, y - 121 + row * 9, 26, 7, row % 2 ? "#717469" : "#666b60");
-    p.rect(x + (row % 2 ? 1 : -4), y - 121 + row * 9, 2, 7, "#454b43");
-  }
-  p.rect(x - 20, y - 125, 40, 7, "#89907c");
-  p.rect(x - 56, y - 68, 112, 12, "#4a5148");
-  p.rect(x - 54, y - 72, 108, 7, "#838575");
-  p.rect(x - 44, y - 56, 88, 66, "#6d7163");
-  p.rect(x - 26, y - 46, 52, 52, "#222724");
-  for (const side of [-1, 1]) {
-    for (let row = 0; row < 5; row++) {
-      p.rect(
-        x + side * 35 - 8,
-        y - 53 + row * 12,
-        16,
-        10,
-        row % 2 ? "#89907c" : "#78816d",
-      );
-      p.rect(x + side * 35 - 8, y - 53 + row * 12, 16, 2, "#a0a38b");
-    }
-  }
-  p.rect(x - 30, y - 58, 60, 12, "#93957f");
-  p.rect(x - 23, y - 40, 46, 44, "#53382b");
-  p.rect(x - 19, y - 36, 38, 36, "#784932");
-  p.rect(x - 24, y, 48, 7, "#342b23");
-  p.rect(x - 20, y - 4, 40, 4, "#805631");
+function campfire(p, x, y) {
+  // An outdoor clearing: warm stones, log seats and cocoa under the trees.
+  p.ellipse(x, y + 20, 242, 172, "#304334");
   p.path(
     [
-      [x - 17, y - 4],
-      [x - 19, y - 16],
-      [x - 12, y - 12],
-      [x - 8, y - 32],
-      [x - 1, y - 23],
-      [x + 5, y - 39],
-      [x + 11, y - 21],
-      [x + 15, y - 25],
-      [x + 19, y - 4],
+      [x - 100, y + 16],
+      [x - 72, y - 49],
+      [x - 12, y - 68],
+      [x + 67, y - 43],
+      [x + 110, y + 24],
+      [x + 68, y + 82],
+      [x - 46, y + 88],
+      [x - 105, y + 54],
     ],
-    "#d7893f",
+    "#514432",
   );
-  p.path(
-    [
-      [x - 11, y - 4],
-      [x - 10, y - 18],
-      [x - 4, y - 13],
-      [x + 2, y - 29],
-      [x + 8, y - 14],
-      [x + 12, y - 4],
-    ],
-    "#f0ba66",
-  );
-  p.rect(x - 3, y - 14, 6, 13, "#f8dba0");
-  p.rect(x - 61, y + 9, 122, 12, "#6b7060");
-  p.rect(x - 60, y + 9, 120, 3, "#9b9b7d");
-  // Brass candleholders sit on the mantle.
-  for (const dx of [-41, 38]) {
-    p.rect(x + dx, y - 82, 4, 10, "#dfc790");
-    p.rect(x + dx, y - 86, 4, 5, "#efd395");
-    p.rect(x + dx - 2, y - 74, 8, 3, "#ab8a50");
-  }
-  // Layered woven rug keeps this distinctly a fireside nook.
-  p.rect(x - 51, y + 32, 102, 69, "#4d3d35");
-  p.rect(x - 47, y + 36, 94, 61, "#985f4b");
-  p.rect(x - 43, y + 40, 86, 53, "#744738");
-  for (const dy of [45, 85]) p.rect(x - 40, y + dy, 80, 3, "#ba9566");
-  for (let dx = -46; dx <= 46; dx += 8) {
-    p.rect(x + dx, y + 28, 3, 7, "#b2966b");
-    p.rect(x + dx, y + 98, 3, 7, "#b2966b");
-  }
-  p.path(
-    [
-      [x, y + 51],
-      [x + 13, y + 66],
-      [x, y + 81],
-      [x - 13, y + 66],
-    ],
-    "#b79060",
-  );
-  p.path(
-    [
-      [x, y + 57],
-      [x + 7, y + 66],
-      [x, y + 75],
-      [x - 7, y + 66],
-    ],
-    "#814e3b",
-  );
-  for (const side of [-1, 1]) {
-    const cx = x + side * 77;
-    p.rect(cx - 18, y + 26, 36, 48, "#46392b");
-    p.rect(cx - 14, y + 27, 28, 31, "#a4774d");
-    p.rect(cx - 11, y + 31, 22, 23, "#c49361");
-    p.rect(cx - 19, y + 56, 38, 20, "#80563a");
-    p.rect(cx - 13, y + 58, 26, 12, "#a7714e");
-    p.rect(cx - 22, y + 45, 7, 22, "#bf925b");
-    p.rect(cx + 15, y + 45, 7, 22, "#bf925b");
-    for (const dx of [-15, 12]) p.rect(cx + dx, y + 76, 4, 10, "#4e3c2d");
-  }
-  // A wool throw over the left chair.
-  p.rect(x - 88, y + 31, 12, 31, "#667b72");
-  for (const dy of [37, 48, 58]) p.rect(x - 88, y + dy, 12, 2, "#9ca68e");
-  // Cocoa on a little low table beside the right chair.
-  p.ellipse(x + 97, y + 7, 34, 20, "#a98150");
-  p.rect(x + 94, y + 14, 6, 14, "#614832");
-  p.rect(x + 91, y - 1, 10, 9, "#d6c49f");
-  p.rect(x + 93, y - 2, 6, 3, "#6b4935");
-  p.rect(x + 101, y + 1, 3, 5, "#d6c49f");
+  p.ellipse(x, y + 12, 152, 116, "#614b32");
+  p.ellipse(x, y + 8, 108, 74, "#775435");
   for (const [dx, dy] of [
-    [-83, -22],
-    [-99, -11],
-    [-81, -5],
+    [-88, 17],
+    [-57, -36],
+    [66, -17],
+    [72, 58],
+    [-44, 69],
   ]) {
-    p.rect(x + dx - 10, y + dy - 4, 25, 9, "#795738");
-    p.ellipse(x + dx + 13, y + dy, 9, 9, "#bc9561");
-    p.rect(x + dx + 12, y + dy - 2, 3, 4, "#805838");
+    p.rect(x + dx, y + dy, 8, 4, "#79654a");
+    p.rect(x + dx + 2, y + dy - 2, 4, 2, "#96835b");
   }
-  p.ellipse(x + 23, y + 78, 30, 16, "#b7966b");
-  p.ellipse(x + 34, y + 73, 14, 12, "#c6a67b");
+  // Three fallen trunks form seats; bright cut ends show their growth rings.
+  for (const [dx, dy] of [
+    [-82, 35],
+    [81, 35],
+    [0, 77],
+  ]) {
+    log(p, x + dx, y + dy);
+    p.rect(x + dx - 22, y + dy - 6, 41, 3, "#997048");
+    p.rect(x + dx - 12, y + dy - 2, 22, 2, "#6b4c33");
+  }
+  // A wool blanket rests on one log rather than furnishing the woodland.
+  p.rect(x - 91, y + 27, 17, 18, "#72867a");
+  for (const dy of [30, 36, 42]) p.rect(x - 91, y + dy, 17, 2, "#a1ad91");
+  p.ellipse(x, y + 6, 82, 42, "#352e27");
+  const stone = (dx, dy, tone) => {
+    p.ellipse(x + dx, y + dy, 17, 11, tone);
+    p.rect(x + dx - 5, y + dy - 3, 9, 2, "#a19c81");
+  };
+  for (const angle of [
+    Math.PI,
+    Math.PI * 1.2,
+    Math.PI * 1.4,
+    Math.PI * 1.6,
+    Math.PI * 1.8,
+    Math.PI * 2,
+  ])
+    stone(Math.cos(angle) * 37, Math.sin(angle) * 18 + 7, "#787965");
+  // Crossed fuel and layered stepped flames sit inside the stone ring.
   p.path(
     [
-      [x + 28, y + 69],
-      [x + 29, y + 63],
-      [x + 34, y + 67],
-      [x + 38, y + 64],
-      [x + 40, y + 70],
+      [x - 25, y + 10],
+      [x - 21, y + 3],
+      [x + 25, y + 17],
+      [x + 21, y + 24],
+    ],
+    "#725035",
+  );
+  p.path(
+    [
+      [x - 24, y + 18],
+      [x - 20, y + 25],
+      [x + 25, y + 8],
+      [x + 20, y + 1],
+    ],
+    "#997045",
+  );
+  p.path(
+    [
+      [x - 21, y + 14],
+      [x - 23, y - 5],
+      [x - 14, y - 1],
+      [x - 11, y - 24],
+      [x - 3, y - 15],
+      [x + 5, y - 41],
+      [x + 13, y - 15],
+      [x + 20, y - 22],
+      [x + 23, y + 14],
+    ],
+    "#d88538",
+  );
+  p.path(
+    [
+      [x - 13, y + 15],
+      [x - 14, y - 3],
+      [x - 5, y + 1],
+      [x + 3, y - 27],
+      [x + 10, y - 7],
+      [x + 14, y + 15],
+    ],
+    "#f0bb64",
+  );
+  p.path(
+    [
+      [x - 5, y + 15],
+      [x - 3, y - 3],
+      [x + 3, y - 12],
+      [x + 7, y + 15],
+    ],
+    "#ffe1a0",
+  );
+  for (const angle of [0.25, 0.65, 1.05, 1.45, 1.85, 2.25, 2.65])
+    stone(Math.cos(angle) * 37, Math.sin(angle) * 18 + 7, "#88836b");
+  for (const [dx, dy] of [
+    [-7, -48],
+    [12, -60],
+    [5, -78],
+  ]) {
+    p.rect(x + dx, y + dy, 3, 4, "#d9aa62");
+    p.rect(x + dx + 3, y + dy - 7, 2, 2, "#8b8972");
+  }
+  // Marshmallows on sticks lean from the seats toward the warmth.
+  p.path(
+    [
+      [x - 83, y + 23],
+      [x - 80, y + 25],
+      [x - 20, y - 6],
+      [x - 21, y - 9],
+    ],
+    "#b39161",
+  );
+  p.rect(x - 24, y - 13, 10, 9, "#e8d9b8");
+  p.rect(x - 23, y - 5, 8, 2, "#b99061");
+  p.path(
+    [
+      [x + 80, y + 26],
+      [x + 82, y + 23],
+      [x + 29, y - 1],
+      [x + 27, y + 1],
+    ],
+    "#b39161",
+  );
+  p.rect(x + 23, y - 5, 10, 9, "#e8d9b8");
+  // A mug and thermos sit on a flat stone beside the right seat.
+  p.ellipse(x + 97, y + 2, 33, 18, "#707662");
+  p.rect(x + 85, y - 11, 8, 13, "#8aa39a");
+  p.rect(x + 86, y - 14, 6, 4, "#b0b6a2");
+  p.rect(x + 98, y - 6, 10, 10, "#ddcba4");
+  p.rect(x + 100, y - 7, 6, 3, "#654833");
+  p.rect(x + 108, y - 3, 3, 6, "#ddcba4");
+  p.ellipse(x + 37, y + 99, 29, 16, "#b7966b");
+  p.ellipse(x + 48, y + 94, 14, 12, "#c6a67b");
+  p.path(
+    [
+      [x + 42, y + 90],
+      [x + 43, y + 84],
+      [x + 48, y + 88],
+      [x + 52, y + 85],
+      [x + 54, y + 91],
     ],
     "#c6a67b",
   );
-  p.rect(x + 31, y + 73, 6, 2, "#5d4c3a");
-  p.ellipse(x + 11, y + 80, 15, 8, "#d0ad7e");
+  p.rect(x + 45, y + 94, 6, 2, "#5d4c3a");
+  p.ellipse(x + 25, y + 101, 15, 8, "#d0ad7e");
 }
 
 function landmarks(layout) {
@@ -337,7 +361,7 @@ function landmarks(layout) {
     if (section.id === "about")
       return [
         {
-          paint: fireplace,
+          paint: campfire,
           x: layout.mobile ? 400 : x,
           y: layout.mobile ? section.y - 220 : section.y + 140,
           rx: 145,

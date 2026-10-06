@@ -41,7 +41,7 @@ try {
         (document.querySelector(".header").getBoundingClientRect().top -
           box.top +
           document.querySelector(".header").getBoundingClientRect().height *
-            0.55) /
+            0.2) /
         scale,
       mobile: false,
     });

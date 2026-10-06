@@ -145,11 +145,8 @@ try {
     await page.locator("#career").innerText(),
     /AI Engineer · Optimiza/,
   );
-  await page.locator("#motion").click();
-  assert.equal(
-    await page.locator("#motion").getAttribute("aria-pressed"),
-    "true",
-  );
+  assert.equal(await page.locator("#sound, #motion, .section-lead").count(), 0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.locator("#world").focus();
   await page.waitForTimeout(50);
   const before = await page.locator("#world").evaluate((el) => el.toDataURL());
@@ -175,18 +172,8 @@ try {
   await page.keyboard.press("e");
   assert.equal(await page.locator("#panel-title").textContent(), "Career");
   await page.keyboard.press("Escape");
-  await page.locator("#sound").click();
-  assert.equal(
-    await page.locator("#sound").getAttribute("aria-pressed"),
-    "true",
-  );
-  await page.locator("#sound").click();
-  assert.equal(
-    await page.locator("#sound").getAttribute("aria-pressed"),
-    "false",
-  );
   // Only the visible world band is animated; the offscreen village stays still.
-  await page.locator("#motion").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(".reading-invitation a").click();
   assert.equal(new URL(page.url()).hash, "#about");
   await page.locator("#career").scrollIntoViewIfNeeded();
@@ -266,10 +253,6 @@ try {
   );
   const reduced = await browser.newPage({ reducedMotion: "reduce" });
   await reduced.goto(process.env.TEST_URL || "http://localhost:5173");
-  assert.equal(
-    await reduced.locator("#motion").getAttribute("aria-pressed"),
-    "true",
-  );
   await reduced.evaluate(() => document.fonts.ready);
   await reduced.waitForTimeout(100);
   const still = await reduced
@@ -331,7 +314,7 @@ try {
   await walking.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, sound, bounded cabin movement and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
+    "Browser verification passed: 4 destinations, focus return, Escape, shared static reading content and portrait, bounded cabin movement and offscreen rendering, reduced motion, mobile layout, and no runtime errors.",
   );
 } finally {
   await browser.close();
