@@ -168,12 +168,70 @@ export function treeClearsRiver(tree) {
   }
   return true;
 }
+export function cabinPaths() {
+  const curves = [
+    [
+      [312, 287],
+      [346, 314],
+      [399, 293],
+      [446, 324],
+    ],
+    [
+      [687, 289],
+      [648, 321],
+      [572, 291],
+      [518, 324],
+    ],
+    [
+      [251, 435],
+      [296, 444],
+      [389, 373],
+      [461, 351],
+    ],
+    [
+      [714, 440],
+      [659, 438],
+      [572, 379],
+      [503, 351],
+    ],
+  ];
+  return curves.map((points) =>
+    Array.from({ length: 33 }, (_, i) => {
+      const t = i / 32,
+        u = 1 - t;
+      return [
+        u * u * u * points[0][0] +
+          3 * u * u * t * points[1][0] +
+          3 * u * t * t * points[2][0] +
+          t * t * t * points[3][0],
+        u * u * u * points[0][1] +
+          3 * u * u * t * points[1][1] +
+          3 * u * t * t * points[2][1] +
+          t * t * t * points[3][1],
+      ];
+    }),
+  );
+}
+export function treeClearsCabinPaths(tree) {
+  const box = treeFootprint(tree),
+    margin = 15;
+  return cabinPaths().every((path) =>
+    path.every(
+      ([x, y]) =>
+        x < box.left - margin ||
+        x > box.right + margin ||
+        y < box.top - margin ||
+        y > box.bottom + margin,
+    ),
+  );
+}
 export function villageTrees() {
   const rand = seeded(827),
     trees = [];
   const place = (tree) => {
-    if (!treeClearsRiver(tree)) return;
+    if (!treeClearsRiver(tree) || !treeClearsCabinPaths(tree)) return;
     const b = treeFootprint(tree);
+    if (b.left < 526 && b.right > 438 && b.top < 350 && b.bottom > 253) return;
     // Southern/side crowns never obscure cabin panels or their nameplates.
     if (
       tree.y > 250 &&
@@ -225,6 +283,30 @@ export function villageTrees() {
     { x: 918, y: 538, s: 1.02, tone: 0.58 },
   ])
     place(tree);
+  // Small groves at the edge and saplings in generous gaps feel less regimented.
+  for (const [x, y, size] of [
+    [154, 290, 0.6],
+    [170, 284, 0.5],
+    [801, 288, 0.48],
+    [844, 315, 0.65],
+    [560, 250, 0.45],
+    [552, 266, 0.48],
+    [439, 237, 0.4],
+    [380, 500, 0.56],
+    [418, 506, 0.65],
+    [551, 503, 0.52],
+    [593, 514, 0.55],
+  ])
+    place({ x, y, s: size, tone: rand() });
+  for (let row = 0; row < 4; row++)
+    for (const side of [0, 1])
+      for (let col = 0; col < 3; col++) {
+        const x = side
+          ? 868 + col * 41 + (rand() - 0.5) * 18
+          : col * 42 + (rand() - 0.5) * 18;
+        const y = 278 + row * 63 + (rand() - 0.5) * 22;
+        place({ x, y, s: 0.6 + rand() * 0.42, tone: rand() });
+      }
   return trees;
 }
 export class World {
@@ -367,7 +449,7 @@ export class World {
     return canWalk(x, y);
   }
   moonPosition() {
-    return { x: 480, y: (this.layout.moonArea?.y || 0) + 65, diameter: 118 };
+    return { x: 480, y: (this.layout.moonArea?.y || 0) + 45, diameter: 118 };
   }
   drawSky() {
     this.rect(0, 0, WIDTH, (this.layout.skyHeight || 0) + 190, "#17242b");
@@ -392,12 +474,13 @@ export class World {
     for (const [mx, height, w] of [
       [-30, 200, 310],
       [178, 240, 350],
-      [416, 205, 320],
+      [480, 205, 320],
       [653, 252, 370],
       [902, 214, 350],
       [1100, 240, 330],
     ]) {
-      const peak = Math.min(height, base - moonFloor);
+      const peak =
+        mx === 480 ? base - (y + d * 0.25) : Math.min(height, base - moonFloor);
       this.path(
         [
           [mx - w / 2, base],
@@ -580,28 +663,7 @@ export class World {
       this.rect(479 + Math.cos(y) * 5, y + 8, 9, 2, "#233e47");
     }
     // Four separate spokes connect the fountain courtyard to the cabin doors.
-    const paths = [
-      [
-        [312, 287],
-        [374, 307],
-        [446, 324],
-      ],
-      [
-        [687, 289],
-        [605, 307],
-        [518, 324],
-      ],
-      [
-        [251, 435],
-        [350, 393],
-        [461, 351],
-      ],
-      [
-        [714, 440],
-        [610, 397],
-        [503, 351],
-      ],
-    ];
+    const paths = cabinPaths();
     for (const route of paths) {
       for (let i = 0; i < route.length - 1; i++) {
         const [ax, ay] = route[i],
@@ -618,7 +680,7 @@ export class World {
           ],
           "#534e3c",
         );
-        for (let t = 0; t < 1; t += 0.075) {
+        for (let t = 0; t < 1; t += 0.5) {
           const x = ax + (bx - ax) * t,
             y = ay + (by - ay) * t;
           this.ellipse(x, y, 27, 20, "#847352");
@@ -1250,12 +1312,12 @@ export class World {
     // Pixel-stepped shafts are rendered before scenery, which occludes the light.
     const breathe = this.reduced ? 1 : 0.94 + Math.sin(this.time * 0.24) * 0.06;
     const moon = this.moonPosition(),
-      originY = moon.y - this.layout.skyHeight;
+      originY = moon.y + moon.diameter * 0.25 - this.layout.skyHeight;
     const shafts = [
       {
         points: [
-          [moon.x - 14, originY + 14],
-          [moon.x - 5, originY + 14],
+          [moon.x - 10, originY + 5],
+          [moon.x - 3, originY + 5],
           [390, 540],
           [270, 540],
         ],
@@ -1263,8 +1325,8 @@ export class World {
       },
       {
         points: [
-          [moon.x - 4, originY + 15],
-          [moon.x + 4, originY + 15],
+          [moon.x - 4, originY + 7],
+          [moon.x + 4, originY + 7],
           [655, 540],
           [485, 540],
         ],
@@ -1272,8 +1334,8 @@ export class World {
       },
       {
         points: [
-          [moon.x + 7, originY + 12],
-          [moon.x + 13, originY + 12],
+          [moon.x + 3, originY + 5],
+          [moon.x + 10, originY + 5],
           [892, 530],
           [744, 530],
         ],
