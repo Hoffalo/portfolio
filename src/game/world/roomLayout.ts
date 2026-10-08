@@ -1,7 +1,7 @@
 import type { Exhibit } from "../../sections/types";
 import { bottom, type Rect } from "../engine/geometry";
 import { FURNITURE, placeProp, propSolid, PROP_SIZE } from "./catalog";
-import { baseOf, type Fixture, type World } from "./world";
+import { baseOf, type Carousel, type Fixture, type FixtureVisual, type World } from "./world";
 
 const WALL_HEIGHT = 44;
 const SIDE_WALL = 8;
@@ -78,17 +78,7 @@ export function buildRoomWorld(exhibits: readonly RoomExhibit[], wallOffset = 0)
     id: exhibit.id,
     bounds,
     zone,
-    visual: {
-      type: "furniture",
-      kind: exhibit.furniture,
-      details: {
-        image: exhibit.image,
-        accent: exhibit.accent,
-        lit: exhibit.lit,
-        levels: exhibit.levels,
-        motif: exhibit.motif,
-      },
-    },
+    visual: furnitureVisual(exhibit),
     action: { type: "inspect", exhibitId: exhibit.id },
   });
 
@@ -104,18 +94,51 @@ export function buildRoomWorld(exhibits: readonly RoomExhibit[], wallOffset = 0)
     });
     wallX += SWITCH.width + WALL_GAP;
   };
-  if (carousel) wallSwitch(-1);
-  for (const exhibit of onWall) {
+  const hang = (exhibit: RoomExhibit, slotX: number, slot: number): Rect => {
     const size = FURNITURE[exhibit.furniture];
-    const slot = carousel ? slotWidth : size.width;
-    const x = wallX + Math.round((slot - size.width) / 2);
-    const bounds = { x, y: WALL_HEIGHT - size.height - 6, ...size };
+    const x = slotX + Math.round((slot - size.width) / 2);
+    return { x, y: WALL_HEIGHT - size.height - 6, ...size };
+  };
+  if (carousel) wallSwitch(-1);
+  const stripStart = wallX;
+  for (const exhibit of onWall) {
+    const slot = carousel ? slotWidth : FURNITURE[exhibit.furniture].width;
+    const bounds = hang(exhibit, wallX, slot);
     fixtures.push(
-      inspect(exhibit, bounds, { x: x - 2, y: WALL_HEIGHT, width: size.width + 4, height: 14 }),
+      inspect(exhibit, bounds, {
+        x: bounds.x - 2,
+        y: WALL_HEIGHT,
+        width: bounds.width + 4,
+        height: 14,
+      }),
     );
     wallX += slot + WALL_GAP;
   }
+  const stripEnd = wallX;
   if (carousel) wallSwitch(1);
+
+  const pitch = slotWidth + WALL_GAP;
+  const turningWall: Carousel | undefined = carousel
+    ? {
+        offset: wallOffset,
+        // Each edge sits halfway between a switch and the nearest slot.
+        strip: {
+          x: stripStart - WALL_GAP / 2,
+          y: 0,
+          width: stripEnd - stripStart,
+          height: WALL_HEIGHT,
+        },
+        pitch,
+        ids: onWall.map((exhibit) => exhibit.id),
+        neighbours: [-1, CAROUSEL_SIZE].map((slot) => {
+          const exhibit = allOnWall[mod(wallOffset + slot, allOnWall.length)]!;
+          return {
+            visual: furnitureVisual(exhibit),
+            bounds: hang(exhibit, stripStart + slot * pitch, slotWidth),
+          };
+        }),
+      }
+    : undefined;
 
   const gridLeft = Math.round((width - columns * CELL.width) / 2);
   const furnitureSolids: Rect[] = [];
@@ -221,10 +244,23 @@ export function buildRoomWorld(exhibits: readonly RoomExhibit[], wallOffset = 0)
     obstacles,
     actors: [],
     spawn: { x: cx, y: height - 16, facing: "up" },
+    carousel: turningWall,
   };
 }
 
 const mod = (value: number, length: number) => ((value % length) + length) % length;
+
+const furnitureVisual = (exhibit: RoomExhibit): FixtureVisual => ({
+  type: "furniture",
+  kind: exhibit.furniture,
+  details: {
+    image: exhibit.image,
+    accent: exhibit.accent,
+    lit: exhibit.lit,
+    levels: exhibit.levels,
+    motif: exhibit.motif,
+  },
+});
 
 function galleryBenches(cx: number, y: number) {
   const { width } = PROP_SIZE.bench;

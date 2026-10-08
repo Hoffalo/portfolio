@@ -33,6 +33,9 @@ interface SimulationOptions {
 }
 
 const CAMERA_EASING = 8;
+/** Seconds the wall carousel takes to slide one step. */
+const CAROUSEL_SLIDE = 0.38;
+const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 /** The camera frames the player below centre, looking up the street towards the skyline. */
 const LOOK_AHEAD = 0.3;
 
@@ -62,6 +65,10 @@ export function useWorldSimulation(options: SimulationOptions) {
     let camera: { x: number; y: number } | undefined;
     let nearbyId: string | undefined;
     let portalArmed = false;
+    // The carousel turns instantly in the world; drawing eases it from where it was shown.
+    let carouselOffset = latest.current.world.carousel?.offset;
+    let slide = { from: 0, start: 0 };
+    let carouselShift = 0;
 
     const stop = startLoop((seconds, now) => {
       const { world, artStyle, input, paused, reducedMotion, onNearbyChange, onPortal } =
@@ -120,6 +127,17 @@ export function useWorldSimulation(options: SimulationOptions) {
         height: viewport.height,
       };
 
+      const { carousel } = world;
+      if (carousel && carousel.offset !== carouselOffset) {
+        // Start from wherever the pieces are now, so quick repeated turns stay continuous.
+        const from =
+          carouselShift + (carousel.offset - (carouselOffset ?? carousel.offset)) * carousel.pitch;
+        slide = { from: Math.max(-carousel.pitch, Math.min(carousel.pitch, from)), start: now };
+        carouselOffset = carousel.offset;
+      }
+      const progress = Math.min(1, (now - slide.start) / CAROUSEL_SLIDE);
+      carouselShift = carousel && !reducedMotion ? slide.from * (1 - easeInOutCubic(progress)) : 0;
+
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.imageSmoothingEnabled = false;
       paintWorld(
@@ -127,9 +145,15 @@ export function useWorldSimulation(options: SimulationOptions) {
         ART_BY_STYLE[artStyle],
         player,
         actors,
+        carouselShift,
       );
 
       overlay.style.setProperty("--scale", String(viewport.scale));
+      overlay.style.setProperty("--carousel-shift", `${Math.round(carouselShift)}px`);
+      overlay.style.setProperty(
+        "--carousel-fade",
+        String(carousel ? Math.abs(carouselShift) / carousel.pitch : 0),
+      );
       overlay.style.transform = `translate3d(${-view.x * viewport.scale}px, ${-view.y * viewport.scale}px, 0)`;
 
       const nearby = findUsableFixture(world, player)?.id;
