@@ -1,0 +1,82 @@
+/* The Konami-code secret world: everything in NES black, white and gold. */
+
+[data-theme="retro"] .top-bar__name {
+  color: var(--accent);
+  text-shadow: 2px 2px 0 #000000;
+}
+
+[data-theme="retro"] .roof-label,
+[data-theme="retro"] .plaque,
+[data-theme="retro"] .peek {
+  border: 1px solid #fcfcfc;
+  background: #000000;
+  color: #fcfcfc;
+  box-shadow: 1px 1px 0 #000000;
+}
+
+[data-theme="retro"] .fixture[data-nearby] .roof-label,
+[data-theme="retro"] .fixture[data-nearby] .plaque,
+[data-theme="retro"] .peek__title {
+  color: var(--accent);
+}
+
+[data-theme="retro"] .sign-label {
+  color: #fcfcfc;
+}
+
+[data-theme="retro"] .dialog-box {
+  --dialog-border: #fcfcfc;
+  --dialog-inner: #000000;
+  --dialog-outer: #000000;
+  --dialog-bg: #000000;
+  --dialog-text: #fcfcfc;
+}
+
+/* "SECRET WORLD!" drops in when the code is entered, then leaves. */
+.secret-banner {
+  position: fixed;
+  top: 18%;
+  left: 50%;
+  z-index: 5;
+  padding: 0.6rem 1.2rem;
+  border: 3px solid #fcfcfc;
+  background: #000000;
+  color: var(--accent);
+  font-family: var(--font-pixel);
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.5);
+  animation: secret-banner 3s steps(12) both;
+}
+
+.secret-banner small {
+  display: block;
+  margin-top: 0.3rem;
+  color: #fcfcfc;
+  font-size: 0.55em;
+}
+
+@keyframes secret-banner {
+  0% {
+    opacity: 0;
+    translate: 0 -30px;
+  }
+  12%,
+  80% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secret-banner {
+    animation-timing-function: steps(1);
+  }
+}

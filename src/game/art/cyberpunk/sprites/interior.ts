@@ -1,0 +1,37 @@
+// Generated with the sheet; frame = [x, y, width, height, anchorX, anchorY].
+// The PNG is exported from the .aseprite file of the same name in /art. Keep frames in place when editing.
+import type { Frames } from "../../sprites";
+
+export const INTERIOR: Frames = {
+  "painting-wide": [115, 47, 40, 28, 1, 1],
+  "painting-tall": [113, 0, 24, 34, 1, 1],
+  portrait: [27, 47, 26, 30, 1, 1],
+  screen: [54, 47, 60, 30, 1, 1],
+  poster: [0, 47, 26, 32, 1, 1],
+  desk: [195, 47, 34, 24, 1, 1],
+  rack: [138, 0, 22, 34, 1, 1],
+  bookshelf: [161, 0, 36, 34, 1, 1],
+  globe: [230, 47, 18, 24, 1, 1],
+  piano: [156, 47, 38, 26, 1, 1],
+  console: [249, 47, 24, 22, 1, 1],
+  contributions: [0, 0, 112, 46, 1, 1],
+  "pet-0": [379, 47, 18, 12, 1, 1],
+  "pet-1": [398, 47, 18, 12, 1, 1],
+  "motif-arcade": [198, 0, 28, 34, 4, 1],
+  "motif-web": [227, 0, 28, 34, 4, 1],
+  "motif-brain": [256, 0, 28, 34, 4, 1],
+  "motif-jukebox": [285, 0, 28, 34, 4, 1],
+  "motif-trophy": [314, 0, 28, 34, 4, 1],
+  "motif-punching-bag": [343, 0, 28, 34, 4, 1],
+  "motif-sewing": [372, 0, 28, 34, 4, 1],
+  "motif-plinko": [401, 0, 28, 34, 4, 1],
+  "motif-megaphone": [430, 0, 28, 34, 4, 1],
+  "motif-database": [459, 0, 28, 34, 4, 1],
+  "motif-camera-small": [274, 47, 14, 20, 1, 1],
+  "motif-chart-small": [289, 47, 14, 20, 1, 1],
+  "motif-robot-small": [304, 47, 14, 20, 1, 1],
+  "motif-clapper-small": [319, 47, 14, 20, 1, 1],
+  "motif-palette-small": [334, 47, 14, 20, 1, 1],
+  "motif-podium-small": [349, 47, 14, 20, 1, 1],
+  "motif-punching-bag-small": [364, 47, 14, 20, 1, 1],
+};

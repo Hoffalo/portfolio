@@ -1,0 +1,469 @@
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 20rem;
+  height: calc(100dvh - var(--top-bar-height));
+  /* "clip", unlike "hidden", can't be scrolled by focusing an off-screen hotspot, which would desync the overlay. */
+  overflow: clip;
+  background: #000;
+  touch-action: none;
+  user-select: none;
+}
+
+/* The canvas is drawn at art resolution and enlarged by a whole number, keeping pixels square and crisp. */
+.stage__canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  image-rendering: pixelated;
+}
+
+/* Overlay contents are positioned in art pixels; --scale (set every frame) maps them to CSS pixels. */
+.stage__overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+.stage__world {
+  position: relative;
+  zoom: var(--scale, 1);
+  font-family: var(--font-pixel);
+  line-height: 1;
+}
+
+.fixture {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.hotspot {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.hotspot:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.roof-label {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  padding: 1px 3px;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 6px;
+  white-space: nowrap;
+  transition: transform 120ms steps(2);
+}
+
+.fixture[data-nearby] .roof-label,
+.hotspot:hover .roof-label {
+  transform: translate(-50%, -2px);
+}
+
+[data-theme="cyberpunk"] .roof-label {
+  border: 1px solid var(--accent);
+  background: #0b0420;
+  color: var(--accent);
+}
+
+[data-theme="cyberpunk"] .fixture[data-nearby] .roof-label {
+  border-color: var(--accent-2);
+  color: #fff;
+}
+
+[data-theme="fantasy"] .roof-label {
+  border: 1px solid #4a2f1a;
+  background: #c79a5f;
+  color: #2b1b0e;
+  font-size: 8px;
+}
+
+[data-theme="fantasy"] .fixture[data-nearby] .roof-label {
+  background: #f0cf7a;
+}
+
+.sign-label {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 1px;
+  display: grid;
+  place-items: center;
+  height: 12px;
+  font-size: 5px;
+  text-decoration: none;
+  overflow: hidden;
+}
+
+[data-theme="cyberpunk"] .sign-label {
+  color: #fff;
+}
+
+[data-theme="fantasy"] .sign-label {
+  color: #2b1b0e;
+  font-size: 6px;
+}
+
+/* Room plaques and peek cards, sized in art pixels like the rest of the overlay */
+
+.plaque {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 1px);
+  max-width: 54px;
+  padding: 0 2px;
+  overflow: hidden;
+  transform: translateX(-50%);
+  font-size: 5px;
+  line-height: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.plaque[data-placement="entrance"] {
+  top: auto;
+  bottom: calc(100% + 2px);
+  max-width: none;
+}
+
+.plaque[data-placement="wall"] {
+  top: calc(100% + 1px);
+  max-width: calc(100% + 10px);
+}
+
+[data-theme="cyberpunk"] .plaque {
+  border: 1px solid var(--border);
+  background: #0b0420;
+  color: var(--muted);
+}
+
+[data-theme="cyberpunk"] .fixture[data-nearby] .plaque {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-theme="fantasy"] .plaque {
+  border: 1px solid #6b4a1e;
+  border-radius: 1px;
+  background: linear-gradient(#e8c96a, #c99a3a);
+  color: #3b2a1a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 5px;
+}
+
+.peek {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  z-index: 2;
+  display: none;
+  gap: 1px;
+  width: max-content;
+  max-width: 100px;
+  padding: 3px 4px;
+  font-size: 5px;
+  line-height: 6px;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: peek-in 160ms steps(3) both;
+}
+
+.fixture[data-nearby] .peek,
+.fixture:hover .peek,
+.hotspot:focus-visible ~ .peek {
+  display: grid;
+}
+
+.fixture:hover {
+  z-index: 3;
+}
+
+.peek[data-placement="entrance"] {
+  bottom: calc(100% + 11px);
+}
+
+.peek[data-placement="wall"] {
+  top: calc(100% + 9px);
+  bottom: auto;
+}
+
+.peek__title {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 6px;
+  line-height: 7px;
+}
+
+.peek__line {
+  white-space: normal;
+}
+
+.peek__hint {
+  margin-top: 1px;
+  opacity: 0.75;
+}
+
+.peek kbd {
+  padding: 0 1px;
+  border: 1px solid currentColor;
+  font-size: 4px;
+}
+
+[data-theme="cyberpunk"] .peek {
+  border: 1px solid var(--accent);
+  background: rgba(11, 4, 32, 0.94);
+  color: var(--text);
+  box-shadow:
+    0 0 4px rgba(45, 226, 230, 0.5),
+    1px 1px 0 #000;
+}
+
+[data-theme="cyberpunk"] .peek__title {
+  color: var(--accent);
+}
+
+[data-theme="fantasy"] .peek {
+  border: 1px solid #6b4a1e;
+  border-radius: 1px;
+  background: #fbf3dc;
+  color: #3b2a1a;
+  box-shadow: 1px 1px 0 rgba(59, 42, 26, 0.35);
+}
+
+[data-theme="fantasy"] .peek__title {
+  color: #8e2b2b;
+}
+
+@keyframes peek-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek {
+    animation: none;
+  }
+}
+
+/* HUD: real CSS pixels, not art pixels */
+
+.hud {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.hud > * {
+  pointer-events: auto;
+}
+
+.hud__prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  padding: 0.45rem 0.9rem;
+  border: 2px solid var(--accent);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-family: var(--font-pixel);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
+}
+
+.hud__hint {
+  padding: 0.35rem 0.6rem;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.touch-pad {
+  display: none;
+  grid-template-areas:
+    ". up ."
+    "left . right"
+    ". down .";
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.touch-pad__button {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  touch-action: none;
+}
+
+.touch-pad__button--up {
+  grid-area: up;
+}
+.touch-pad__button--down {
+  grid-area: down;
+}
+.touch-pad__button--left {
+  grid-area: left;
+}
+.touch-pad__button--right {
+  grid-area: right;
+}
+
+@media (pointer: coarse) {
+  .touch-pad {
+    display: grid;
+  }
+
+  .hud__hint {
+    display: none;
+  }
+
+  /* The D-pad owns the bottom-right corner on touch screens. */
+  .hud__prompt {
+    left: 1rem;
+    bottom: 1rem;
+    transform: none;
+  }
+}
+
+.room-banner {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.6rem 0.4rem 0.9rem;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.room-banner__title {
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.room-banner__exit {
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+}
+
+/* Pokémon-style dialog box */
+
+.dialog-box {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  width: min(46rem, calc(100% - 2rem));
+  max-height: min(60%, 30rem);
+  transform: translateX(-50%);
+  border: 4px solid var(--dialog-border);
+  background: var(--dialog-bg);
+  color: var(--dialog-text);
+  box-shadow:
+    inset 0 0 0 2px var(--dialog-inner),
+    0 0 0 2px var(--dialog-outer),
+    6px 6px 0 rgba(0, 0, 0, 0.45);
+  animation: dialog-in 160ms steps(4);
+}
+
+@keyframes dialog-in {
+  from {
+    transform: translate(-50%, 1.5rem);
+    opacity: 0;
+  }
+}
+
+.dialog-box__header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.6rem 0.75rem 0;
+}
+
+/* A nameplate on the box's top edge, like a speaker's name in a Pokémon dialogue. */
+.dialog-box__title {
+  position: absolute;
+  left: 0.75rem;
+  top: -0.9rem;
+  max-width: calc(100% - 1.5rem);
+  overflow: hidden;
+  padding: 0.15rem 0.6rem;
+  border: 2px solid var(--dialog-border);
+  background: var(--dialog-bg);
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog-box__close {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+}
+
+.dialog-box__body {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0 1rem 1.5rem;
+  overflow-y: auto;
+}
+
+.dialog-box__cursor {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  font-size: 0.7rem;
+  animation: cursor-blink 0.8s steps(2) infinite;
+}
+
+@keyframes cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+[data-theme="cyberpunk"] .dialog-box {
+  --dialog-border: #2de2e6;
+  --dialog-inner: #0b0420;
+  --dialog-outer: #0b0420;
+  --dialog-bg: #120a2a;
+  --dialog-text: #e8e3ff;
+}
+
+[data-theme="fantasy"] .dialog-box {
+  --dialog-border: #4a2f1a;
+  --dialog-inner: #c79a5f;
+  --dialog-outer: #2b1b0e;
+  --dialog-bg: #fbf3de;
+  --dialog-text: #3b2a1a;
+}

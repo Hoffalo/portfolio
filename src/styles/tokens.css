@@ -1,0 +1,94 @@
+/*
+ * Design tokens. Components only use these variables, so each theme is defined in one place.
+ * Dark = cyberpunk city, light = fantasy kingdom.
+ */
+:root,
+:root[data-theme="cyberpunk"] {
+  color-scheme: dark;
+  --bg: #0b0420;
+  --bg-pattern:
+    linear-gradient(rgba(45, 226, 230, 0.04) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(45, 226, 230, 0.04) 1px, transparent 1px) 0 0 / 32px 32px,
+    radial-gradient(ellipse at top, #1b0838, #0b0420 70%);
+  --surface: rgba(20, 12, 44, 0.88);
+  --surface-strong: #160c30;
+  --border: #3b2a6b;
+  --text: #e8e3ff;
+  --muted: #9d93c7;
+  --accent: #2de2e6;
+  --accent-2: #ff3cac;
+  --accent-3: #f9c80e;
+  --on-accent: #0b0420;
+  --focus: #f9c80e;
+  --glow: 0 0 14px rgba(45, 226, 230, 0.45);
+  --radius: 2px;
+  --font-display: "Silkscreen", ui-monospace, monospace;
+  --display-weight: 400;
+  --font-body: "VT323", ui-monospace, monospace;
+  --font-pixel: "Silkscreen", ui-monospace, monospace;
+  --body-size: 20px;
+  --level-0: #1a1533;
+  --level-1: #0e4a4f;
+  --level-2: #13797f;
+  --level-3: #1fb3b8;
+  --level-4: #2de2e6;
+}
+
+:root[data-theme="fantasy"] {
+  color-scheme: light;
+  --bg: #efe4cb;
+  --bg-pattern:
+    radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.55), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(176, 141, 87, 0.25), transparent 60%), #efe4cb;
+  --surface: rgba(251, 245, 230, 0.95);
+  --surface-strong: #fffaf0;
+  --border: #b08d57;
+  --text: #3b2a1a;
+  --muted: #7a6448;
+  --accent: #8e2b2b;
+  --accent-2: #2f5a2b;
+  --accent-3: #b8862b;
+  --on-accent: #fffaf0;
+  --focus: #b8862b;
+  --glow: 0 2px 0 rgba(59, 42, 26, 0.15), 0 6px 18px rgba(59, 42, 26, 0.12);
+  --radius: 6px;
+  --font-display: "Alegreya", Georgia, serif;
+  --display-weight: 700;
+  --font-body: "Pixelify Sans", system-ui, sans-serif;
+  --font-pixel: "Pixelify Sans", system-ui, sans-serif;
+  --body-size: 17px;
+  --level-0: #e3d5b5;
+  --level-1: #c9d9a6;
+  --level-2: #94bd6e;
+  --level-3: #5f9a45;
+  --level-4: #2f6a2b;
+}
+
+/* The Konami-code secret world: NES colours, black boxes and a pixel font. */
+:root[data-theme="retro"] {
+  color-scheme: dark;
+  --bg: #6888fc;
+  --bg-pattern: #6888fc;
+  --surface: #000000;
+  --surface-strong: #000000;
+  --border: #fcfcfc;
+  --text: #fcfcfc;
+  --muted: #bcbcbc;
+  --accent: #f8b800;
+  --accent-2: #f83800;
+  --accent-3: #00a800;
+  --on-accent: #000000;
+  --focus: #f8b800;
+  --glow: 4px 4px 0 #000000;
+  --radius: 0;
+  --font-display: "Silkscreen", ui-monospace, monospace;
+  --display-weight: 400;
+  --font-body: "VT323", ui-monospace, monospace;
+  --font-pixel: "Silkscreen", ui-monospace, monospace;
+  --body-size: 20px;
+  --level-0: #503000;
+  --level-1: #006800;
+  --level-2: #00a800;
+  --level-3: #58d854;
+  --level-4: #b8f818;
+}

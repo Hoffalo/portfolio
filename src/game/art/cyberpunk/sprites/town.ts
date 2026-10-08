@@ -1,0 +1,38 @@
+// Generated with the sheet; frame = [x, y, width, height, anchorX, anchorY].
+// The PNG is exported from the .aseprite file of the same name in /art. Keep frames in place when editing.
+import type { Frames } from "../../sprites";
+
+export const TOWN: Frames = {
+  residence: [77, 0, 72, 75, 1, 8],
+  corporate: [0, 0, 76, 88, 1, 1],
+  datacenter: [235, 0, 82, 68, 1, 1],
+  theater: [150, 0, 84, 74, 1, 1],
+  "crown-0": [85, 89, 26, 24, 1, 1],
+  "crown-1": [112, 89, 26, 24, 1, 1],
+  trunk: [224, 89, 16, 16, 1, 1],
+  palm: [456, 0, 30, 39, 2, 6],
+  bush: [262, 89, 16, 13, 1, 1],
+  lamp: [72, 89, 12, 26, 1, 1],
+  bench: [279, 89, 22, 12, 1, 1],
+  "flowers-0": [370, 89, 16, 9, 1, 1],
+  "flowers-1": [387, 89, 16, 9, 1, 1],
+  "flowers-2": [404, 89, 16, 9, 1, 1],
+  "mushrooms-0": [447, 89, 10, 8, 1, 1],
+  "mushrooms-1": [458, 89, 10, 8, 1, 1],
+  "rock-0": [421, 89, 12, 9, 1, 1],
+  "rock-1": [434, 89, 12, 9, 1, 1],
+  "barrel-0": [302, 89, 10, 12, 1, 1],
+  "barrel-1": [313, 89, 10, 12, 1, 1],
+  crate: [324, 89, 12, 12, 1, 1],
+  plant: [186, 89, 14, 20, 1, 1],
+  campfire: [241, 89, 20, 16, 1, 1],
+  "fence-post": [364, 89, 5, 10, 1, 1],
+  fountain: [405, 0, 50, 46, 1, 1],
+  stall: [0, 89, 38, 32, 1, 1],
+  barn: [318, 0, 86, 62, 1, 1],
+  vehicle: [139, 89, 46, 24, 1, 1],
+  pad: [337, 89, 26, 12, 1, 1],
+  drone: [469, 89, 18, 7, 1, 1],
+  trough: [201, 89, 22, 20, 1, 1],
+  billboard: [39, 89, 32, 28, 1, 1],
+};
