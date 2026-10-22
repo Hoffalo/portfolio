@@ -220,6 +220,12 @@ describe("room", () => {
     expect(shown(1).ids).toEqual(["p1", "p2", "p3"]);
     expect(shown(-1).ids).toEqual(["p7", "p0", "p1"]);
     expect(shown(5).wall.width).toBe(first.wall.width);
+    // After a turn, the piece that slid off sits one step beyond the end, ready to slide back in.
+    const pitch = first.wall.carousel!.pitch;
+    expect(first.wall.carousel?.ids).toEqual(["p0", "p1", "p2"]);
+    expect(shown(1).wall.carousel?.neighbours[0]?.bounds.x).toBe(
+      first.wall.fixtures.find((f) => f.id === "p0")!.bounds.x - pitch,
+    );
     const switches = first.wall.fixtures.filter((f) => f.action.type === "rotate");
     expect(switches.map((f) => f.action)).toEqual([
       { type: "rotate", step: -1 },

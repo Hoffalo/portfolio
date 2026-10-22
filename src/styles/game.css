@@ -38,6 +38,15 @@
   pointer-events: auto;
 }
 
+/* Carousel pieces follow the canvas as it slides (both set every frame); plaques fade mid-turn. */
+.fixture[data-carousel] {
+  transform: translateX(var(--carousel-shift, 0px));
+}
+
+.fixture[data-carousel] .plaque {
+  opacity: calc(1 - var(--carousel-fade, 0));
+}
+
 .hotspot {
   position: absolute;
   inset: 0;

@@ -14,12 +14,15 @@ interface Drawable {
 /**
  * Draws one frame: ground first, then every object sorted by how far down the screen its base is,
  * so the player correctly passes in front of and behind things.
+ *
+ * `carouselShift` slides the wall carousel's pieces sideways (in world pixels) while it turns.
  */
 export function paintWorld(
   scene: Omit<Frame, "focus">,
   art: ThemeArt,
   player: Player,
   actors: readonly Actor[],
+  carouselShift = 0,
 ) {
   const frame: Frame = { ...scene, focus: { x: player.x, y: player.y } };
   const { ctx, world } = frame;
@@ -28,17 +31,44 @@ export function paintWorld(
 
   art.ground(frame);
 
+  const { carousel } = world;
+  const onCarousel = (id: string) => carousel?.ids.includes(id) ?? false;
   const drawables: Drawable[] = [
     ...world.props.map((prop) => ({
       depth: bottom(prop.bounds),
       bounds: prop.bounds,
       paint: () => art.prop(frame, prop),
     })),
-    ...world.fixtures.map((fixture) => ({
-      depth: bottom(fixture.bounds),
-      bounds: fixture.bounds,
-      paint: () => paintFixture(frame, art, fixture.visual, fixture.bounds),
-    })),
+    ...world.fixtures
+      .filter((fixture) => !onCarousel(fixture.id))
+      .map((fixture) => ({
+        depth: bottom(fixture.bounds),
+        bounds: fixture.bounds,
+        paint: () => paintFixture(frame, art, fixture.visual, fixture.bounds),
+      })),
+    ...(carousel
+      ? [
+          {
+            depth: bottom(carousel.strip),
+            bounds: carousel.strip,
+            paint: () => {
+              const pieces = [
+                ...world.fixtures.filter((fixture) => onCarousel(fixture.id)),
+                ...(carouselShift === 0 ? [] : carousel.neighbours),
+              ];
+              ctx.save();
+              ctx.beginPath();
+              const { strip } = carousel;
+              ctx.rect(strip.x, strip.y, strip.width, strip.height);
+              ctx.clip();
+              const dx = Math.round(carouselShift);
+              for (const piece of pieces)
+                paintFixture(frame, art, piece.visual, { ...piece.bounds, x: piece.bounds.x + dx });
+              ctx.restore();
+            },
+          },
+        ]
+      : []),
     ...actors.map((actor) => ({
       depth: actor.y,
       bounds: { x: actor.x - 10, y: actor.y - 18, width: 20, height: 20 },

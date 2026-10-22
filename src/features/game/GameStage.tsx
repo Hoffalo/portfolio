@@ -80,6 +80,7 @@ export function GameStage({
               className="fixture"
               data-kind={fixture.visual.type}
               data-nearby={fixture.id === nearbyId || undefined}
+              data-carousel={world.carousel?.ids.includes(fixture.id) || undefined}
               style={{
                 left: fixture.bounds.x,
                 top: fixture.bounds.y,

@@ -134,6 +134,21 @@ export interface World {
   obstacles: Rect[];
   actors: ActorSpawn[];
   spawn: Vec & { facing: Facing };
+  /** A wall too crowded to show at once; its pieces slide along `strip` whenever `offset` changes. */
+  carousel?: Carousel;
+}
+
+export interface Carousel {
+  /** Which piece the carousel starts at; not wrapped, so its sign says which way it last turned. */
+  offset: number;
+  /** The stretch of wall between the switches; sliding pieces are cut off at its edges. */
+  strip: Rect;
+  /** How far one turn moves each piece. */
+  pitch: number;
+  /** The fixtures currently showing on the carousel. */
+  ids: readonly string[];
+  /** The pieces just beyond each end, drawn only while they slide in. */
+  neighbours: readonly { visual: FixtureVisual; bounds: Rect }[];
 }
 
 export function isBlockedIn(world: World) {
