@@ -57,7 +57,7 @@ describe("video sources", () => {
     expect(embedUrl(source)).toBe("https://drive.google.com/file/d/file9/preview");
   });
 
-  it("uses the poster of self-hosted files as thumbnail", () => {
-    expect(thumbnailUrl({ provider: "file", src: "/v.mp4", poster: "/p.jpg" })).toBe("/p.jpg");
+  it("has no thumbnail service for self-hosted files", () => {
+    expect(thumbnailUrl({ provider: "file", src: "/v.mp4" })).toBeUndefined();
   });
 });

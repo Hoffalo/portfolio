@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import type { Motif } from "../content/types";
 import type { Localized } from "../i18n/locale";
+import type { PopupVariant } from "../ui/popup/popupStack";
 
 /** The building that represents a section in the town. Each theme draws every kind its own way. */
 export type BuildingKind = "residence" | "corporate" | "datacenter" | "theater";
@@ -35,8 +36,10 @@ export interface Exhibit {
   caption?: string;
   /** A few short lines previewed above the object when the visitor walks up to it. */
   teaser?: string[];
-  /** Shown in the dialog box when the visitor interacts. Without it, `href` opens instead. */
+  /** Shown in a popup when the visitor interacts. Without it, `href` opens instead. */
   detail?: ReactNode;
+  /** Media-heavy details (a video, a grid of them) need the larger popup. Defaults to "dialog". */
+  detailLayout?: PopupVariant;
   href?: string;
   /** Picture drawn onto paintings, screens and portraits. */
   image?: string;

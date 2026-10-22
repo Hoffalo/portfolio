@@ -13,6 +13,9 @@ export interface Rect {
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
+/** An index that wraps around both ends of a list, so -1 is the last item. */
+export const wrap = (index: number, length: number) => ((index % length) + length) % length;
+
 export const intersects = (a: Rect, b: Rect) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 

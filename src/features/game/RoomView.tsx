@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { FURNITURE, type Placement } from "../../game/world/catalog";
-import { CAROUSEL_SIZE } from "../../game/world/roomLayout";
-import type { Fixture, FixtureAction } from "../../game/world/world";
-import { buildRoomWorld } from "../../game/world/roomLayout";
+import { runFixtureAction } from "../../game/world/fixtureActions";
+import { buildRoomWorld, carouselCentre, wallPiecesOf } from "../../game/world/roomLayout";
+import type { Fixture } from "../../game/world/world";
 import { useLocale } from "../../i18n/LocaleContext";
 import type { Exhibit, SectionDefinition } from "../../sections/types";
-import { openExternal } from "../../shared/openExternal";
-import { DialogBox } from "./DialogBox";
+import { useOpenExhibit } from "../../sections/useOpenExhibit";
+import { usePopups } from "../../ui/popup/PopupContext";
 import { GameStage } from "./GameStage";
 
 interface RoomViewProps {
@@ -16,49 +16,49 @@ interface RoomViewProps {
 
 export function RoomView({ section, onExit }: RoomViewProps) {
   const { t, ui } = useLocale();
+  const { isOpen: isInspecting } = usePopups();
+  const openExhibit = useOpenExhibit();
   const exhibits = section.useExhibits();
   // Which wall piece the carousel starts at; turning it rebuilds the wall but keeps the player in place.
   const [wallOffset, setWallOffset] = useState(0);
   const world = useMemo(() => buildRoomWorld(exhibits, wallOffset), [exhibits, wallOffset]);
-  const wallCount = exhibits.filter(
-    (exhibit) => FURNITURE[exhibit.furniture].placement === "wall",
-  ).length;
-  const [inspectedId, setInspectedId] = useState<string>();
-  const inspected = exhibits.find((exhibit) => exhibit.id === inspectedId);
+  const wallCount = wallPiecesOf(exhibits).length;
 
   const exhibitFor = ({ action }: Fixture) =>
     action.type === "inspect"
       ? exhibits.find((exhibit) => exhibit.id === action.exhibitId)
       : undefined;
 
-  const runAction = (action: FixtureAction) => {
-    if (action.type === "exitRoom") return onExit();
-    if (action.type === "rotate") return setWallOffset((offset) => offset + action.step);
-    if (action.type !== "inspect") return;
-    const exhibit = exhibits.find((candidate) => candidate.id === action.exhibitId);
-    if (exhibit?.detail) setInspectedId(exhibit.id);
-    else if (exhibit?.href) openExternal(exhibit.href);
+  const labelFor = (fixture: Fixture) => {
+    if (fixture.action.type === "rotate") return fixture.action.step < 0 ? ui.previous : ui.next;
+    return `${ui.inspect} · ${exhibitFor(fixture)?.label ?? ""}`;
   };
+
+  const runAction = (action: Fixture["action"]) =>
+    runFixtureAction(action, {
+      exitRoom: onExit,
+      rotate: ({ step }) => setWallOffset((offset) => offset + step),
+      inspect: ({ exhibitId }) => {
+        const exhibit = exhibits.find((candidate) => candidate.id === exhibitId);
+        if (exhibit) openExhibit(exhibit);
+      },
+    });
 
   const renderFixture = (fixture: Fixture) => {
     if (fixture.action.type === "rotate") {
       const { action } = fixture;
-      const label = action.step < 0 ? ui.previous : ui.next;
-      // The piece in the middle slot, counting from 1, so the visitor knows where they are.
-      const centre =
-        (((wallOffset + Math.floor(CAROUSEL_SIZE / 2)) % wallCount) + wallCount) % wallCount;
       return (
         <>
           <button
             type="button"
             className="hotspot"
-            aria-label={label}
-            title={label}
+            aria-label={labelFor(fixture)}
+            title={labelFor(fixture)}
             onClick={() => runAction(action)}
           />
           {action.step > 0 && (
             <span className="plaque carousel-count" data-placement="wall" aria-live="polite">
-              {centre + 1} / {wallCount}
+              {carouselCentre(wallOffset, wallCount) + 1} / {wallCount}
             </span>
           )}
         </>
@@ -72,14 +72,14 @@ export function RoomView({ section, onExit }: RoomViewProps) {
         <button
           type="button"
           className="hotspot"
-          aria-label={`${ui.inspect} · ${exhibit.label}`}
+          aria-label={labelFor(fixture)}
           title={exhibit.label}
           onClick={() => runAction(fixture.action)}
         />
         <span className="plaque" data-placement={placement} aria-hidden="true">
           {exhibit.caption ?? exhibit.label}
         </span>
-        {!inspected && <PeekCard exhibit={exhibit} placement={placement} />}
+        {!isInspecting && <PeekCard exhibit={exhibit} placement={placement} />}
       </>
     );
   };
@@ -89,15 +89,9 @@ export function RoomView({ section, onExit }: RoomViewProps) {
       world={world}
       worldKey={`room:${section.id}`}
       label={`${t(section.title)} — ${ui.gameLabel}`}
-      paused={Boolean(inspected)}
+      paused={isInspecting}
       renderFixture={renderFixture}
-      describeFixture={(fixture) =>
-        fixture.action.type === "rotate"
-          ? fixture.action.step < 0
-            ? ui.previous
-            : ui.next
-          : `${ui.inspect} · ${exhibitFor(fixture)?.label ?? ""}`
-      }
+      describeFixture={labelFor}
       onAction={runAction}
     >
       <header className="room-banner">
@@ -106,11 +100,6 @@ export function RoomView({ section, onExit }: RoomViewProps) {
           ← {ui.backToTown}
         </button>
       </header>
-      {inspected && (
-        <DialogBox title={inspected.label} onClose={() => setInspectedId(undefined)}>
-          {inspected.detail}
-        </DialogBox>
-      )}
     </GameStage>
   );
 }

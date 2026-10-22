@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, type RefObject } from "react";
 import { ART_BY_STYLE } from "../../game/art";
 import { paintWorld } from "../../game/art/paintWorld";
 import { spawnActors, stepActor } from "../../game/world/actors";
@@ -14,6 +14,7 @@ import {
   type FixtureAction,
   type World,
 } from "../../game/world/world";
+import { useLatest } from "../../shared/useLatest";
 import type { ArtStyle } from "../../theme/theme";
 import { computePixelViewport } from "./viewport";
 
@@ -41,11 +42,7 @@ const LOOK_AHEAD = 0.3;
  * keeping the HTML overlay aligned. React only hears about it when something meaningful changes.
  */
 export function useWorldSimulation(options: SimulationOptions) {
-  // Latest props are read through a ref so the loop isn't torn down on every render.
-  const latest = useRef(options);
-  useEffect(() => {
-    latest.current = options;
-  });
+  const latest = useLatest(options);
 
   const { worldKey, containerRef, canvasRef, overlayRef } = options;
 
@@ -140,5 +137,5 @@ export function useWorldSimulation(options: SimulationOptions) {
     });
 
     return stop;
-  }, [worldKey, containerRef, canvasRef, overlayRef]);
+  }, [worldKey, containerRef, canvasRef, overlayRef, latest]);
 }

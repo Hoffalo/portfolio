@@ -4,6 +4,7 @@ import { GITHUB_USERNAME } from "../../content/profile";
 import { useLocale } from "../../i18n/LocaleContext";
 import type { ContributionDay } from "../../services/github";
 import { formatDate } from "../../shared/formatDate";
+import { shorten } from "../../shared/text";
 import type { Exhibit, SectionDefinition } from "../types";
 import { ContributionGraph } from "./ContributionGraph";
 import { DevPage } from "./DevPage";
@@ -20,9 +21,6 @@ import {
   toWeekColumns,
 } from "./repoModel";
 import { useContributions, useGitHubRepos } from "./useGitHub";
-
-const shorten = (text: string, length: number) =>
-  text.length > length ? `${text.slice(0, length - 1).trimEnd()}…` : text;
 
 /**
  * A server room (or a wizard's library): a year of commits stitched or lit up on a display by the

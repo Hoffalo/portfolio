@@ -372,10 +372,10 @@
   font-size: 0.75rem;
 }
 
-/* Pokémon-style dialog box */
+/* Pokémon-style dialog box. It opens over the game and over boring mode alike, hence fixed. */
 
 .dialog-box {
-  position: absolute;
+  position: fixed;
   left: 50%;
   bottom: 1rem;
   z-index: 10;
@@ -399,6 +399,27 @@
     transform: translate(-50%, 1.5rem);
     opacity: 0;
   }
+}
+
+/* Covered popups stay mounted (keeping their scroll position) but must not show. */
+.dialog-box[hidden],
+.popup-backdrop[hidden] {
+  display: none;
+}
+
+/* The theater holds video, so it takes the middle of the screen instead of the bottom edge. */
+.dialog-box--theater {
+  top: calc(var(--top-bar-height, 0px) + 1.5rem);
+  bottom: auto;
+  width: min(56rem, calc(100% - 2rem));
+  max-height: calc(100dvh - var(--top-bar-height, 0px) - 2.5rem);
+}
+
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .dialog-box__header {

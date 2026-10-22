@@ -21,7 +21,8 @@ Pushes to `main` deploy through Vercel (the framework preset detects Vite automa
 
 | Folder                    | Responsibility                                                                                                                           |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/content/`            | **Your data.** Profile, career, skills, videos, repo descriptions. Plain TypeScript objects with `{ en, pt }` text.                      |
+| `src/content/`            | **Your data.** Profile, career, skills, repo descriptions. Plain TypeScript objects with `{ en, pt }` text.                              |
+| `videos/`                 | **Your videos.** Every file here appears in the Filmmaking section; every folder is a collection. See `videos/README.md`.                |
 | `src/sections/`           | One folder per portfolio section. Each exports a `SectionDefinition`: its building, its boring-mode page, and its room's furniture.      |
 | `src/game/engine/`        | Framework-free game logic: input, movement and collision, camera, the frame loop.                                                        |
 | `src/game/world/`         | Builds the town and room layouts (positions, collisions, doors) from the registered sections.                                            |
@@ -31,26 +32,14 @@ Pushes to `main` deploy through Vercel (the framework preset detects Vite automa
 | `src/features/boring/`    | The sidebar reading layout.                                                                                                              |
 | `src/i18n/`, `src/theme/` | Language and theme state, both remembered between visits.                                                                                |
 | `src/services/`           | GitHub API access and video-provider URLs.                                                                                               |
+| `src/ui/`                 | Shared components, including the popup stack used by rooms and boring mode alike.                                                        |
+| `docs/decisions.md`       | Why the code is shaped the way it is: the patterns in use, and the ones considered and rejected.                                         |
 
 ## Common changes
 
 **A new job.** Add an entry at the top of `experiences` in `src/content/career.ts`. A new desk appears in the career room and a new card in boring mode. Give it an `accent` (the organisation's colour, used for its pennant or monitor) and a `motif` (the prop beside its desk: `camera`, `chart`, `robot`, `clapper`, `palette`, `podium`, `punching-bag`). Desks run oldest to newest, and roles at the same organisation share one desk, so a promotion just means adding the new role with the same `organization`.
 
-**A new video.** Add an entry to `src/content/videos.ts`:
-
-```ts
-{
-  id: "brasa-2027-teaser",
-  title: { en: "BRASA 2027 Teaser", pt: "Teaser BRASA 2027" },
-  client: "BRASA",
-  role: { en: "Director & editor", pt: "Direção e edição" },
-  year: 2027,
-  orientation: "landscape", // "portrait" for Shorts, Reels and vertical OOH
-  source: { provider: "youtube", id: "dQw4w9WgXcQ" },
-}
-```
-
-The thumbnail is fetched automatically and hangs on the Filmmaking gallery wall as a painting (or an LED frame in the city).
+**A new video.** Drop it into `videos/` (or a folder inside it, to make a collection). Its title comes from the file name; a JSON file with the same name adds a description. `videos/README.md` has the full format, including videos hosted on YouTube and the `links.json` file for tiles that open another site.
 
 **Better repo descriptions or ordering.** Edit `src/content/dev.ts` (`featuredRepos`, `hiddenRepos`, `repoDescriptions`). The repo list itself comes live from the GitHub API. Each repo is drawn as an object that matches its subject, guessed from its name and description ("music" becomes a jukebox, "game" an arcade cabinet). If the guess is wrong, set it in `repoMotifs`.
 
@@ -68,10 +57,10 @@ The town gains a building (the avenue grows north two buildings per row), the ro
 
 ## Hosting your videos
 
-Use **YouTube** (Unlisted works fine) or **Vimeo** rather than Google Drive:
+Small, web-exported MP4s can live in `videos/` and ship with the site. Long pieces belong on **YouTube** (Unlisted works fine) or **Vimeo**, declared with a JSON `source`:
 
-- **Thumbnails for free.** YouTube serves a thumbnail for every video ID, so a painting needs only the ID. Drive thumbnails only work for files shared publicly, and they're slow and unreliable.
-- **Real streaming.** Adaptive quality, fast start and mobile support. Drive previews are low quality, buffer a lot, and show "too many views" errors on popular files.
+- **Real streaming.** Adaptive quality, fast start and mobile support, and no 100 MB GitHub file limit.
+- **Thumbnails for free.** YouTube serves one for every video ID.
 - **Embeds that behave.** The player uses `youtube-nocookie.com` so visitors aren't tracked until they press play.
 
-Drive is still supported (`{ provider: "drive", id }`) for client work you can't post publicly. Make sure the file is shared as "Anyone with the link". For short loops or private OOH pieces, export a compressed MP4 into `public/videos/` and use `{ provider: "file", src: "/videos/name.mp4", poster: "/thumbnails/name.jpg" }`. Keep those files small, because they ship with the site.
+Drive is supported too (`"provider": "drive"`) for client work you can't post publicly. Share the file as "Anyone with the link". Its previews are lower quality and buffer more.

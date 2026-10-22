@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { profile, TOWN_SIGNS } from "../../content/profile";
 import type { Fixture, FixtureAction } from "../../game/world/world";
+import { runFixtureAction } from "../../game/world/fixtureActions";
 import { buildTownWorld } from "../../game/world/townLayout";
 import { useLocale } from "../../i18n/LocaleContext";
 import { findSection, sections } from "../../sections/registry";
@@ -36,10 +37,11 @@ export function TownView({ arrivingFrom, onEnter }: TownViewProps) {
     return undefined;
   };
 
-  const runAction = (action: FixtureAction) => {
-    if (action.type === "enterSection") onEnter(action.sectionId);
-    if (action.type === "openLink") openExternal(action.url);
-  };
+  const runAction = (action: FixtureAction) =>
+    runFixtureAction(action, {
+      enterSection: ({ sectionId }) => onEnter(sectionId),
+      openLink: ({ url }) => openExternal(url),
+    });
 
   const renderFixture = (fixture: Fixture) => {
     const target = resolve(fixture);

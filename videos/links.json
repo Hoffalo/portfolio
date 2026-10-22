@@ -1,0 +1,10 @@
+[
+  {
+    "title": { "en": "My YouTube channel", "pt": "Meu canal no YouTube" },
+    "description": {
+      "en": "Everything else I've filmed and edited.",
+      "pt": "Todo o resto que filmei e editei."
+    },
+    "url": "https://www.youtube.com/@REPLACE-WITH-YOUR-HANDLE"
+  }
+]

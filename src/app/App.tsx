@@ -2,6 +2,7 @@ import { BoringView } from "../features/boring/BoringView";
 import { GameView } from "../features/game/GameView";
 import { useLocale } from "../i18n/LocaleContext";
 import { findSection, sections } from "../sections/registry";
+import { PopupProvider } from "../ui/popup/PopupProvider";
 import { routeToHash } from "./route";
 import { TopBar } from "./TopBar";
 import { useRoute } from "./useRoute";
@@ -17,26 +18,29 @@ export function App() {
         {ui.skipToContent}
       </a>
       <TopBar route={route} />
-      {route.view === "read" ? (
-        <BoringView section={findSection(route.sectionId) ?? firstSection} />
-      ) : (
-        <>
-          <GameView
-            roomId={route.view === "room" ? route.sectionId : undefined}
-            onEnterRoom={(sectionId) => navigate({ view: "room", sectionId })}
-            onLeaveRoom={() => navigate({ view: "town" })}
-          />
-          <a
-            className="mobile-hint"
-            href={routeToHash({
-              view: "read",
-              sectionId: route.view === "room" ? route.sectionId : firstSection.id,
-            })}
-          >
-            {ui.mobileHint}
-          </a>
-        </>
-      )}
+      {/* Keyed by route so changing page or room closes whatever popups were open. */}
+      <PopupProvider key={routeToHash(route)}>
+        {route.view === "read" ? (
+          <BoringView section={findSection(route.sectionId) ?? firstSection} />
+        ) : (
+          <>
+            <GameView
+              roomId={route.view === "room" ? route.sectionId : undefined}
+              onEnterRoom={(sectionId) => navigate({ view: "room", sectionId })}
+              onLeaveRoom={() => navigate({ view: "town" })}
+            />
+            <a
+              className="mobile-hint"
+              href={routeToHash({
+                view: "read",
+                sectionId: route.view === "room" ? route.sectionId : firstSection.id,
+              })}
+            >
+              {ui.mobileHint}
+            </a>
+          </>
+        )}
+      </PopupProvider>
     </div>
   );
 }

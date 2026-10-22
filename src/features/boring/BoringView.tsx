@@ -6,10 +6,13 @@ import { sections } from "../../sections/registry";
 import type { SectionDefinition } from "../../sections/types";
 import { ExternalLink } from "../../ui/ExternalLink";
 
+/** Two digits, like chapters in a printed portfolio. */
+const sectionNumber = (index: number) => String(index + 1).padStart(2, "0");
+
 export function BoringView({ section }: { section: SectionDefinition }) {
   const { t, ui } = useLocale();
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const number = String(sections.indexOf(section) + 1).padStart(2, "0");
+  const number = sectionNumber(sections.indexOf(section));
 
   // Moving focus to the new heading tells screen readers the page changed, and resets scroll.
   useEffect(() => {
@@ -43,7 +46,7 @@ export function BoringView({ section }: { section: SectionDefinition }) {
                   href={routeToHash({ view: "read", sectionId: item.id })}
                   aria-current={item.id === section.id ? "page" : undefined}
                 >
-                  <span className="reader__nav-number">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="reader__nav-number">{sectionNumber(index)}</span>
                   <span>
                     <span className="reader__nav-title">{t(item.title)}</span>
                     <span className="reader__nav-tagline">{t(item.tagline)}</span>

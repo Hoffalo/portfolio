@@ -1,37 +1,15 @@
-import type { VideoWork } from "../../content/videos";
 import { useLocale } from "../../i18n/LocaleContext";
 import { embedUrl, watchUrl } from "../../services/videoSources";
 import { ExternalLink } from "../../ui/ExternalLink";
-import { videoThumbnail } from "./videoThumbnail";
-
-function ComingSoon({ video }: { video: VideoWork }) {
-  const { t, ui } = useLocale();
-  return (
-    <div className="video-placeholder">
-      <span className="video-placeholder__title">{t(video.title)}</span>
-      <span className="video-placeholder__badge">{ui.comingSoon}</span>
-    </div>
-  );
-}
-
-export function VideoThumbnail({ video }: { video: VideoWork }) {
-  const src = videoThumbnail(video);
-  return (
-    <div className={`video-thumb video-thumb--${video.orientation}`}>
-      {src ? <img src={src} alt="" loading="lazy" /> : <ComingSoon video={video} />}
-    </div>
-  );
-}
+import type { ShelfItem, VideoWork } from "./catalog/types";
 
 export function VideoPlayer({ video }: { video: VideoWork }) {
   const { t } = useLocale();
   const { source } = video;
   return (
     <div className={`video-player video-player--${video.orientation}`}>
-      {!source ? (
-        <ComingSoon video={video} />
-      ) : source.provider === "file" ? (
-        <video src={source.src} poster={source.poster} controls autoPlay playsInline />
+      {source.provider === "file" ? (
+        <video src={source.src} poster={video.poster} controls autoPlay playsInline />
       ) : (
         <iframe
           src={embedUrl(source)}
@@ -44,15 +22,54 @@ export function VideoPlayer({ video }: { video: VideoWork }) {
   );
 }
 
-export function VideoCredits({ video }: { video: VideoWork }) {
+/** What a video's popup holds; its title is already on the popup's nameplate. */
+export function VideoDetail({ video }: { video: VideoWork }) {
   const { t, ui } = useLocale();
   return (
-    <div className="video-credits">
-      <h3 className="video-credits__title">{t(video.title)}</h3>
-      <p className="muted">
-        {video.client} · {t(video.role)} · {video.year}
-      </p>
-      {video.source && <ExternalLink href={watchUrl(video.source)}>{ui.watch}</ExternalLink>}
+    <div className="video-detail">
+      <VideoPlayer video={video} />
+      {video.description && <p className="video-detail__description">{t(video.description)}</p>}
+      {video.source.provider !== "file" && (
+        <ExternalLink href={watchUrl(video.source)}>{ui.watch}</ExternalLink>
+      )}
     </div>
   );
 }
+
+interface ShelfTileProps {
+  item: ShelfItem;
+  thumbnail?: string;
+  onOpen: () => void;
+}
+
+/** A thumbnail with a nameplate. Collections and links say what they are, since they don't play. */
+export function ShelfTile({ item, thumbnail, onOpen }: ShelfTileProps) {
+  const { t, ui } = useLocale();
+  const title = t(item.title);
+  return (
+    <button
+      type="button"
+      className="shelf-tile"
+      data-kind={item.kind}
+      aria-label={item.kind === "link" ? `${title} ↗` : title}
+      onClick={onOpen}
+    >
+      <span className="shelf-tile__frame" data-orientation={orientationOf(item)}>
+        {thumbnail ? (
+          <img src={thumbnail} alt="" loading="lazy" />
+        ) : (
+          <span className="shelf-tile__placeholder" aria-hidden="true">
+            ▶
+          </span>
+        )}
+        {item.kind === "collection" && (
+          <span className="shelf-tile__badge">{ui.videoCount(item.videos.length)}</span>
+        )}
+        {item.kind === "link" && <span className="shelf-tile__badge">↗</span>}
+      </span>
+      <span className="shelf-tile__title">{title}</span>
+    </button>
+  );
+}
+
+const orientationOf = (item: ShelfItem) => (item.kind === "video" ? item.orientation : "landscape");

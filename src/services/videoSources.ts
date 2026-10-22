@@ -1,12 +1,20 @@
-/**
- * Where a video is hosted. Each provider knows how to derive a thumbnail, an embeddable
- * player URL and a public watch URL from just an ID, so the content file stays one line per video.
- */
-export type VideoSource =
+/** A video on a streaming platform, identified by the ID in its URL. */
+export type HostedVideoSource =
   | { provider: "youtube"; id: string }
   | { provider: "vimeo"; id: string }
-  | { provider: "drive"; id: string }
-  | { provider: "file"; src: string; poster?: string };
+  | { provider: "drive"; id: string };
+
+/**
+ * Where a video lives. Each provider adapts its own URL scheme to one interface (thumbnail,
+ * embeddable player, public page), so the rest of the site never needs to know which one it is.
+ */
+export type VideoSource = HostedVideoSource | { provider: "file"; src: string };
+
+export const HOSTED_PROVIDERS: readonly HostedVideoSource["provider"][] = [
+  "youtube",
+  "vimeo",
+  "drive",
+];
 
 interface ProviderAdapter<S extends VideoSource> {
   thumbnail(source: S): string | undefined;
@@ -37,7 +45,8 @@ const adapters: Adapters = {
     watch: ({ id }) => `https://drive.google.com/file/d/${id}/view`,
   },
   file: {
-    thumbnail: ({ poster }) => poster,
+    // A plain file has no thumbnail service; the videos section captures a frame instead.
+    thumbnail: () => undefined,
     embed: ({ src }) => src,
     watch: ({ src }) => src,
   },

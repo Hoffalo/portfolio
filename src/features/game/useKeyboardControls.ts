@@ -1,18 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { directionForKey, INTERACT_KEYS, type DirectionInput } from "../../game/engine/input";
+import { isTypingTarget } from "../../shared/isTypingTarget";
+import { useLatest } from "../../shared/useLatest";
 
 interface KeyboardOptions {
   input: DirectionInput;
   enabled: boolean;
   onInteract: () => void;
-}
-
-/** Typing in a form field or using a focused control must never move the character. */
-function isEditable(target: EventTarget | null) {
-  return (
-    target instanceof HTMLElement &&
-    (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
-  );
 }
 
 /** Enter and Space already activate a focused button; handling them too would trigger it twice. */
@@ -26,10 +20,7 @@ function isNativelyActivated(event: KeyboardEvent) {
 }
 
 export function useKeyboardControls({ input, enabled, onInteract }: KeyboardOptions) {
-  const interact = useRef(onInteract);
-  useEffect(() => {
-    interact.current = onInteract;
-  });
+  const interact = useLatest(onInteract);
 
   useEffect(() => {
     if (!enabled) {
@@ -40,7 +31,7 @@ export function useKeyboardControls({ input, enabled, onInteract }: KeyboardOpti
     const onKeyDown = (event: KeyboardEvent) => {
       // Keys something else already handled (e.g. E closing a dialog) must not also act in the game.
       if (event.defaultPrevented) return;
-      if (event.ctrlKey || event.metaKey || event.altKey || isEditable(event.target)) return;
+      if (event.ctrlKey || event.metaKey || event.altKey || isTypingTarget(event.target)) return;
       const direction = directionForKey(event.key);
       if (direction) {
         event.preventDefault();
@@ -69,5 +60,5 @@ export function useKeyboardControls({ input, enabled, onInteract }: KeyboardOpti
       removeEventListener("blur", releaseAll);
       input.clear();
     };
-  }, [input, enabled]);
+  }, [input, enabled, interact]);
 }
