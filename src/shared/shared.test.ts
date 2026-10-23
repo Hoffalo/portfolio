@@ -54,13 +54,21 @@ describe("parseVideoLink", () => {
     ["https://player.vimeo.com/video/76979871", "vimeo", "76979871"],
     ["https://drive.google.com/file/d/file9/view?usp=sharing", "drive", "file9"],
     ["https://drive.google.com/open?id=file9", "drive", "file9"],
+    ["https://www.instagram.com/reel/DUT_QaYDJOk/", "instagram", "DUT_QaYDJOk"],
+    ["https://www.instagram.com/p/DUT_QaYDJOk/?igsh=share", "instagram", "DUT_QaYDJOk"],
+    ["https://www.instagram.com/brasa/reel/DUT_QaYDJOk/", "instagram", "DUT_QaYDJOk"],
   ])("reads %s", (link, provider, id) => {
     const parsed = parseVideoLink(link);
 
     expect(parsed?.source).toEqual({ provider, id });
   });
 
-  it.each(["https://www.youtube.com/@hoffalo", "https://example.com/watch?v=abc", "not a link"])(
+  it.each([
+    "https://www.youtube.com/@hoffalo",
+    "https://www.instagram.com/hoffalo/",
+    "https://example.com/watch?v=abc",
+    "not a link",
+  ])(
     "rejects %s, which isn't a video",
     (link) => {
       expect(parseVideoLink(link)).toBeUndefined();
@@ -69,6 +77,11 @@ describe("parseVideoLink", () => {
 
   it("recognises YouTube Shorts as vertical", () => {
     expect(parseVideoLink("https://youtube.com/shorts/abc123")?.vertical).toBe(true);
+  });
+
+  it("recognises Instagram Reels as vertical, but not other posts", () => {
+    expect(parseVideoLink("https://www.instagram.com/reel/abc123/")?.vertical).toBe(true);
+    expect(parseVideoLink("https://www.instagram.com/p/abc123/")?.vertical).toBe(false);
   });
 });
 
@@ -85,5 +98,13 @@ describe("video sources", () => {
     expect(embedUrl({ provider: "drive", id: "file9" })).toBe(
       "https://drive.google.com/file/d/file9/preview",
     );
+  });
+
+  it("derives Instagram embed URLs, with no thumbnail to fall back on", () => {
+    const source = { provider: "instagram", id: "abc123" } as const;
+
+    expect(embedUrl(source)).toBe("https://www.instagram.com/p/abc123/embed");
+    expect(watchUrl(source)).toBe("https://www.instagram.com/p/abc123/");
+    expect(thumbnailUrl(source)).toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 # Videos
 
-Everything in this folder appears in the Filmmaking section: on the gallery wall in play mode and as a grid in boring mode. The videos themselves live on **YouTube** (Unlisted works), **Vimeo** or **Google Drive**. This folder only holds a JSON file per tile, plus optional thumbnail images. Nothing needs registering in code. Save a file here and it shows up (while `npm run dev` is running, the page updates by itself).
+Everything in this folder appears in the Filmmaking section: on the gallery wall in play mode and as a grid in boring mode. The videos themselves live on **YouTube** (Unlisted works), **Vimeo**, **Google Drive** or **Instagram**. This folder only holds a JSON file per tile, plus optional thumbnail images. Nothing needs registering in code. Save a file here and it shows up (while `npm run dev` is running, the page updates by itself).
 
 ```
 videos/
@@ -13,10 +13,10 @@ videos/
 ## Rules
 
 - **Order** follows file names. Start them with numbers (`01-`, `02-`) to choose it. The numbers never show. Inside a collection, videos keep the order they're written in. `links.json` comes last.
-- **Links** are pasted straight from the browser or a Share button: `youtube.com/watch?v=…`, `youtu.be/…`, `youtube.com/shorts/…`, `vimeo.com/…`, `drive.google.com/file/d/…/view`. Drive files must be shared as "Anyone with the link".
-- **Thumbnails** come from YouTube, Vimeo or Drive automatically. To use your own, put an image in this folder and name it in `"thumbnail"` (its path inside `videos/`, e.g. `"thumbnails/teaser.jpg"`), or give a full URL. A collection without one uses its first video's.
+- **Links** are pasted straight from the browser or a Share button: `youtube.com/watch?v=…`, `youtu.be/…`, `youtube.com/shorts/…`, `vimeo.com/…`, `drive.google.com/file/d/…/view`, `instagram.com/reel/…`, `instagram.com/p/…`. Drive files must be shared as "Anyone with the link".
+- **Thumbnails** come from YouTube, Vimeo or Drive automatically. Instagram doesn't offer one, so an Instagram video without a `"thumbnail"` shows a blank tile. To use your own, put an image in this folder and name it in `"thumbnail"` (its path inside `videos/`, e.g. `"thumbnails/teaser.jpg"`), or give a full URL. A collection without one uses its first video's.
 - **Text** can be one string for both languages, or `{ "en": "…", "pt": "…" }`.
-- **Orientation**: YouTube Shorts show upright on their own. For any other vertical video, add `"orientation": "portrait"`.
+- **Orientation**: YouTube Shorts and Instagram Reels show upright on their own. For any other vertical video, add `"orientation": "portrait"`.
 
 ## A video on its own
 

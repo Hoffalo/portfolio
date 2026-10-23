@@ -89,7 +89,7 @@ export class VideoCatalogBuilder {
     const link = parseVideoLink(readString(content.url) ?? "");
     const title = readText(content.title) ?? fallbackTitle;
     if (!link) {
-      this.problems.push(`${where}: "url" must be a YouTube, Vimeo or Google Drive video link.`);
+      this.problems.push(`${where}: "url" must be a YouTube, Vimeo, Google Drive or Instagram video link.`);
       return undefined;
     }
     if (!title) {

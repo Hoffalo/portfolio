@@ -4,7 +4,7 @@ import { VideoCatalogBuilder } from "./catalog/VideoCatalogBuilder";
  * Adapter between Vite and the catalog: Vite lists the files in /videos at build time (and again
  * whenever one changes during `npm run dev`), keyed by their path from the project root. The
  * catalog only understands paths relative to the videos folder, so the prefix is stripped here.
- * The videos themselves live on YouTube, Vimeo or Drive; only JSON and thumbnails are bundled.
+ * The videos themselves live on YouTube, Vimeo, Drive or Instagram; only JSON and thumbnails are bundled.
  * Globs must be literal strings for Vite to read them, which is why each is written out in full.
  */
 

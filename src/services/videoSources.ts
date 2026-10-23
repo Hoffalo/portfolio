@@ -1,4 +1,4 @@
-export type VideoProvider = "youtube" | "vimeo" | "drive";
+export type VideoProvider = "youtube" | "vimeo" | "drive" | "instagram";
 
 /** A video on a streaming platform, identified by the ID in its link. */
 export interface VideoSource {
@@ -13,9 +13,10 @@ export interface VideoSource {
 interface ProviderAdapter {
   /** The video's ID if the link is one of this provider's videos. */
   idFrom(link: URL): string | undefined;
-  /** Vertical formats (YouTube Shorts) can be recognised from the link alone. */
+  /** Vertical formats (YouTube Shorts, Instagram Reels) can be recognised from the link alone. */
   isVertical(link: URL): boolean;
-  thumbnail(id: string): string;
+  /** Undefined when the platform has no public image URL; the JSON then has to name one. */
+  thumbnail(id: string): string | undefined;
   embed(id: string): string;
   watch(id: string): string;
 }
@@ -27,6 +28,7 @@ const isHost = (link: URL, domain: string) =>
   link.hostname === domain || link.hostname.endsWith(`.${domain}`);
 
 const YOUTUBE_ID_PATHS = new Set(["shorts", "embed", "live"]);
+const INSTAGRAM_ID_PATHS = new Set(["reel", "reels", "p", "tv"]);
 
 const adapters: Record<VideoProvider, ProviderAdapter> = {
   youtube: {
@@ -65,6 +67,20 @@ const adapters: Record<VideoProvider, ProviderAdapter> = {
     thumbnail: (id) => `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
     embed: (id) => `https://drive.google.com/file/d/${id}/preview`,
     watch: (id) => `https://drive.google.com/file/d/${id}/view`,
+  },
+  instagram: {
+    idFrom: (link) => {
+      if (!isHost(link, "instagram.com")) return undefined;
+      // Profile links prefix the post: instagram.com/<user>/reel/<id>.
+      const segments = pathSegments(link);
+      const index = segments.findIndex((segment) => INSTAGRAM_ID_PATHS.has(segment));
+      return index === -1 ? undefined : segments[index + 1];
+    },
+    isVertical: (link) => pathSegments(link).some((segment) => /^reels?$/.test(segment)),
+    thumbnail: () => undefined,
+    // "/p/" serves reels and posts alike.
+    embed: (id) => `https://www.instagram.com/p/${id}/embed`,
+    watch: (id) => `https://www.instagram.com/p/${id}/`,
   },
 };
 
