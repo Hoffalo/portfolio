@@ -1,13 +1,14 @@
 import type { Exhibit } from "../../sections/types";
-<<<<<<< HEAD
 import { bottom, wrap, type Rect } from "../engine/geometry";
 import { FURNITURE, placeProp, propSolid, PROP_SIZE, type Placement } from "./catalog";
-import { baseOf, type Fixture, type Prop, type World } from "./world";
-=======
-import { bottom, type Rect } from "../engine/geometry";
-import { FURNITURE, placeProp, propSolid, PROP_SIZE } from "./catalog";
-import { baseOf, type Carousel, type Fixture, type FixtureVisual, type World } from "./world";
->>>>>>> 164a1909a3d899b53163f654faefea070b9a5627
+import {
+  baseOf,
+  type Carousel,
+  type Fixture,
+  type FixtureVisual,
+  type Prop,
+  type World,
+} from "./world";
 
 const WALL_HEIGHT = 44;
 const SIDE_WALL = 8;
@@ -36,7 +37,15 @@ interface RoomPlan {
   width: number;
   height: number;
   cx: number;
-  wall: { pieces: RoomExhibit[]; carousel: boolean; slotWidth: number; span: number };
+  wall: {
+    /** Every wall piece; only `pieces` are showing when the wall is a carousel. */
+    all: RoomExhibit[];
+    pieces: RoomExhibit[];
+    offset: number;
+    carousel: boolean;
+    slotWidth: number;
+    span: number;
+  };
   floor: { pieces: RoomExhibit[]; columns: number; rows: number; left: number };
   entrance: { pieces: RoomExhibit[]; lobbyHeight: number };
 }
@@ -59,7 +68,8 @@ export function buildRoomWorld(exhibits: readonly RoomExhibit[], wallOffset = 0)
   const plan = planRoom(exhibits, wallOffset);
   const floor = standOnFloor(plan);
   const entrance = standAtEntrance(plan);
-  const fixtures = [...hangOnWall(plan), ...floor.fixtures, ...entrance.fixtures];
+  const wall = hangOnWall(plan);
+  const fixtures = [...wall.fixtures, ...floor.fixtures, ...entrance.fixtures];
   const mat = { x: plan.cx - MAT.width / 2, y: plan.height - MAT.height, ...MAT };
   const props = furnish(plan);
 
@@ -96,6 +106,7 @@ export function buildRoomWorld(exhibits: readonly RoomExhibit[], wallOffset = 0)
     ],
     actors: [],
     spawn: { x: plan.cx, y: plan.height - 16, facing: "up" },
+    carousel: wall.carousel,
   };
 }
 
@@ -156,7 +167,14 @@ function planRoom(exhibits: readonly RoomExhibit[], wallOffset: number): RoomPla
     width,
     height,
     cx: Math.round(width / 2),
-    wall: { pieces: onWall, carousel, slotWidth, span: wallSpan },
+    wall: {
+      all: allOnWall,
+      pieces: onWall,
+      offset: wallOffset,
+      carousel,
+      slotWidth,
+      span: wallSpan,
+    },
     floor: {
       pieces: onFloor,
       columns,
@@ -177,7 +195,29 @@ function exhibitFixture(exhibit: RoomExhibit, bounds: Rect, zone: Rect): Fixture
   };
 }
 
-function hangOnWall({ width, wall }: RoomPlan): Fixture[] {
+const furnitureVisual = (exhibit: RoomExhibit): FixtureVisual => ({
+  type: "furniture",
+  kind: exhibit.furniture,
+  details: {
+    image: exhibit.image,
+    accent: exhibit.accent,
+    lit: exhibit.lit,
+    levels: exhibit.levels,
+    motif: exhibit.motif,
+  },
+});
+
+/** Where a piece hangs when centred in a slot of the given width. */
+function hang(exhibit: RoomExhibit, slotX: number, slot: number): Rect {
+  const size = sizeOf(exhibit);
+  return {
+    x: slotX + Math.round((slot - size.width) / 2),
+    y: WALL_HEIGHT - size.height - 6,
+    ...size,
+  };
+}
+
+function hangOnWall({ width, wall }: RoomPlan): { fixtures: Fixture[]; carousel?: Carousel } {
   const fixtures: Fixture[] = [];
   let x = Math.round((width - wall.span) / 2);
 
@@ -191,24 +231,53 @@ function hangOnWall({ width, wall }: RoomPlan): Fixture[] {
     });
     x += SWITCH.width + WALL_GAP;
   };
-<<<<<<< HEAD
 
   if (wall.carousel) wallSwitch(-1);
+  const stripStart = x;
   for (const exhibit of wall.pieces) {
-    const size = sizeOf(exhibit);
-    const slot = wall.carousel ? wall.slotWidth : size.width;
-    const pieceX = x + Math.round((slot - size.width) / 2);
+    const slot = wall.carousel ? wall.slotWidth : sizeOf(exhibit).width;
+    const bounds = hang(exhibit, x, slot);
     fixtures.push(
-      exhibitFixture(
-        exhibit,
-        { x: pieceX, y: WALL_HEIGHT - size.height - 6, ...size },
-        { x: pieceX - 2, y: WALL_HEIGHT, width: size.width + 4, height: REACH },
-      ),
+      exhibitFixture(exhibit, bounds, {
+        x: bounds.x - 2,
+        y: WALL_HEIGHT,
+        width: bounds.width + 4,
+        height: REACH,
+      }),
     );
     x += slot + WALL_GAP;
   }
+  const stripEnd = x;
   if (wall.carousel) wallSwitch(1);
-  return fixtures;
+
+  return {
+    fixtures,
+    carousel: wall.carousel ? turningWall(wall, stripStart, stripEnd) : undefined,
+  };
+}
+
+/** What the renderer needs to slide the wall pieces along when the carousel turns. */
+function turningWall(wall: RoomPlan["wall"], stripStart: number, stripEnd: number): Carousel {
+  const pitch = wall.slotWidth + WALL_GAP;
+  return {
+    offset: wall.offset,
+    // Each edge sits halfway between a switch and the nearest slot.
+    strip: {
+      x: stripStart - WALL_GAP / 2,
+      y: 0,
+      width: stripEnd - stripStart,
+      height: WALL_HEIGHT,
+    },
+    pitch,
+    ids: wall.pieces.map((exhibit) => exhibit.id),
+    neighbours: [-1, CAROUSEL_SIZE].map((slot) => {
+      const exhibit = wall.all[wrap(wall.offset + slot, wall.all.length)]!;
+      return {
+        visual: furnitureVisual(exhibit),
+        bounds: hang(exhibit, stripStart + slot * pitch, wall.slotWidth),
+      };
+    }),
+  };
 }
 
 function standOnFloor({ floor }: RoomPlan): Placed {
@@ -217,60 +286,6 @@ function standOnFloor({ floor }: RoomPlan): Placed {
     const size = sizeOf(exhibit);
     const cellX = floor.left + (index % floor.columns) * CELL.width;
     const cellY = WALL_HEIGHT + 16 + Math.floor(index / floor.columns) * CELL.height;
-=======
-  const hang = (exhibit: RoomExhibit, slotX: number, slot: number): Rect => {
-    const size = FURNITURE[exhibit.furniture];
-    const x = slotX + Math.round((slot - size.width) / 2);
-    return { x, y: WALL_HEIGHT - size.height - 6, ...size };
-  };
-  if (carousel) wallSwitch(-1);
-  const stripStart = wallX;
-  for (const exhibit of onWall) {
-    const slot = carousel ? slotWidth : FURNITURE[exhibit.furniture].width;
-    const bounds = hang(exhibit, wallX, slot);
-    fixtures.push(
-      inspect(exhibit, bounds, {
-        x: bounds.x - 2,
-        y: WALL_HEIGHT,
-        width: bounds.width + 4,
-        height: 14,
-      }),
-    );
-    wallX += slot + WALL_GAP;
-  }
-  const stripEnd = wallX;
-  if (carousel) wallSwitch(1);
-
-  const pitch = slotWidth + WALL_GAP;
-  const turningWall: Carousel | undefined = carousel
-    ? {
-        offset: wallOffset,
-        // Each edge sits halfway between a switch and the nearest slot.
-        strip: {
-          x: stripStart - WALL_GAP / 2,
-          y: 0,
-          width: stripEnd - stripStart,
-          height: WALL_HEIGHT,
-        },
-        pitch,
-        ids: onWall.map((exhibit) => exhibit.id),
-        neighbours: [-1, CAROUSEL_SIZE].map((slot) => {
-          const exhibit = allOnWall[mod(wallOffset + slot, allOnWall.length)]!;
-          return {
-            visual: furnitureVisual(exhibit),
-            bounds: hang(exhibit, stripStart + slot * pitch, slotWidth),
-          };
-        }),
-      }
-    : undefined;
-
-  const gridLeft = Math.round((width - columns * CELL.width) / 2);
-  const furnitureSolids: Rect[] = [];
-  onFloor.forEach((exhibit, index) => {
-    const size = FURNITURE[exhibit.furniture];
-    const cellX = gridLeft + (index % columns) * CELL.width;
-    const cellY = WALL_HEIGHT + 16 + Math.floor(index / columns) * CELL.height;
->>>>>>> 164a1909a3d899b53163f654faefea070b9a5627
     const bounds = {
       x: Math.round(cellX + (CELL.width - size.width) / 2),
       y: cellY + CELL.height - 16 - size.height,
@@ -355,58 +370,8 @@ function walls({ width, height }: RoomPlan, mat: Rect): Rect[] {
     { x: 0, y: height - 4, width: mat.x, height: 4 },
     { x: mat.x + mat.width, y: height - 4, width: width - mat.x - mat.width, height: 4 },
   ];
-<<<<<<< HEAD
 }
 
-=======
-
-  return {
-    kind: "room",
-    width,
-    height,
-    ground: {
-      type: "room",
-      wallHeight: WALL_HEIGHT,
-      windows: windowsBetween(fixtures, width),
-      mat,
-      rug: {
-        x: gridLeft + 6,
-        y: WALL_HEIGHT + 10,
-        width: columns * CELL.width - 12,
-        height: rows * CELL.height + 30,
-      },
-    },
-    fixtures,
-    props,
-    portals: [
-      {
-        zone: { x: mat.x, y: height - 10, width: mat.width, height: 10 },
-        facing: "down",
-        action: { type: "exitRoom" },
-      },
-    ],
-    obstacles,
-    actors: [],
-    spawn: { x: cx, y: height - 16, facing: "up" },
-    carousel: turningWall,
-  };
-}
-
-const mod = (value: number, length: number) => ((value % length) + length) % length;
-
-const furnitureVisual = (exhibit: RoomExhibit): FixtureVisual => ({
-  type: "furniture",
-  kind: exhibit.furniture,
-  details: {
-    image: exhibit.image,
-    accent: exhibit.accent,
-    lit: exhibit.lit,
-    levels: exhibit.levels,
-    motif: exhibit.motif,
-  },
-});
-
->>>>>>> 164a1909a3d899b53163f654faefea070b9a5627
 function galleryBenches(cx: number, y: number) {
   const { width } = PROP_SIZE.bench;
   return [placeProp("bench", cx - width - 10, y), placeProp("bench", cx + 10, y)];
