@@ -1,61 +1,96 @@
-/** A video on a streaming platform, identified by the ID in its URL. */
-export type HostedVideoSource =
-  | { provider: "youtube"; id: string }
-  | { provider: "vimeo"; id: string }
-  | { provider: "drive"; id: string };
+export type VideoProvider = "youtube" | "vimeo" | "drive";
+
+/** A video on a streaming platform, identified by the ID in its link. */
+export interface VideoSource {
+  provider: VideoProvider;
+  id: string;
+}
 
 /**
- * Where a video lives. Each provider adapts its own URL scheme to one interface (thumbnail,
- * embeddable player, public page), so the rest of the site never needs to know which one it is.
+ * Adapter: each platform has its own link formats; this one interface reads them and builds
+ * everything the site needs (thumbnail, embeddable player, public page) from just the ID.
  */
-export type VideoSource = HostedVideoSource | { provider: "file"; src: string };
-
-export const HOSTED_PROVIDERS: readonly HostedVideoSource["provider"][] = [
-  "youtube",
-  "vimeo",
-  "drive",
-];
-
-interface ProviderAdapter<S extends VideoSource> {
-  thumbnail(source: S): string | undefined;
-  embed(source: S): string;
-  watch(source: S): string;
+interface ProviderAdapter {
+  /** The video's ID if the link is one of this provider's videos. */
+  idFrom(link: URL): string | undefined;
+  /** Vertical formats (YouTube Shorts) can be recognised from the link alone. */
+  isVertical(link: URL): boolean;
+  thumbnail(id: string): string;
+  embed(id: string): string;
+  watch(id: string): string;
 }
 
-type Adapters = {
-  [P in VideoSource["provider"]]: ProviderAdapter<Extract<VideoSource, { provider: P }>>;
-};
+const pathSegments = (link: URL) => link.pathname.split("/").filter(Boolean);
 
-const adapters: Adapters = {
+/** "www.youtube.com" and "m.youtube.com" are the same site as "youtube.com". */
+const isHost = (link: URL, domain: string) =>
+  link.hostname === domain || link.hostname.endsWith(`.${domain}`);
+
+const YOUTUBE_ID_PATHS = new Set(["shorts", "embed", "live"]);
+
+const adapters: Record<VideoProvider, ProviderAdapter> = {
   youtube: {
-    thumbnail: ({ id }) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    idFrom: (link) => {
+      if (isHost(link, "youtu.be")) return pathSegments(link)[0];
+      if (!isHost(link, "youtube.com") && !isHost(link, "youtube-nocookie.com")) return undefined;
+      const [first, second] = pathSegments(link);
+      if (first && second && YOUTUBE_ID_PATHS.has(first)) return second;
+      return link.searchParams.get("v") ?? undefined;
+    },
+    isVertical: (link) => pathSegments(link)[0] === "shorts",
+    thumbnail: (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
     // The privacy-enhanced domain avoids setting tracking cookies until the visitor presses play.
-    embed: ({ id }) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`,
-    watch: ({ id }) => `https://www.youtube.com/watch?v=${id}`,
+    embed: (id) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`,
+    watch: (id) => `https://www.youtube.com/watch?v=${id}`,
   },
   vimeo: {
-    thumbnail: ({ id }) => `https://vumbnail.com/${id}.jpg`,
-    embed: ({ id }) => `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`,
-    watch: ({ id }) => `https://vimeo.com/${id}`,
+    idFrom: (link) => {
+      if (!isHost(link, "vimeo.com")) return undefined;
+      return pathSegments(link).find((segment) => /^\d+$/.test(segment));
+    },
+    isVertical: () => false,
+    thumbnail: (id) => `https://vumbnail.com/${id}.jpg`,
+    embed: (id) => `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`,
+    watch: (id) => `https://vimeo.com/${id}`,
   },
   drive: {
+    idFrom: (link) => {
+      if (link.hostname !== "drive.google.com") return undefined;
+      const [first, second, third] = pathSegments(link);
+      if (first === "file" && second === "d") return third;
+      return link.searchParams.get("id") ?? undefined;
+    },
+    isVertical: () => false,
     // Only works for files shared as "Anyone with the link".
-    thumbnail: ({ id }) => `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
-    embed: ({ id }) => `https://drive.google.com/file/d/${id}/preview`,
-    watch: ({ id }) => `https://drive.google.com/file/d/${id}/view`,
-  },
-  file: {
-    // A plain file has no thumbnail service; the videos section captures a frame instead.
-    thumbnail: () => undefined,
-    embed: ({ src }) => src,
-    watch: ({ src }) => src,
+    thumbnail: (id) => `https://drive.google.com/thumbnail?id=${id}&sz=w800`,
+    embed: (id) => `https://drive.google.com/file/d/${id}/preview`,
+    watch: (id) => `https://drive.google.com/file/d/${id}/view`,
   },
 };
 
-function adapterFor<S extends VideoSource>(source: S) {
-  return adapters[source.provider] as ProviderAdapter<S>;
+export interface ParsedVideoLink {
+  source: VideoSource;
+  vertical: boolean;
 }
 
-export const thumbnailUrl = (source: VideoSource) => adapterFor(source).thumbnail(source);
-export const embedUrl = (source: VideoSource) => adapterFor(source).embed(source);
-export const watchUrl = (source: VideoSource) => adapterFor(source).watch(source);
+/** Reads a link copied from the browser's address bar or a share button. */
+export function parseVideoLink(text: string): ParsedVideoLink | undefined {
+  let link: URL;
+  try {
+    link = new URL(text);
+  } catch {
+    return undefined;
+  }
+  for (const [provider, adapter] of Object.entries(adapters) as [
+    VideoProvider,
+    ProviderAdapter,
+  ][]) {
+    const id = adapter.idFrom(link);
+    if (id) return { source: { provider, id }, vertical: adapter.isVertical(link) };
+  }
+  return undefined;
+}
+
+export const thumbnailUrl = ({ provider, id }: VideoSource) => adapters[provider].thumbnail(id);
+export const embedUrl = ({ provider, id }: VideoSource) => adapters[provider].embed(id);
+export const watchUrl = ({ provider, id }: VideoSource) => adapters[provider].watch(id);

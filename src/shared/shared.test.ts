@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseRoute, routeToHash } from "../app/route";
 import { detectLocale } from "../i18n/locale";
-import { embedUrl, thumbnailUrl, watchUrl } from "../services/videoSources";
+import { embedUrl, parseVideoLink, thumbnailUrl, watchUrl } from "../services/videoSources";
 import { formatPeriod } from "./formatDate";
 
 describe("routes", () => {
@@ -44,20 +44,46 @@ describe("formatPeriod", () => {
   });
 });
 
+describe("parseVideoLink", () => {
+  it.each([
+    ["https://www.youtube.com/watch?v=abc123&t=10s", "youtube", "abc123"],
+    ["https://youtu.be/abc123?si=share", "youtube", "abc123"],
+    ["https://youtube.com/shorts/abc123", "youtube", "abc123"],
+    ["https://m.youtube.com/watch?v=abc123", "youtube", "abc123"],
+    ["https://vimeo.com/76979871", "vimeo", "76979871"],
+    ["https://player.vimeo.com/video/76979871", "vimeo", "76979871"],
+    ["https://drive.google.com/file/d/file9/view?usp=sharing", "drive", "file9"],
+    ["https://drive.google.com/open?id=file9", "drive", "file9"],
+  ])("reads %s", (link, provider, id) => {
+    const parsed = parseVideoLink(link);
+
+    expect(parsed?.source).toEqual({ provider, id });
+  });
+
+  it.each(["https://www.youtube.com/@hoffalo", "https://example.com/watch?v=abc", "not a link"])(
+    "rejects %s, which isn't a video",
+    (link) => {
+      expect(parseVideoLink(link)).toBeUndefined();
+    },
+  );
+
+  it("recognises YouTube Shorts as vertical", () => {
+    expect(parseVideoLink("https://youtube.com/shorts/abc123")?.vertical).toBe(true);
+  });
+});
+
 describe("video sources", () => {
   it("derives YouTube URLs from an ID", () => {
     const source = { provider: "youtube", id: "abc123" } as const;
+
     expect(thumbnailUrl(source)).toBe("https://i.ytimg.com/vi/abc123/hqdefault.jpg");
     expect(embedUrl(source)).toContain("youtube-nocookie.com/embed/abc123");
     expect(watchUrl(source)).toBe("https://www.youtube.com/watch?v=abc123");
   });
 
   it("derives Drive preview URLs from a file ID", () => {
-    const source = { provider: "drive", id: "file9" } as const;
-    expect(embedUrl(source)).toBe("https://drive.google.com/file/d/file9/preview");
-  });
-
-  it("has no thumbnail service for self-hosted files", () => {
-    expect(thumbnailUrl({ provider: "file", src: "/v.mp4" })).toBeUndefined();
+    expect(embedUrl({ provider: "drive", id: "file9" })).toBe(
+      "https://drive.google.com/file/d/file9/preview",
+    );
   });
 });

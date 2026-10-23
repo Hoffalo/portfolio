@@ -2,22 +2,22 @@
 
 Short records of why the code is shaped the way it is. Each pattern named here is also named in the docstring of the code that uses it.
 
-## Videos come from a folder, not a content file
+## Videos are links, listed in a folder of JSON files
 
-**Context.** Videos are added often, by someone editing video rather than code. A TypeScript content file meant writing an entry per video and copying files to `public/` by hand.
+**Context.** Videos are added often, by someone editing video rather than code. The first version bundled video files from `videos/`, but GitHub rejects files over 100 MB and every visitor would download from the site's own hosting.
 
-**Decision.** `videos/` is read at build time with Vite's `import.meta.glob`. Top-level folders become collections, file names become titles and order, and optional JSON files next to a video add a description or point to a hosted copy. `links.json` holds tiles that leave the site.
+**Decision.** Videos live on YouTube, Vimeo or Drive. `videos/` holds one JSON file per shelf tile, read at build time with Vite's `import.meta.glob`: a file with a `"videos"` list is a collection, any other is a single video, and `links.json` holds tiles that leave the site. Links are pasted as copied from the browser and parsed into a provider and ID. Optional thumbnail images can sit in the folder.
 
-**Consequences.** Adding a video needs no code. The files ship with the site, so large ones must be compressed or hosted on YouTube (`videos/README.md` explains both). Mistakes in the JSON are reported as console warnings in development instead of breaking the page.
+**Consequences.** Adding a video needs no code and nothing large in git. Thumbnails come from the provider. Mistakes in the JSON are reported as console warnings in development, and cost only the entry that has them.
+
+**Replaced.** Local video files and the thumbnail **Proxy** (with an **Observer**) that captured a frame from them. With every video hosted, the provider always has a thumbnail, so both became dead code and were removed.
 
 ## Patterns in the video section
 
-- **Adapter** (`services/videoSources.ts`, `sections/videos/videoFolder.ts`). YouTube, Vimeo, Drive and plain files each have their own URL schemes; one interface hides them. Vite's glob results are adapted into the folder-relative paths the catalog understands, so the catalog has no dependency on Vite and is tested with plain lists of paths.
-- **Builder** (`VideoCatalogBuilder`). A video is up to three files (video, image, JSON) that arrive in any order. Parts are collected first and assembled in `build()`. The trade-off is a mutable object during building; it never escapes `videoFolder.ts`.
+- **Adapter** (`services/videoSources.ts`, `sections/videos/videoFolder.ts`). YouTube, Vimeo and Drive each have their own link formats and URLs; one interface reads their links and builds their thumbnail, player and page URLs. Vite's glob results are adapted into the folder-relative paths the catalog understands, so the catalog has no dependency on Vite and is tested with plain objects.
+- **Builder** (`VideoCatalogBuilder`). JSON files name thumbnail images that may be added before or after them, so files are collected first and assembled in `build()`. The trade-off is a mutable object during building; it never escapes `videoFolder.ts`.
 - **Factory Method** (`shelfExhibits.tsx`). Whether an item becomes a painting, a screen or a poster, and what opening it does, depends on its kind. A table per kind (`RulesByKind`) replaces `if` chains, and adding a kind fails to compile until every table handles it.
-- **Proxy** (`thumbnails.ts`). Asking for a thumbnail is cheap and immediate. Behind it, a frame is captured from the video the first time, then cached. The trade-off is a placeholder until the capture lands.
-- **Observer** (also `thumbnails.ts`). Tiles and paintings subscribe to the proxy through `useSyncExternalStore` and re-render when a frame arrives. The proxy doesn't know who is listening.
-- **Singleton**. `videoCatalog` and the thumbnail proxy are module-level instances, created once. The folder can't change while the site runs, and the frame cache must be shared so a video is never downloaded twice. Tests build their own `VideoCatalogBuilder` instead of using the singleton.
+- **Singleton**. `videoCatalog` is a module-level instance, built once: the folder can't change while the site runs. Tests build their own `VideoCatalogBuilder` instead.
 
 ## Popups are a stack owned by one provider
 

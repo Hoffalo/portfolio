@@ -1,145 +1,145 @@
 import type { Localized } from "../../../i18n/locale";
-import { compareNames, parseFolderPath, titleFromName, type FolderPath } from "./folderPath";
-import { readCollectionSidecar, readLinkEntries, readVideoSidecar } from "./sidecars";
-import type {
-  ShelfItem,
-  VideoCatalog,
-  VideoCollection,
-  VideoLink,
-  VideoSidecar,
-  VideoWork,
-} from "./types";
+import { parseVideoLink, thumbnailUrl } from "../../../services/videoSources";
+import { baseName, compareNames, titleFromName } from "./fileNames";
+import {
+  isJsonObject,
+  readOrientation,
+  readString,
+  readText,
+  readWebUrl,
+  type JsonObject,
+} from "./jsonFields";
+import type { ShelfItem, VideoCatalog, VideoCollection, VideoLink, VideoWork } from "./types";
 
 const LINKS_FILE = "links.json";
-const COLLECTION_FILE = "collection";
-const COVER_FILE = "cover";
-
-interface VideoDraft {
-  path: FolderPath;
-  url?: string;
-  sidecar?: VideoSidecar;
-}
 
 /**
- * Builder: a video is described by up to three files (the video, its thumbnail, its JSON) that
- * arrive in no particular order, so parts are collected first and only assembled in `build()`,
- * once every file is known.
+ * Builder: JSON files name their thumbnails ("thumbnail": "brasa.jpg"), and the images can arrive
+ * before or after the JSON that uses them. Everything is collected first and only assembled in
+ * `build()`, once every file is known.
  */
 export class VideoCatalogBuilder {
-  private readonly videos = new Map<string, VideoDraft>();
   private readonly images = new Map<string, string>();
-  private readonly collectionInfo = new Map<string, unknown>();
+  private readonly entries = new Map<string, unknown>();
   private links: unknown = [];
   private readonly problems: string[] = [];
 
-  /** `path` is relative to the videos folder; `url` is where the browser can load the file. */
-  addFile(path: string, url: string): this {
-    const parsed = parseFolderPath(path);
-    if (parsed.role === "video") this.draftFor(parsed).url = url;
-    else if (parsed.role === "image") this.images.set(parsed.key, url);
+  /** `path` is relative to the videos folder; `url` is where the browser can load the image. */
+  addImage(path: string, url: string): this {
+    this.images.set(path, url);
     return this;
   }
 
-  addJson(path: string, data: unknown): this {
-    const parsed = parseFolderPath(path);
-    if (path === LINKS_FILE) this.links = data;
-    else if (parsed.isCollectionRoot && parsed.name === COLLECTION_FILE)
-      this.collectionInfo.set(parsed.collection!, data);
-    else this.draftFor(parsed).sidecar = readVideoSidecar(data);
+  addJson(path: string, content: unknown): this {
+    if (path === LINKS_FILE) this.links = content;
+    else this.entries.set(path, content);
     return this;
   }
 
   build(): VideoCatalog {
-    const works = [...this.videos.values()]
-      .map((draft) => this.buildVideo(draft))
-      .filter((work): work is VideoWork => work !== undefined);
+    const shelf = [...this.entries.keys()]
+      .sort(compareNames)
+      .map((path) => this.buildEntry(path, this.entries.get(path)))
+      .filter((item): item is ShelfItem => item !== undefined);
+    return { items: [...shelf, ...this.buildLinks()], problems: [...this.problems] };
+  }
 
-    const looseVideos = works.filter((work) => !parseFolderPath(work.id).collection);
-    const shelf: { sortName: string; item: ShelfItem }[] = [
-      ...this.buildCollections(works).map((item) => ({ sortName: item.id, item })),
-      ...looseVideos.map((item) => ({ sortName: item.id, item })),
-    ];
-    shelf.sort((a, b) => compareNames(a.sortName, b.sortName));
+  /** A file with a "videos" list is a collection; any other is a single video. */
+  private buildEntry(path: string, content: unknown): ShelfItem | undefined {
+    if (!isJsonObject(content)) {
+      this.problems.push(`${path}: expected an object ({ … }), so it was skipped.`);
+      return undefined;
+    }
+    const fallbackTitle = bothLocales(titleFromName(baseName(path)));
+    return Array.isArray(content.videos)
+      ? this.buildCollection(path, content, content.videos, fallbackTitle)
+      : this.buildVideo(content, { id: path, where: path, fallbackTitle });
+  }
 
+  private buildCollection(
+    path: string,
+    content: JsonObject,
+    entries: readonly unknown[],
+    fallbackTitle: Localized,
+  ): VideoCollection | undefined {
+    const videos = entries
+      .map((entry, index) => {
+        const where = `${path}, video ${index + 1}`;
+        if (isJsonObject(entry)) return this.buildVideo(entry, { id: `${path}#${index}`, where });
+        this.problems.push(`${where}: expected an object ({ … }), so it was skipped.`);
+        return undefined;
+      })
+      .filter((video): video is VideoWork => video !== undefined);
+    // An empty list is a collection set up before its videos are published: hidden, not an error.
+    if (videos.length === 0) return undefined;
     return {
-      items: [...shelf.map(({ item }) => item), ...this.buildLinks()],
-      problems: [...this.problems],
+      kind: "collection",
+      id: path,
+      title: readText(content.title) ?? fallbackTitle,
+      description: readText(content.description),
+      thumbnail: this.resolveImage(content.thumbnail, path) ?? videos[0]!.thumbnail,
+      videos,
     };
   }
 
-  private draftFor(path: FolderPath): VideoDraft {
-    let draft = this.videos.get(path.key);
-    if (!draft) {
-      draft = { path };
-      this.videos.set(path.key, draft);
+  private buildVideo(
+    content: JsonObject,
+    { id, where, fallbackTitle }: { id: string; where: string; fallbackTitle?: Localized },
+  ): VideoWork | undefined {
+    const link = parseVideoLink(readString(content.url) ?? "");
+    const title = readText(content.title) ?? fallbackTitle;
+    if (!link) {
+      this.problems.push(`${where}: "url" must be a YouTube, Vimeo or Google Drive video link.`);
+      return undefined;
     }
-    return draft;
-  }
-
-  private buildVideo({ path, url, sidecar = {} }: VideoDraft): VideoWork | undefined {
-    const source = url ? ({ provider: "file", src: url } as const) : sidecar.source;
-    if (!source) {
-      this.problems.push(
-        `${path.key}.json: no video file next to it and no valid "source", so it was skipped.`,
-      );
+    if (!title) {
+      this.problems.push(`${where}: needs a "title".`);
       return undefined;
     }
     return {
       kind: "video",
-      id: path.key,
-      title: sidecar.title ?? bothLocales(titleFromName(path.name)),
-      description: sidecar.description,
-      orientation: sidecar.orientation ?? "landscape",
-      poster: this.images.get(path.key),
-      source,
+      id,
+      title,
+      description: readText(content.description),
+      orientation:
+        readOrientation(content.orientation) ?? (link.vertical ? "portrait" : "landscape"),
+      thumbnail: this.resolveImage(content.thumbnail, where) ?? thumbnailUrl(link.source),
+      source: link.source,
     };
-  }
-
-  /** Every top-level folder with at least one video; an empty folder is a collection not yet filmed. */
-  private buildCollections(works: readonly VideoWork[]): VideoCollection[] {
-    const byFolder = new Map<string, VideoWork[]>();
-    for (const work of works) {
-      const folder = parseFolderPath(work.id).collection;
-      if (folder) byFolder.set(folder, [...(byFolder.get(folder) ?? []), work]);
-    }
-    return [...byFolder].map(([folder, videos]) => {
-      const info = readCollectionSidecar(this.collectionInfo.get(folder));
-      return {
-        kind: "collection",
-        id: folder,
-        title: info.title ?? bothLocales(titleFromName(folder)),
-        description: info.description,
-        cover: this.images.get(`${folder}/${COVER_FILE}`),
-        videos: [...videos].sort((a, b) => compareNames(a.id, b.id)),
-      };
-    });
   }
 
   private buildLinks(): VideoLink[] {
     if (!Array.isArray(this.links)) {
-      this.problems.push(`${LINKS_FILE}: expected a list of links, so it was ignored.`);
+      this.problems.push(`${LINKS_FILE}: expected a list ([ … ]), so it was ignored.`);
       return [];
     }
-    const { entries, invalid } = readLinkEntries(this.links);
-    for (const index of invalid)
-      this.problems.push(
-        `${LINKS_FILE}: entry ${index + 1} needs a "title" and a full "url" (https://…).`,
-      );
-    return entries.map((entry) => ({
-      kind: "link",
-      id: `link:${entry.url}`,
-      title: entry.title,
-      description: entry.description,
-      url: entry.url,
-      thumbnail: entry.thumbnail && this.resolveImage(entry.thumbnail),
-    }));
+    return this.links
+      .map((entry, index) => this.buildLink(entry, `${LINKS_FILE}, entry ${index + 1}`))
+      .filter((link): link is VideoLink => link !== undefined);
   }
 
-  /** Thumbnails are given as a file in the videos folder ("youtube.jpg") or a full URL. */
-  private resolveImage(reference: string): string | undefined {
-    if (/^https?:\/\//.test(reference)) return reference;
-    const url = this.images.get(parseFolderPath(reference).key);
-    if (!url) this.problems.push(`${LINKS_FILE}: thumbnail "${reference}" was not found.`);
+  private buildLink(entry: unknown, where: string): VideoLink | undefined {
+    const title = isJsonObject(entry) ? readText(entry.title) : undefined;
+    const url = isJsonObject(entry) ? readWebUrl(entry.url) : undefined;
+    if (!isJsonObject(entry) || !title || !url) {
+      this.problems.push(`${where}: needs a "title" and a full "url" (https://…).`);
+      return undefined;
+    }
+    return {
+      kind: "link",
+      id: `link:${url}`,
+      title,
+      description: readText(entry.description),
+      url,
+      thumbnail: this.resolveImage(entry.thumbnail, where),
+    };
+  }
+
+  /** A thumbnail is an image in the videos folder ("brasa.jpg") or a full URL. */
+  private resolveImage(reference: unknown, where: string): string | undefined {
+    if (typeof reference !== "string") return undefined;
+    const url = readWebUrl(reference) ?? this.images.get(reference);
+    if (!url) this.problems.push(`${where}: thumbnail "${reference}" was not found.`);
     return url;
   }
 }

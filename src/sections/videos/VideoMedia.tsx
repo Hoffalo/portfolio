@@ -5,19 +5,14 @@ import type { ShelfItem, VideoWork } from "./catalog/types";
 
 export function VideoPlayer({ video }: { video: VideoWork }) {
   const { t } = useLocale();
-  const { source } = video;
   return (
     <div className={`video-player video-player--${video.orientation}`}>
-      {source.provider === "file" ? (
-        <video src={source.src} poster={video.poster} controls autoPlay playsInline />
-      ) : (
-        <iframe
-          src={embedUrl(source)}
-          title={t(video.title)}
-          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-          allowFullScreen
-        />
-      )}
+      <iframe
+        src={embedUrl(video.source)}
+        title={t(video.title)}
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowFullScreen
+      />
     </div>
   );
 }
@@ -29,21 +24,18 @@ export function VideoDetail({ video }: { video: VideoWork }) {
     <div className="video-detail">
       <VideoPlayer video={video} />
       {video.description && <p className="video-detail__description">{t(video.description)}</p>}
-      {video.source.provider !== "file" && (
-        <ExternalLink href={watchUrl(video.source)}>{ui.watch}</ExternalLink>
-      )}
+      <ExternalLink href={watchUrl(video.source)}>{ui.watch}</ExternalLink>
     </div>
   );
 }
 
 interface ShelfTileProps {
   item: ShelfItem;
-  thumbnail?: string;
   onOpen: () => void;
 }
 
 /** A thumbnail with a nameplate. Collections and links say what they are, since they don't play. */
-export function ShelfTile({ item, thumbnail, onOpen }: ShelfTileProps) {
+export function ShelfTile({ item, onOpen }: ShelfTileProps) {
   const { t, ui } = useLocale();
   const title = t(item.title);
   return (
@@ -55,8 +47,8 @@ export function ShelfTile({ item, thumbnail, onOpen }: ShelfTileProps) {
       onClick={onOpen}
     >
       <span className="shelf-tile__frame" data-orientation={orientationOf(item)}>
-        {thumbnail ? (
-          <img src={thumbnail} alt="" loading="lazy" />
+        {item.thumbnail ? (
+          <img src={item.thumbnail} alt="" loading="lazy" />
         ) : (
           <span className="shelf-tile__placeholder" aria-hidden="true">
             ▶

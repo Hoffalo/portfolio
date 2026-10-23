@@ -22,7 +22,7 @@ Pushes to `main` deploy through Vercel (the framework preset detects Vite automa
 | Folder                    | Responsibility                                                                                                                           |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/content/`            | **Your data.** Profile, career, skills, repo descriptions. Plain TypeScript objects with `{ en, pt }` text.                              |
-| `videos/`                 | **Your videos.** Every file here appears in the Filmmaking section; every folder is a collection. See `videos/README.md`.                |
+| `videos/`                 | **Your videos.** One JSON file of links per tile in the Filmmaking section. See `videos/README.md`.                                      |
 | `src/sections/`           | One folder per portfolio section. Each exports a `SectionDefinition`: its building, its boring-mode page, and its room's furniture.      |
 | `src/game/engine/`        | Framework-free game logic: input, movement and collision, camera, the frame loop.                                                        |
 | `src/game/world/`         | Builds the town and room layouts (positions, collisions, doors) from the registered sections.                                            |
@@ -39,7 +39,7 @@ Pushes to `main` deploy through Vercel (the framework preset detects Vite automa
 
 **A new job.** Add an entry at the top of `experiences` in `src/content/career.ts`. A new desk appears in the career room and a new card in boring mode. Give it an `accent` (the organisation's colour, used for its pennant or monitor) and a `motif` (the prop beside its desk: `camera`, `chart`, `robot`, `clapper`, `palette`, `podium`, `punching-bag`). Desks run oldest to newest, and roles at the same organisation share one desk, so a promotion just means adding the new role with the same `organization`.
 
-**A new video.** Drop it into `videos/` (or a folder inside it, to make a collection). Its title comes from the file name; a JSON file with the same name adds a description. `videos/README.md` has the full format, including videos hosted on YouTube and the `links.json` file for tiles that open another site.
+**A new video.** Upload it to YouTube (Unlisted works), Vimeo or Google Drive, then add a JSON file with its link to `videos/`. A file with a `"videos"` list becomes a collection. `videos/README.md` has the format, including `links.json` for tiles that open another site.
 
 **Better repo descriptions or ordering.** Edit `src/content/dev.ts` (`featuredRepos`, `hiddenRepos`, `repoDescriptions`). The repo list itself comes live from the GitHub API. Each repo is drawn as an object that matches its subject, guessed from its name and description ("music" becomes a jukebox, "game" an arcade cabinet). If the guess is wrong, set it in `repoMotifs`.
 
@@ -57,10 +57,10 @@ The town gains a building (the avenue grows north two buildings per row), the ro
 
 ## Hosting your videos
 
-Small, web-exported MP4s can live in `videos/` and ship with the site. Long pieces belong on **YouTube** (Unlisted works fine) or **Vimeo**, declared with a JSON `source`:
+Videos are never stored in the repository: GitHub rejects files over 100 MB, and the site would have to ship them. They live on **YouTube** (Unlisted works fine), **Vimeo** or **Google Drive**, and `videos/` only holds links:
 
-- **Real streaming.** Adaptive quality, fast start and mobile support, and no 100 MB GitHub file limit.
+- **Real streaming.** Adaptive quality, fast start and mobile support.
 - **Thumbnails for free.** YouTube serves one for every video ID.
 - **Embeds that behave.** The player uses `youtube-nocookie.com` so visitors aren't tracked until they press play.
 
-Drive is supported too (`"provider": "drive"`) for client work you can't post publicly. Share the file as "Anyone with the link". Its previews are lower quality and buffer more.
+Drive is for client work you can't post publicly. Share the file as "Anyone with the link". Its previews are lower quality and buffer more.

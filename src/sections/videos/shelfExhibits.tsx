@@ -5,7 +5,6 @@ import type { Exhibit } from "../types";
 import { applyRuleFor, type RulesByKind } from "./catalog/byKind";
 import type { ShelfItem } from "./catalog/types";
 import { ShelfGrid } from "./ShelfGrid";
-import type { ThumbnailLookup } from "./thumbnails";
 import { VideoDetail } from "./VideoMedia";
 
 const TEASER_LENGTH = 70;
@@ -16,9 +15,7 @@ export interface ShelfEntry {
   exhibit: Exhibit;
 }
 
-export interface ShelfContext extends Pick<LocaleContextValue, "t" | "ui"> {
-  thumbnailOf: ThumbnailLookup;
-}
+export type ShelfContext = Pick<LocaleContextValue, "t" | "ui">;
 
 /**
  * Factory Method: what an exhibit looks like and does depends on the kind of item, chosen from a
@@ -29,7 +26,7 @@ export function toShelfEntry(item: ShelfItem, context: ShelfContext): ShelfEntry
   return { item, exhibit: applyRuleFor(exhibitFactories(context), item) };
 }
 
-function exhibitFactories({ t, ui, thumbnailOf }: ShelfContext): RulesByKind<Exhibit> {
+function exhibitFactories({ t, ui }: ShelfContext): RulesByKind<Exhibit> {
   const teaserOf = (description?: Localized) =>
     description ? [shorten(t(description), TEASER_LENGTH)] : [];
 
@@ -38,7 +35,7 @@ function exhibitFactories({ t, ui, thumbnailOf }: ShelfContext): RulesByKind<Exh
       id: video.id,
       label: t(video.title),
       furniture: video.orientation === "portrait" ? "painting-tall" : "painting-wide",
-      image: thumbnailOf(video),
+      image: video.thumbnail,
       teaser: teaserOf(video.description),
       detail: <VideoDetail video={video} />,
       detailLayout: "theater",
@@ -47,7 +44,7 @@ function exhibitFactories({ t, ui, thumbnailOf }: ShelfContext): RulesByKind<Exh
       id: `collection:${collection.id}`,
       label: t(collection.title),
       furniture: "screen",
-      image: thumbnailOf(collection),
+      image: collection.thumbnail,
       teaser: [ui.videoCount(collection.videos.length), ...teaserOf(collection.description)],
       detail: (
         <>
@@ -56,7 +53,7 @@ function exhibitFactories({ t, ui, thumbnailOf }: ShelfContext): RulesByKind<Exh
           )}
           <ShelfGrid
             layout="pairs"
-            entries={collection.videos.map((video) => toShelfEntry(video, { t, ui, thumbnailOf }))}
+            entries={collection.videos.map((video) => toShelfEntry(video, { t, ui }))}
           />
         </>
       ),
@@ -66,7 +63,7 @@ function exhibitFactories({ t, ui, thumbnailOf }: ShelfContext): RulesByKind<Exh
       id: link.id,
       label: t(link.title),
       furniture: "poster",
-      image: thumbnailOf(link),
+      image: link.thumbnail,
       teaser: [new URL(link.url).hostname.replace(/^www\./, ""), ...teaserOf(link.description)],
       href: link.url,
     }),

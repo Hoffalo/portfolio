@@ -1,74 +1,69 @@
 # Videos
 
-Everything in this folder appears in the Filmmaking section: on the gallery wall in play mode and as a grid in boring mode. Nothing needs registering in code. Save a file here, and it shows up (while `npm run dev` is running, the page updates by itself).
+Everything in this folder appears in the Filmmaking section: on the gallery wall in play mode and as a grid in boring mode. The videos themselves live on **YouTube** (Unlisted works), **Vimeo** or **Google Drive**. This folder only holds a JSON file per tile, plus optional thumbnail images. Nothing needs registering in code. Save a file here and it shows up (while `npm run dev` is running, the page updates by itself).
 
 ```
 videos/
-├── links.json                 tiles that open another site (your YouTube channel…)
-├── 01-showreel.mp4            a video on its own
-├── 01-showreel.jpg            its thumbnail (optional)
-├── 01-showreel.json           its title and description (optional)
-└── brasa/                     every folder is a collection
-    ├── collection.json        the collection's title and description (optional)
-    ├── cover.jpg              the collection's thumbnail (optional)
-    ├── 01-conference-teaser.mp4
-    └── 02-ensina-promo.mp4
+├── 01-showreel.json      a video on its own
+├── 02-brasa.json         a collection: a file with a "videos" list
+├── links.json            tiles that open another site (your YouTube channel…)
+└── thumbnails/           optional images, named in the JSON files
 ```
 
 ## Rules
 
-- **Order** follows file and folder names. Start them with numbers (`01-`, `02-`) to choose it. The numbers never show.
-- **Titles** come from file names: `02-ensina_promo.mp4` is titled "Ensina promo". A JSON file with the same name overrides it.
-- **Thumbnails**: an image with the video's name (`.jpg`, `.png`, `.webp`). Without one, a frame from one second in is used.
-- **Collections**: each folder directly inside `videos/` is one. Its thumbnail is `cover.jpg`, or else its first video's. A folder with no videos stays hidden, so you can set one up before you film it.
-- **Formats**: MP4 (H.264 + AAC) plays everywhere. WebM works too. Avoid `.mov` from a camera, because only some browsers play it.
+- **Order** follows file names. Start them with numbers (`01-`, `02-`) to choose it. The numbers never show. Inside a collection, videos keep the order they're written in. `links.json` comes last.
+- **Links** are pasted straight from the browser or a Share button: `youtube.com/watch?v=…`, `youtu.be/…`, `youtube.com/shorts/…`, `vimeo.com/…`, `drive.google.com/file/d/…/view`. Drive files must be shared as "Anyone with the link".
+- **Thumbnails** come from YouTube, Vimeo or Drive automatically. To use your own, put an image in this folder and name it in `"thumbnail"` (its path inside `videos/`, e.g. `"thumbnails/teaser.jpg"`), or give a full URL. A collection without one uses its first video's.
+- **Text** can be one string for both languages, or `{ "en": "…", "pt": "…" }`.
+- **Orientation**: YouTube Shorts show upright on their own. For any other vertical video, add `"orientation": "portrait"`.
 
-## The JSON files
+## A video on its own
 
-Any text can be one string for both languages, or `{ "en": "…", "pt": "…" }`. Every field is optional.
-
-`<video name>.json`
+`01-showreel.json`. Only `url` is required; the title defaults to the file name ("Showreel").
 
 ```json
 {
-  "title": { "en": "Conference teaser", "pt": "Teaser da conferência" },
-  "description": "Shot and edited in three days.",
-  "orientation": "portrait"
+  "title": { "en": "Showreel 2026", "pt": "Showreel 2026" },
+  "description": "Highlights from this year.",
+  "url": "https://youtu.be/dQw4w9WgXcQ"
 }
 ```
 
-`orientation` is `"landscape"` (the default) or `"portrait"` for Reels, Shorts and vertical screens.
+## A collection
 
-**A video hosted on YouTube, Vimeo or Drive** needs only the JSON file, with a `source` and no video file:
-
-```json
-{ "title": "Botzo devlog", "source": { "provider": "youtube", "id": "dQw4w9WgXcQ" } }
-```
-
-The `id` is the part of the link after `watch?v=` (YouTube), after `vimeo.com/` (Vimeo), or between `/d/` and `/view` (Drive, shared as "Anyone with the link").
-
-`collection.json`
+`02-brasa.json`. Each video needs a `title` and a `url`. A collection with an empty list stays hidden, so you can set one up before its videos are published.
 
 ```json
-{ "title": "BRASA", "description": "Conferences and campaigns." }
+{
+  "title": "BRASA",
+  "description": { "en": "Conferences and campaigns.", "pt": "Conferências e campanhas." },
+  "thumbnail": "thumbnails/brasa.jpg",
+  "videos": [
+    {
+      "title": { "en": "Conference teaser", "pt": "Teaser da conferência" },
+      "description": "Shot and edited in three days.",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    },
+    { "title": "Ensina promo", "url": "https://youtube.com/shorts/dQw4w9WgXcQ" }
+  ]
+}
 ```
 
-`links.json` is a list, shown after the videos, in the order written:
+## Links
+
+`links.json` is a list. Each entry needs a `title` and a full `url`:
 
 ```json
 [
   {
     "title": "My YouTube channel",
     "url": "https://www.youtube.com/@handle",
-    "thumbnail": "youtube.jpg"
+    "thumbnail": "thumbnails/youtube.jpg"
   }
 ]
 ```
 
-`thumbnail` is an image in this folder, or a full URL.
+## Mistakes
 
-## Size
-
-These files are copied into the website, and GitHub rejects files over 100 MB. Export web versions (1080p, around 8–12 Mbit/s keeps a 2-minute video under 100 MB). For long pieces, put them on YouTube (unlisted works) and use a `source` instead.
-
-Mistakes (a JSON file with no video next to it, a link without a URL) are listed as `[videos]` warnings in the browser console during `npm run dev`.
+A bad link, a missing title or a thumbnail that isn't in the folder skips only that entry. During `npm run dev` each one is listed as a `[videos]` warning in the browser console.
