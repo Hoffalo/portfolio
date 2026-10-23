@@ -4,5 +4,14 @@
     "en": "Audiovisual production for BRASA's conferences and campaigns.",
     "pt": "Produção audiovisual para as conferências e campanhas da BRASA."
   },
-  "videos": []
+  "videos": [
+    {
+      "title": { "en": "BRASA 2026 Conferences Teaser", "pt": "Teaser Conferências BRASA 2026" },
+      "description": {
+        "en": "The first teaser used to promote BRASA's 2026 conferences, highlighting the events' themes",
+        "pt": "O primeiro teaser usado para promover as conferências da BRASA 2026, destacando os temas dos eventos"
+      },
+      "url": "https://www.instagram.com/reel/DUT_QaYDJOk/"
+    }
+  ]
 }
