@@ -1,4 +1,4 @@
-# [Lorenzo Hoffmann's Portfolio](hoffalo.com)
+# [Lorenzo Hoffmann's Portfolio](https://hoffalo.com)
 
 A pixel-art portfolio you can walk around. Dark mode is a rainy **cyberpunk city**; light mode is a **fantasy kingdom**. Each section is a building around the central fountain. Walk through its door to enter a Pokémon-style room where every piece of furniture holds part of the portfolio. Prefer reading? **Boring mode** shows the same content as a classic sidebar layout. Everything is available in **English and Portuguese**.
 
